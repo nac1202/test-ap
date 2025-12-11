@@ -1,0 +1,2269 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miryu Burger - Premium Fast Food</title>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #d32f2f;
+            --secondary-color: #ffa000;
+            --text-color: #333;
+            --bg-color: #fff9f0;
+            --card-bg: #fff;
+            --widget-theme-color: #4169e1;
+            --widget-header-height: 48px;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header */
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            font-size: 2rem;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: opacity 0.2s;
+        }
+
+        nav a:hover {
+            opacity: 0.8;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(to bottom, #d32f2f 0%, #b71c1c 100%);
+            /* Fallback if img fails */
+            background: #fff;
+            padding: 4rem 0;
+            overflow: hidden;
+        }
+
+        .hero-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 3rem;
+        }
+
+        .hero-text {
+            flex: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #555;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: white;
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(255, 160, 0, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+        }
+
+        .hero-image {
+            flex: 1;
+            position: relative;
+        }
+
+        .hero-image img {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            /* Fallback style for broken hero image */
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--primary-color);
+            position: relative;
+        }
+
+        section h2::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: var(--secondary-color);
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .menu-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #f0f0f0;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .menu-thumb {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .menu-thumb::after {
+            content: "NO IMAGE";
+            position: absolute;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .menu-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: relative;
+            z-index: 1;
+        }
+
+        .menu-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu-title {
+            font-size: 1.4rem;
+            color: #222;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-description {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 1rem;
+            flex: 1;
+        }
+
+        .menu-price {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 1rem;
+        }
+
+        .menu-tags {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .menu-tags li {
+            font-size: 0.8rem;
+            background: #ffeecc;
+            color: #d84315;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* Campaigns */
+        .campaign-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .campaign {
+            background: #fff;
+            border-left: 6px solid var(--secondary-color);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .campaign-title {
+            font-size: 1.6rem;
+            color: #d32f2f;
+            margin-bottom: 0.5rem;
+        }
+
+        .campaign-description {
+            font-size: 1rem;
+            color: #444;
+            margin-bottom: 0.5rem;
+        }
+
+        .campaign-period {
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: bold;
+        }
+
+        /* Store Info */
+        #store {
+            background: #fff;
+        }
+
+        #store p {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* FAQ */
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: #fff;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .faq-question {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .faq-question::before {
+            content: "Q.";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .faq-answer {
+            color: #555;
+            padding-left: 1.5rem;
+            margin: 0;
+        }
+
+        /* Footer */
+        footer {
+            background: #212121;
+            color: #aaa;
+            text-align: center;
+            padding: 3rem 0;
+            margin-top: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-inner {
+                flex-direction: column;
+                text-align: center;
+                gap: 2rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #ai-widget {
+                right: 10px;
+                bottom: 10px;
+            }
+
+            .assistant-portrait {
+                width: 140px;
+            }
+        }
+
+        /* --- CONCIERGE WIDGET STYLES --- */
+        #ai-widget {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            display: flex;
+            align-items: flex-end;
+            gap: 0;
+            z-index: 9999;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        #ai-widget.transparent-mode {
+            opacity: 0.4;
+        }
+
+        .assistant-portrait {
+            width: 220px;
+            padding: 0;
+            margin-right: -40px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            pointer-events: auto;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .assistant-portrait img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .chat-block {
+            position: relative;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 16px;
+        }
+
+        #chat-window {
+            width: 320px;
+            height: 480px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            display: none;
+            position: relative;
+            flex-direction: column;
+            overflow: visible;
+            margin-bottom: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .chat-inner {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 22px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 3px 8px rgba(0, 0, 0, 0.06);
+            /* Wider, professional shadow */
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Triangle (Hidden for clean floating card look) */
+        #chat-window::before,
+        #chat-window::after {
+            display: none;
+        }
+
+        .chat-header {
+            height: 48px;
+            /* Apple HIG Standard */
+            /* Dynamic Apple-like Gradient: Lighter top mix */
+            background: linear-gradient(180deg, color-mix(in srgb, var(--widget-theme-color), white 25%) 0%, var(--widget-theme-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            /* Spacer approach */
+            padding: 0 12px;
+            /* Reduced padding */
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+            /* 1px separator */
+            position: relative;
+            z-index: 20;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            /* Relaxed Brand Gap */
+            flex-shrink: 0;
+            /* Spacer handles separation */
+        }
+
+        .header-spacer {
+            flex: 1;
+            min-width: 8px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            justify-content: flex-end;
+            gap: 12px;
+            /* Optimized Tool Gap */
+        }
+
+
+        .header-title {
+            color: rgba(255, 255, 255, 0.9);
+            /* 90% White */
+            font-size: 15px;
+            font-weight: 500;
+            /* Medium */
+            margin-left: 0;
+            text-shadow: none;
+            letter-spacing: 0.01em;
+            user-select: none;
+            line-height: 1;
+        }
+
+        .header-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .header-btn:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+            color: white;
+        }
+
+        .header-btn:active {
+            transform: translateY(0);
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        #close-chat {
+            margin-left: 0;
+        }
+
+        .header-icon-brand {
+            width: 24px;
+            height: 24px;
+            margin-right: 0;
+            cursor: default;
+            user-select: none;
+            color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-line {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .icon-brand {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .color-popup {
+            position: absolute;
+            top: 52px;
+            right: 8px;
+            width: 176px;
+            background: white;
+            padding: 12px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            z-index: 100;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .color-popup::before {
+            display: none;
+        }
+
+        .color-popup.open {
+            display: grid;
+            animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .color-option:hover {
+            transform: scale(1.15);
+            z-index: 1;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        #chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #fff;
+            scroll-behavior: smooth;
+        }
+
+        #chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .message-row {
+            margin: 14px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .message-bubble {
+            max-width: 82%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.64;
+            /* +2% line-height */
+            word-wrap: break-word;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .user-msg {
+            align-items: flex-end;
+        }
+
+        .user-msg .message-bubble {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #0d47a1;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-msg {
+            align-items: flex-start;
+        }
+
+        .bot-msg .message-bubble {
+            background-color: #f7f7f8;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        /* Input Area (Card Style) */
+        .input-area {
+            padding: 16px;
+            background: white;
+            border-top: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 30;
+            /* box-shadow removed for cleaner look */
+            border-radius: 0 0 22px 22px;
+        }
+
+        .chat-input-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        #chat-input {
+            width: 100%;
+            padding: 10px 46px 10px 14px;
+            border: 1px solid #E7E7E7;
+            /* Thinner subtle border */
+            border-radius: 16px;
+            /* Reduced to 16px */
+            outline: none;
+            font-size: 15px;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            /* Softer shadow */
+            line-height: 1.5;
+        }
+
+        #chat-input:focus {
+            border-color: var(--widget-theme-color);
+            background: white;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            /* Keep refined natural shadow */
+        }
+
+        #chat-send {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            background: linear-gradient(to bottom, #fff, #f2f2f2);
+            /* Apple-like gradient */
+            color: var(--widget-theme-color);
+            /* Icon color matches theme */
+            border: 1px solid rgba(0, 0, 0, 0.07);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), 0 4px 10px rgba(0, 0, 0, 0.20);
+            /* Premium depth */
+            z-index: 2;
+        }
+
+        #chat-send:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+            transform: translateY(calc(-50% - 2px)) scale(1.05);
+            filter: brightness(1.02);
+        }
+
+        #chat-send:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        #chat-send svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            fill: none;
+            margin-left: 0;
+        }
+
+        #stt-btn {
+            background: linear-gradient(to bottom, #ffffff, #f2f2f2);
+            border: 1px solid rgba(0, 0, 0, 0.07);
+            font-size: 18px;
+            cursor: pointer;
+            color: #555;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), 0 4px 10px rgba(0, 0, 0, 0.20);
+        }
+
+        #stt-btn:hover {
+            background-color: #fff;
+            color: var(--widget-theme-color);
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+        }
+
+        #stt-btn:active {
+            transform: translateY(0);
+        }
+
+        #stt-btn.listening {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border-color: #ffcdd2;
+            box-shadow: 0 2px 8px rgba(211, 47, 47, 0.2);
+        }
+
+        #stt-btn.listening::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid var(--widget-theme-color);
+            z-index: -1;
+            animation: mic-pulse 1.2s infinite ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes mic-pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
+        }
+
+        /* Product Cards (Premium) */
+        .chat-product-card {
+            width: 100%;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+            margin: 8px 0;
+            display: flex;
+            gap: 10px;
+            transition: transform 0.2s;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+
+        .chat-product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            /* Stronger hover shadow */
+        }
+
+        .chat-product-card__img-wrapper {
+            flex: 0 0 80px;
+            max-width: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .chat-product-card__img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .chat-product-card__body {
+            flex: 1;
+            padding: 8px 10px 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .chat-product-card__title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.3;
+        }
+
+        .chat-product-card__price {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #e53935;
+        }
+
+        .chat-product-card__tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .chat-product-card__tag {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #fff3cd;
+            color: #a76a00;
+        }
+
+        .chat-product-card__button {
+            margin-top: 4px;
+            align-self: flex-start;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: none;
+            background: #ff7043;
+            color: #ffffff;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            box-shadow: 0 2px 5px rgba(255, 112, 67, 0.3);
+        }
+
+        .chat-product-card__button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Detail Modal */
+        .chat-detail-modal {
+            position: absolute;
+            inset: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-detail-modal__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(2px);
+        }
+
+        .chat-detail-modal__content {
+            position: relative;
+            max-width: 320px;
+            width: 92%;
+            background: #ffffff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            animation: chat-detail-modal-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .chat-detail-modal__close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: none;
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .chat-detail-modal__close:hover {
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .chat-detail-modal__img-wrapper {
+            width: 100%;
+            max-height: 180px;
+            overflow: hidden;
+        }
+
+        .chat-detail-modal__img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .chat-detail-modal__body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chat-detail-modal__title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .chat-detail-modal__price {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e53935;
+        }
+
+        .chat-detail-modal__tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .chat-detail-modal__tag {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #fff3cd;
+            color: #a76a00;
+        }
+
+        .chat-detail-modal__description {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #555;
+            margin-top: 4px;
+        }
+
+        @keyframes chat-detail-modal-in {
+            from {
+                transform: translateY(20px) scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Camera Modal Styles */
+        .camera-modal {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 320px;
+            background: #000;
+            z-index: 50;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            overflow: hidden;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .camera-modal.active {
+            transform: translateY(0);
+        }
+
+        .camera-modal.hidden {
+            display: none !important;
+        }
+
+        .camera-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #000;
+        }
+
+        #camera-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            padding-bottom: 10px;
+        }
+
+        .camera-ctrl-btn {
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .camera-ctrl-btn.cancel {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+        }
+
+        .camera-ctrl-btn.shutter {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: white;
+            padding: 4px;
+            background-clip: content-box;
+            border: 4px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .shutter-inner {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.1s;
+        }
+
+        .camera-ctrl-btn.shutter:active .shutter-inner {
+            transform: scale(0.9);
+        }
+
+        #camera-btn {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-right: 8px;
+        }
+
+        #camera-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: var(--widget-theme-color);
+        }
+
+        #camera-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Miryu Burger Site Header -->
+    <header>
+        <div class="container header-inner">
+            <div class="brand">
+                <span class="brand-icon">🍔</span>
+                <span>Miryu Burger</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#">Menus</a></li>
+                    <li><a href="#campaigns">Specials</a></li>
+                    <li><a href="#store">Locations</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container hero-inner">
+            <div class="hero-text">
+                <h1>Taste the Future.<br>Experience Classic.</h1>
+                <p>伝統の味と、最新テクノロジーの融合。<br>Miryu Burgerで、新しい食体験を。</p>
+                <a href="#menus" class="cta-button">View Menu</a>
+            </div>
+            <div class="hero-image">
+                <img src="assets/miryu-burger/hero-burger.png" alt="Delicious Burger" loading="lazy">
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container" id="menus">
+
+        <!-- Menu Grid -->
+        <section>
+            <h2>Grand Menu</h2>
+            <div class="menu-grid">
+                <!-- Item 1 -->
+                <article class="menu-card" data-menu-card>
+                    <div class="menu-thumb">
+                        <img src="assets/miryu-burger/signature-burger.png" alt="Miryu Signature Burger" loading="lazy">
+                    </div>
+                    <div class="menu-content">
+                        <h3 class="menu-title">Miryu Signature Burger</h3>
+                        <p class="menu-description">和牛パティ2枚と特製スパイシーソースの看板バーガー。圧倒的満足感。</p>
+                        <p class="menu-price">¥680〜</p>
+                        <ul class="menu-tags">
+                            <li>No.1</li>
+                            <li>Wagyu</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <!-- Item 2 -->
+                <article class="menu-card" data-menu-card>
+                    <div class="menu-thumb">
+                        <img src="assets/miryu-burger/golden-fries.png" alt="Golden Crispy Fries" loading="lazy">
+                    </div>
+                    <div class="menu-content">
+                        <h3 class="menu-title">Golden Crispy Fries</h3>
+                        <p class="menu-description">毎朝カットする新鮮なジャガイモを二度揚げ。カリカリホクホクの食感。</p>
+                        <p class="menu-price">¥280〜</p>
+                        <ul class="menu-tags">
+                            <li>Classic</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <!-- Item 3 -->
+                <article class="menu-card" data-menu-card>
+                    <div class="menu-thumb">
+                        <img src="assets/miryu-burger/green-shake.png" alt="Green Refresh Shake" loading="lazy">
+                    </div>
+                    <div class="menu-content">
+                        <h3 class="menu-title">Green Refresh Shake</h3>
+                        <p class="menu-description">小松菜、リンゴ、キウイのヘルシーシェイク。バーガーとの相性抜群。</p>
+                        <p class="menu-price">¥350〜</p>
+                        <ul class="menu-tags">
+                            <li>Healthy</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <!-- Item 4 -->
+                <article class="menu-card" data-menu-card>
+                    <div class="menu-thumb">
+                        <img src="assets/miryu-burger/spicy-chicken.png" alt="Spicy Chicken Fillet" loading="lazy">
+                    </div>
+                    <div class="menu-content">
+                        <h3 class="menu-title">Spicy Chicken Fillet</h3>
+                        <p class="menu-description">サクサク衣のチキンにハバネロパウダー。辛いもの好きには堪らない。</p>
+                        <p class="menu-price">¥420〜</p>
+                        <ul class="menu-tags">
+                            <li>Hot</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <!-- Item 5 -->
+                <article class="menu-card" data-menu-card>
+                    <div class="menu-thumb">
+                        <img src="assets/miryu-burger/onion-rings.png" alt="Royal Onion Rings" loading="lazy">
+                    </div>
+                    <div class="menu-content">
+                        <h3 class="menu-title">Royal Onion Rings</h3>
+                        <p class="menu-description">甘みの強いタマネギを使用した、衣厚めの贅沢オニオンリング。</p>
+                        <p class="menu-price">¥320〜</p>
+                        <ul class="menu-tags">
+                            <li>Side</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <!-- Item 6 -->
+                <article class="menu-card" data-menu-card>
+                    <div class="menu-thumb">
+                        <img src="assets/miryu-burger/cola-zero.png" alt="Miryu Cola Zero" loading="lazy">
+                    </div>
+                    <div class="menu-content">
+                        <h3 class="menu-title">Miryu Cola Zero</h3>
+                        <p class="menu-description">カロリーゼロでも味は濃厚。オリジナルスパイス配合のクラフトコーラ。</p>
+                        <p class="menu-price">¥250〜</p>
+                        <ul class="menu-tags">
+                            <li>Drink</li>
+                        </ul>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Campaigns -->
+        <section id="campaigns">
+            <h2>Limited Specials</h2>
+            <div class="campaign-list">
+                <article class="campaign" data-campaign>
+                    <h3 class="campaign-title">Spicy Volcano Burger</h3>
+                    <p class="campaign-description">今だけの特製マグマソースを使用。ハラペーニョ3倍増量の期間限定激辛バーガー。挑戦者求む。</p>
+                    <p class="campaign-period">提供期間：〜 5月末まで</p>
+                </article>
+                <article class="campaign" data-campaign>
+                    <h3 class="campaign-title">Sakura Mochi Pie</h3>
+                    <p class="campaign-description">サクサクのパイ生地の中に、モチモチの桜餅とあんこを包みました。春の訪れを感じるスイーツ。</p>
+                    <p class="campaign-period">提供期間：春季限定</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Store Info -->
+        <section id="store" data-store-info>
+            <h2>Store Information</h2>
+            <p class="store-address">〒100-0005 東京都千代田区丸の内 1-2-3 ミリュータワー 1F</p>
+            <p class="store-hours">営業時間：11:00〜22:00（L.O. 21:30） / 定休日：なし</p>
+            <p class="store-phone">TEL：03-1234-5678</p>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq">
+            <h2>FAQ</h2>
+            <div class="faq-list">
+                <article class="faq-item" data-faq-item>
+                    <h3 class="faq-question">テイクアウトはできますか？</h3>
+                    <p class="faq-answer">はい、全メニューお持ち帰り可能です。モバイルオーダーもご利用いただけます。</p>
+                </article>
+                <article class="faq-item" data-faq-item>
+                    <h3 class="faq-question">カロリーやアレルギー情報はありますか？</h3>
+                    <p class="faq-answer">各メニュー詳細ページにてご確認いただけます。またはスタッフにお尋ねください。</p>
+                </article>
+                <article class="faq-item" data-faq-item>
+                    <h3 class="faq-question">席の予約は可能ですか？</h3>
+                    <p class="faq-answer">申し訳ございません。当店は完全フリーシーティング制となっております。</p>
+                </article>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Miryu Burger Inc. all rights reserved.</p>
+    </footer>
+    <!-- 
+    ================================================================
+    CONCIERGE WIDGET LOGIC
+    ================================================================
+    -->
+    <script>
+        const WIDGET_HTML = `
+            <div class="assistant-portrait" id="assistant-avatar">
+                <img src="assistant.png" alt="AIコンシェルジュ">
+            </div>
+            <div class="chat-block">
+                <div id="chat-window">
+                    <div class="chat-inner">
+                        <div class="chat-header">
+                            <div class="header-left">
+                                <span class="header-icon-brand" title="AIコンシェルジュ">
+                                    <!-- Minimal Robot: Rect Head (rx=8), Circle Eyes, Line+Circle Antenna -->
+                                    <svg class="icon-brand" viewBox="0 0 24 24">
+                                        <rect x="3" y="6" width="18" height="15" rx="8" ry="8" />
+                                        <circle cx="9" cy="12" r="1.5" />
+                                        <circle cx="15" cy="12" r="1.5" />
+                                        <line x1="12" y1="6" x2="12" y2="3" />
+                                        <circle cx="12" cy="2" r="1.5" />
+                                    </svg>
+                                </span>
+                                <span class="header-title">Concierge</span>
+                            </div>
+                            <div class="header-spacer"></div>
+                            <div class="header-right">
+                                <button id="theme-btn" class="header-btn" title="テーマカラー変更">
+                                    <svg class="icon-line" viewBox="0 0 24 24"><path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10z"/><circle cx="8" cy="7" r="1.5"/><circle cx="16" cy="7" r="1.5"/><circle cx="8" cy="17" r="1.5"/></svg>
+                                </button>
+                                <button id="opacity-toggle" class="header-btn" title="透明度切り替え">
+                                    <svg class="icon-line" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button id="avatar-toggle" class="header-btn" title="キャラクター表示切り替え">
+                                    <svg class="icon-line" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/></svg>
+                                </button>
+                                <button id="tts-toggle" class="header-btn" title="音声オン/オフ">
+                                    <svg class="icon-line" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                                </button>
+                                <button id="close-chat" class="header-btn" title="チャットを閉じる">
+                                    <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                            <div id="color-popup" class="color-popup">
+                                <div class="color-option" style="background:#4169e1;" data-color="#4169e1" title="Blue"></div>
+                                <div class="color-option" style="background:#ff4d4d;" data-color="#ff4d4d" title="Red"></div>
+                                <div class="color-option" style="background:#ff8c00;" data-color="#ff8c00" title="Orange"></div>
+                                <div class="color-option" style="background:#20b2aa;" data-color="#20b2aa" title="Light Sea Green"></div>
+                                <div class="color-option" style="background:#ff69b4;" data-color="#ff69b4" title="Pink"></div>
+                                <div class="color-option" style="background:#333333;" data-color="#333333" title="Black"></div>
+                                <div class="color-option" style="background:#8a2be2;" data-color="#8a2be2" title="Violet"></div>
+                                <div class="color-option" style="background:#008080;" data-color="#008080" title="Teal"></div>
+                            </div>
+                        </div>
+                        <div id="chat-messages">
+                        </div>
+                        <div class="input-area">
+                            <button id="stt-btn" title="音声入力">
+                                <svg class="icon-line" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                            </button>
+                            <button id="camera-btn" title="カメラで質問">
+                                <svg class="icon-line" viewBox="0 0 24 24">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
+                            </button>
+                            <div class="chat-input-container">
+                                <input type="text" id="chat-input" placeholder="メッセージを入力..." autocomplete="off">
+                                <button id="chat-send" aria-label="メッセージを送信" title="送信">
+                                    <svg class="icon-line" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Camera Preview Modal -->
+                        <div id="camera-preview-modal" class="camera-modal hidden">
+                            <div class="camera-container">
+                                <video id="camera-video" autoplay playsinline muted></video>
+                                <div class="camera-controls">
+                                    <button id="camera-cancel-btn" class="camera-ctrl-btn cancel">キャンセル</button>
+                                    <button id="camera-shutter-btn" class="camera-ctrl-btn shutter"><div class="shutter-inner"></div></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        window.initConciergeWidget = function (options) {
+            // Widget Injection
+            const widgetDiv = document.createElement('div');
+            widgetDiv.id = 'ai-widget';
+            widgetDiv.innerHTML = WIDGET_HTML;
+            document.body.appendChild(widgetDiv);
+
+            if (options.primaryColor) {
+                document.documentElement.style.setProperty('--widget-theme-color', options.primaryColor);
+            }
+
+            // --- Elements ---
+            const aiWidget = document.getElementById("ai-widget");
+            const assistantAvatar = document.getElementById("assistant-avatar");
+            const chatWindow = document.getElementById("chat-window");
+            const closeBtn = document.getElementById("close-chat");
+            const themeBtn = document.getElementById("theme-btn");
+            const colorPopup = document.getElementById("color-popup");
+            const opacityToggle = document.getElementById("opacity-toggle");
+            const avatarToggle = document.getElementById("avatar-toggle");
+            const ttsToggle = document.getElementById("tts-toggle");
+            const chatMessages = document.getElementById("chat-messages");
+            const chatInput = document.getElementById("chat-input");
+            const chatSend = document.getElementById("chat-send");
+            const sttBtn = document.getElementById("stt-btn");
+            // --- State ---
+            let isAvatarVisible = true;
+            let isTransparent = false;
+            let isTtsEnabled = false;
+            let isListening = false;
+            let isContinuousMode = true; // Default to continuous mode for voice
+            let lastMentionedProduct = ""; // Context for demonstratives
+            let recognition = null;
+            let conversationHistory = [];
+
+            // --- SYSTEM PROMPT (Enhanced Persona) ---
+            const SYSTEM_PROMPT = `
+あなたは「Miryu Burger（ミリューバーガー）」の店舗スタッフ（AIコンシェルジュ）です。
+ユーザー（お客様）に対し、明るく、丁寧で、親しみやすい態度で接客してください。
+
+========================
+■ 1. 役割と話し方
+========================
+- 口調：丁寧語（〜です、〜ます）を基本としつつ、フレンドリーで親しみやすくしてください。
+  - OK例：「いらっしゃいませ！今日はどんな気分ですか？」「こちら、とってもおすすめですよ！」
+  - NG例：「承知いたしました。左様でございますか。」（堅すぎる表現）
+- 返答の長さ：音声会話がメインのため、**1回の返答は2〜3文程度（目安10秒以内）**に収めてください。
+- 軽い雑談：質問に答えるだけでなく、
+  「辛いものはお好きですか？」「今日は暑いですね！」など、
+  お客様の好みに合わせた軽い一言を、必要に応じて添えてください。
+
+========================
+■ 2. 情報源と優先順位
+========================
+あなたの回答は、つねに次の優先順位で行ってください。
+
+1. 【現在表示中のページ情報】として渡されるJSON
+   - ここに書かれたメニュー一覧（name / description / price）を「唯一の正解」とみなしてください。
+   - メニュー名を新しく作らないでください。**必ずJSONに含まれる商品名だけ**を使ってください。
+2. 必要に応じて、一般的なハンバーガーショップの知識で
+   説明文を少し補足するのはOKです（ただし、存在しないメニュー名は絶対に作らないこと）。
+
+禁止事項：
+- Amazon、楽天、他社チェーンなど、外部サイトの商品を案内しないでください。
+- JSONに存在しない新しい商品名をでっち上げないでください。
+- 「本当か分かりませんが〜と思います」のような不確かな推測は避け、
+  分からない場合は「このメニューにはその情報がありません」と正直に伝えてください。
+
+========================
+■ 3. ユーザープロファイルの利用
+========================
+以下のプレースホルダは、実行時にユーザーごとのプロファイル情報に置き換えられます。
+
+{{USER_PROFILE_PLACEHOLDER}}
+
+- これまでの会話から分かっている好み（ポテト好き、辛いもの、ドリンクの好み、ヘルシー志向など）を、
+  さりげなく提案に反映してください。
+- ただし、「データによると〜」や「プロファイル上では〜」など、
+  内部情報の存在を明示する言い方はせず、
+  「前にポテトがお好きとおっしゃっていたので〜」のように自然な言い回しにしてください。
+
+========================
+■ 4. プロファイル更新（隠しメモ）
+========================
+会話の中からユーザーの好みが分かった場合、
+応答テキストの末尾に、次の形式で「差分情報（PROFILE_DELTA）」を**こっそり**追加してください。
+ユーザーには見えませんが、システム側が読み取ります。
+
+[[PROFILE_DELTA:
+{
+  "likes_fries": true,          // ポテト好き: true/false
+  "likes_spicy": false,         // 辛いもの: true/false
+  "preferred_drink": "コーラ",  // 好みのドリンク名（不要なら null）
+  "is_health_conscious": true   // ヘルシー志向: true/false
+}
+]]
+
+ルール：
+- すべてのキーを書かなくても構いません。更新したい項目だけを含めてください。
+- 分からない項目は書かないでください（推測で true/false を入れないこと）。
+- PROFILE_DELTA ブロックは、**通常の会話文と製品JSONブロックの「後ろ」**に置いてください。
+
+========================
+■ 5. 製品推薦とJSON出力ルール
+========================
+ユーザーが「おすすめは？」「この商品と他の商品を比較したい」など、
+具体的にメニューを選びたい状況のときは、以下の2つをセットで返してください。
+
+1. 会話文（通常の日本語の返答）
+   - 2〜3文で、ユーザーの好みにふれつつ、おすすめ理由を簡潔に説明してください。
+
+2. 製品リストJSON（チャットUI用）
+   - 会話文の**後ろ**に、次の形式のJSONを \`\`\`json ... \`\`\` で囲んで出力してください。
+   - JSONは「この会話ターンで特におすすめしたい商品」のみを含めてください（最大3件程度）。
+
+\`\`\`json
+{
+  "products": [
+    {
+      "id": "任意のID（あってもなくてもよい）",
+      "name": "商品名（ページJSONのnameと完全一致させる）",
+      "price": "価格（ページJSONからそのまま使うか、近い表現）",
+      "description": "簡単な説明（必要に応じて自然な日本語で補足）",
+      "imageUrl": "画像URLが分かる場合のみ。分からなければ空文字でも可。",
+      "tags": ["辛口", "ヘルシー", "ボリューム満点 など任意"],
+      "detailText": "モーダルに表示する少し詳しい説明文"
+    }
+  ]
+}
+\`\`\`
+
+重要：
+- name は、必ず【現在表示中のページ情報】に含まれるメニュー名と完全一致させてください。
+- imageUrl は、分からなければ空文字 "" のままで構いません（システム側で埋めます）。
+- JSONブロックは**必ず返答の末尾**に置いてください。
+
+========================
+■ 6. その他の注意
+========================
+- ユーザーが雑談だけしている場合（例：「今日は寒いですね」など）は、
+  無理に商品を出さず、自然な一言返し＋様子をうかがう程度にしてください。
+- 分からないこと、ページ情報にないことは正直に「確認できません」と伝えて構いません。
+- あなたの最優先の役割は、「このページ上のメニューを、その人に合った形で気持ちよく案内する」ことです。
+`;
+
+            // --- User Profile Logic ---
+            let userId = "";
+            let userProfile = {
+                likes_fries: null,
+                likes_spicy: null,
+                preferred_drink: null,
+                is_health_conscious: null,
+                visit_count: 0,
+                last_visit_at: null
+            };
+
+            function initUserProfile() {
+                // 1. User ID
+                let storedId = localStorage.getItem("miryu_ai_user_id");
+                if (!storedId) {
+                    storedId = "miryu_" + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "_" + Math.random());
+                    localStorage.setItem("miryu_ai_user_id", storedId);
+                }
+                userId = storedId;
+
+                // 2. Profile
+                const storedProfile = localStorage.getItem("miryu_ai_profile_" + userId);
+                if (storedProfile) {
+                    try {
+                        userProfile = JSON.parse(storedProfile);
+                    } catch (e) {
+                        console.error("Profile Parse Error", e);
+                    }
+                } else {
+                    // New profile
+                    userProfile.last_visit_at = new Date().toISOString();
+                }
+
+                // Update Stats
+                userProfile.visit_count = (userProfile.visit_count || 0) + 1;
+                userProfile.last_visit_at = new Date().toISOString();
+                saveUserProfile();
+
+                console.log("User Profile Loaded:", userProfile);
+            }
+
+            function saveUserProfile() {
+                localStorage.setItem("miryu_ai_profile_" + userId, JSON.stringify(userProfile));
+            }
+
+            function resetUserProfile() {
+                localStorage.removeItem("miryu_ai_profile_" + userId);
+                // Reset in memory to default
+                userProfile = {
+                    likes_fries: null,
+                    likes_spicy: null,
+                    preferred_drink: null,
+                    is_health_conscious: null,
+                    visit_count: 0,
+                    last_visit_at: null
+                };
+            }
+
+            function getProfilePromptText() {
+                const p = userProfile;
+                const lines = [];
+                lines.push(`- 訪問回数: ${p.visit_count}回`);
+                if (p.likes_fries !== null) lines.push(`- ポテト好き: ${p.likes_fries ? "はい" : "いいえ"}`);
+                if (p.likes_spicy !== null) lines.push(`- 辛いもの: ${p.likes_spicy ? "好き" : "苦手"}`);
+                if (p.preferred_drink) lines.push(`- 好みのドリンク: ${p.preferred_drink}`);
+                if (p.is_health_conscious !== null) lines.push(`- ヘルシー志向: ${p.is_health_conscious ? "はい" : "いいえ"}`);
+
+                if (lines.length === 1) return "【ユーザープロファイル】\n特に情報なし（初対面に近い）";
+                return "【ユーザープロファイル（以前の会話の記憶）】\n" + lines.join("\n");
+            }
+
+            // Initialize immediately
+            // But we need to make sure we don't call it before DOM if we needed DOM, but here it is just LS.
+            initUserProfile();
+
+            // Helper: Build Product Registry from DOM
+            function buildProductRegistry() {
+                const registry = {};
+                // Scan existing menu cards to build a lookup
+                document.querySelectorAll(".menu-card").forEach((card, index) => {
+                    const title = card.querySelector(".menu-title")?.textContent.trim() || "";
+                    const desc = card.querySelector(".menu-description")?.textContent.trim() || "";
+                    const price = card.querySelector(".menu-price")?.textContent.trim() || "";
+                    const img = card.querySelector("img")?.getAttribute("src") || "";
+                    // Basic ID generation if not present
+                    const id = `menu_${index + 1}`;
+                    const tags = Array.from(card.querySelectorAll(".menu-tags li")).map(li => li.textContent.trim());
+
+                    if (id) {
+                        registry[id] = {
+                            id,
+                            name: title,
+                            description: desc,
+                            price,
+                            imageUrl: img,
+                            tags,
+                            detailText: desc // Use description as detail text for now
+                        };
+                    }
+                });
+                // Expose to global for modal lookup
+                window.chatProductRegistry = registry;
+                return registry;
+            }
+
+            function createChatProductCard(product) {
+                const card = document.createElement("div");
+                card.className = "chat-product-card";
+                card.innerHTML = `
+                    <div class="chat-product-card__img-wrapper">
+                        <img src="${product.imageUrl}" alt="${product.name}" loading="lazy">
+                    </div>
+                    <div class="chat-product-card__body">
+                        <div class="chat-product-card__title">${product.name}</div>
+                        <div class="chat-product-card__price">${product.price}</div>
+                        <div class="chat-product-card__tags">
+                            ${product.tags.map(tag => `<span class="chat-product-card__tag">${tag}</span>`).join('')}
+                        </div>
+                        <button class="chat-product-card__button" data-product-id="${product.id}">詳細を見る</button>
+                    </div>
+                `;
+                return card;
+            }
+
+            function renderProductStack(products, registry) {
+                const fragment = document.createDocumentFragment();
+                products.forEach(pData => {
+                    // Merge with registry if available to get better images/data
+                    let finalProduct = pData;
+                    // Try to match with registry by name if ID is weak
+                    const regItem = Object.values(registry).find(r => r.name === pData.name);
+                    if (regItem) {
+                        finalProduct = { ...regItem, ...pData };
+                        // Prioritize Registry Image if AI has none or generic
+                        if (regItem.imageUrl) finalProduct.imageUrl = regItem.imageUrl;
+                        finalProduct.id = regItem.id;
+                    }
+                    fragment.appendChild(createChatProductCard(finalProduct));
+                });
+                return fragment;
+            }
+
+            function getInitialMessage(siteName) {
+                return `こんにちは！\n${siteName || "このサイト"}のAIコンシェルジュです。\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」「営業時間は？」）`;
+            }
+
+            // DOM-based Context Collection (For Prompt)
+            function collectPageMenuContext() {
+                const cards = document.querySelectorAll("[data-menu-card]");
+                if (!cards.length) return null;
+
+                const items = Array.from(cards).map((card, index) => {
+                    const titleEl = card.querySelector(".menu-title");
+                    const descEl = card.querySelector(".menu-description");
+                    const priceEl = card.querySelector(".menu-price");
+
+                    return {
+                        id: `menu_${index + 1}`,
+                        name: titleEl ? titleEl.textContent.trim() : "",
+                        description: descEl ? descEl.textContent.trim() : "",
+                        price: priceEl ? priceEl.textContent.trim() : "",
+                    };
+                });
+
+                return {
+                    siteName: document.title || "Miryu Burger Demo",
+                    items
+                };
+            }
+
+            // API Call
+            async function callGeminiAPI(history, imageBase64 = null) {
+                const apiKey = "AIzaSyDzxKU9B7Qa12zhpT3xwOVsp305HDDVeFY";
+                let dynamicPrompt = SYSTEM_PROMPT;
+
+                const lastUserMessage = history.length > 0 ? history[history.length - 1].parts[0].text : "";
+                const hasUrl = /https?:\/\//.test(lastUserMessage);
+
+                // Inject User Profile (Always replace placeholder)
+                const profileContext = getProfilePromptText();
+                dynamicPrompt = dynamicPrompt.replace("{{USER_PROFILE_PLACEHOLDER}}", profileContext);
+
+                if (!hasUrl) {
+                    const pageContext = collectPageMenuContext();
+                    if (pageContext) {
+                        dynamicPrompt += `\n\n【現在表示中のページ情報（優先参照）】\nこの情報だけを信頼して回答してください。\n${JSON.stringify(pageContext, null, 2)}`;
+                    }
+                }
+
+                // Camera Image Context
+                let contents = history;
+                if (imageBase64) {
+                    // Start response with specific phrase
+                    // We append this instruction to the PROMPT for this turn
+                    dynamicPrompt += `\n\n【画像入力】\nユーザーから画像が送信されました。「画像を拝見しました。」から回答を始めてください。画像の内容を説明し、もしメニューや商品が写っていれば特定して案内してください。`;
+
+                    // Construct Multimodal Payload
+                    // Use a copy of history but replace the last user message with multimodal parts
+                    // Or simply append if history doesn't have it? 
+                    // Usually history has the user's text "Look at this". 
+                    // We need to attach image to THAT turn.
+
+                    const historyCopy = JSON.parse(JSON.stringify(history));
+                    const lastTurn = historyCopy[historyCopy.length - 1];
+                    if (lastTurn && lastTurn.role === "user") {
+                        // Clean Base64 (remove header)
+                        const rawBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+
+                        lastTurn.parts = [
+                            { text: "お客様が撮影した画像です。内容を説明し、もしメニューや商品が分かれば教えてください。" },
+                            { inline_data: { mime_type: "image/png", data: rawBase64 } }
+                        ];
+                    }
+                    contents = historyCopy;
+                }
+
+                try {
+                    const payload = {
+                        system_instruction: { parts: [{ text: dynamicPrompt }] },
+                        contents: contents
+                    };
+                    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        console.error("API Error Details:", data.error);
+                        return "申し訳ありません。エラーが発生しました: " + data.error.message;
+                    }
+                    return data?.candidates?.[0]?.content?.parts?.[0]?.text || "応答の生成に失敗しました。";
+                } catch (e) {
+                    console.error(e);
+                    return "通信エラーが発生しました: " + e.message;
+                }
+            }
+
+            // Msg Logic
+            function addMessage(text, role) {
+                const row = document.createElement("div");
+                row.className = `message-row ${role === 'user' ? 'user-msg' : 'bot-msg'}`;
+                const jsonRegex = /```(?:json)?\s*([\s\S]*?)\s*```/i;
+                const match = text.match(jsonRegex);
+                let displayText = text;
+                let productData = null;
+                if (match && role === "bot") {
+                    try {
+                        productData = JSON.parse(match[1]);
+                        displayText = text.replace(match[0], "").trim();
+                    } catch (e) { console.warn("JSON Parse Error", e); }
+                }
+
+                // Inject Product Cards (Rich EC Style)
+                const registry = buildProductRegistry();
+
+                // 1. If JSON from Bot (Recommendations)
+                if (productData && productData.products && productData.products.length > 0) {
+                    // Use the JSON data but enriched/rendered with new style
+                    row.appendChild(renderProductStack(productData.products, registry));
+                }
+                // 2. If Text Mention (Single Inquiry) - AND no JSON to avoid dupes [Simple logic for now]
+                else if (role === "bot") {
+                    // Check for mentions
+                    const productNames = Object.keys(registry).sort((a, b) => b.length - a.length);
+                    let foundName = "";
+
+                    for (const name of productNames) {
+                        if (displayText.includes(name)) {
+                            foundName = name;
+                            break; // Only start with the first found
+                        }
+                    }
+
+                    if (foundName) {
+                        lastMentionedProduct = foundName; // Update context
+                        row.appendChild(createChatProductCard(registry[foundName]));
+                    }
+                }
+
+                const bubble = document.createElement("div");
+                bubble.className = "message-bubble";
+                bubble.innerHTML = displayText.replace(/\n/g, '<br>');
+                row.appendChild(bubble);
+
+                chatMessages.appendChild(row);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            async function sendMessage() {
+                const text = chatInput.value.trim();
+                if (!text) return;
+
+                // Handle Reset Command
+                if (text.includes("記憶をリセット") || text.includes("記憶を消して") || text.includes("忘れて")) {
+                    resetUserProfile();
+                    addMessage(text, "user");
+                    addMessage("かしこまりました。これまでの好みに関する情報をすべてリセットしました。", "bot");
+                    return;
+                }
+
+                addMessage(text, "user");
+                chatInput.value = "";
+                conversationHistory.push({ role: "user", parts: [{ text: text }] });
+                const loadingRow = document.createElement("div");
+                loadingRow.className = "message-row bot-msg";
+                loadingRow.innerHTML = `<div class="message-bubble">...</div>`;
+                chatMessages.appendChild(loadingRow);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                const rawReply = await callGeminiAPI(conversationHistory);
+                chatMessages.removeChild(loadingRow);
+
+                // Parse Profile Delta
+                const deltaRegex = /\[\[PROFILE_DELTA:\s*([\s\S]*?)\]\]/;
+                const deltaMatch = rawReply.match(deltaRegex);
+                let cleanReply = rawReply;
+
+                if (deltaMatch) {
+                    try {
+                        const deltaJson = JSON.parse(deltaMatch[1]);
+                        console.log("Profile Delta:", deltaJson);
+
+                        // Merge delta into userProfile
+                        userProfile = { ...userProfile, ...deltaJson };
+                        saveUserProfile();
+
+                        cleanReply = rawReply.replace(deltaMatch[0], "").trim();
+                    } catch (e) {
+                        console.error("Delta Parse Error", e);
+                    }
+                }
+
+                addMessage(cleanReply, "bot");
+                conversationHistory.push({ role: "model", parts: [{ text: cleanReply }] }); // Save clean text to history to avoid loop
+
+                const cleanTextForTTS = cleanReply.replace(/```(?:json)?[\s\S]*?```/i, "").trim();
+                if (isTtsEnabled) speak(cleanTextForTTS);
+            }
+
+            // Event Listeners
+            assistantAvatar.addEventListener("click", () => {
+                if (chatWindow.style.display === "flex") { chatWindow.style.display = "none"; } else { chatWindow.style.display = "flex"; chatInput.focus(); }
+            });
+            closeBtn.addEventListener("click", (e) => { e.stopPropagation(); chatWindow.style.display = "none"; });
+            themeBtn.addEventListener("click", (e) => { e.stopPropagation(); colorPopup.classList.toggle("open"); });
+            document.querySelectorAll(".color-option").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const color = btn.getAttribute("data-color");
+                    document.documentElement.style.setProperty('--widget-theme-color', color);
+                    colorPopup.classList.remove("open");
+                });
+            });
+            opacityToggle.addEventListener("click", () => {
+                isTransparent = !isTransparent;
+                if (isTransparent) { aiWidget.classList.add("transparent-mode"); opacityToggle.classList.add("active"); }
+                else { aiWidget.classList.remove("transparent-mode"); opacityToggle.classList.remove("active"); }
+            });
+            avatarToggle.addEventListener("click", () => {
+                isAvatarVisible = !isAvatarVisible;
+                // Update Icon State
+                const svg = avatarToggle.querySelector("svg");
+                if (isAvatarVisible) {
+                    assistantAvatar.style.display = "flex";
+                    chatWindow.classList.remove("no-avatar");
+                    svg.innerHTML = '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/>';
+                }
+                else {
+                    assistantAvatar.style.display = "none";
+                    chatWindow.classList.add("no-avatar");
+                    svg.innerHTML = '<circle cx="12" cy="12" r="9"/><line x1="5" y1="5" x2="19" y2="19"/>'; // Disabled icon
+                }
+            });
+
+            ttsToggle.addEventListener("click", () => {
+                isTtsEnabled = !isTtsEnabled;
+                if (isTtsEnabled) { ttsToggle.classList.add("active"); } else { ttsToggle.classList.remove("active"); speechSynthesis.cancel(); }
+            });
+            chatSend.addEventListener("click", sendMessage);
+            chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { if (e.isComposing) return; e.preventDefault(); sendMessage(); } });
+
+            // --- Camera Logic ---
+            const cameraBtn = document.getElementById("camera-btn");
+            const cameraModal = document.getElementById("camera-preview-modal");
+            const cameraVideo = document.getElementById("camera-video");
+            const cameraCancel = document.getElementById("camera-cancel-btn");
+            const cameraShutter = document.getElementById("camera-shutter-btn");
+            let cameraStream = null;
+
+            async function initCamera() {
+                // HTTPS check
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    addMessage("カメラは安全な接続（HTTPS）またはローカル環境でのみ利用できます。", "bot");
+                    return;
+                }
+
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    cameraVideo.srcObject = cameraStream;
+                    cameraModal.classList.remove("hidden");
+                    // Trigger reflow for transition
+                    void cameraModal.offsetWidth;
+                    cameraModal.classList.add("active");
+                } catch (err) {
+                    console.error("Camera Error:", err);
+                    addMessage("カメラにアクセスできませんでした。権限と接続環境をご確認ください。", "bot");
+                }
+            }
+
+            function stopCamera() {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                    cameraStream = null;
+                }
+                cameraVideo.srcObject = null;
+                cameraModal.classList.remove("active");
+                setTimeout(() => {
+                    cameraModal.classList.add("hidden");
+                }, 300);
+            }
+
+            async function captureAndSend() {
+                if (!cameraStream) return;
+
+                // Capture
+                const canvas = document.createElement("canvas");
+                canvas.width = cameraVideo.videoWidth;
+                canvas.height = cameraVideo.videoHeight;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+                const base64 = canvas.toDataURL("image/png");
+
+                // Stop UI
+                stopCamera();
+
+                // Send Message Flow
+                addMessage("（画像を送信しました）", "user");
+
+                // Push placeholder to history
+                conversationHistory.push({ role: "user", parts: [{ text: "（画像送信）" }] });
+
+                const loadingRow = document.createElement("div");
+                loadingRow.className = "message-row bot-msg";
+                loadingRow.innerHTML = `<div class="message-bubble">画像を解析中...</div>`;
+                chatMessages.appendChild(loadingRow);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                const reply = await callGeminiAPI(conversationHistory, base64);
+
+                chatMessages.removeChild(loadingRow);
+                addMessage(reply, "bot");
+                conversationHistory.push({ role: "model", parts: [{ text: reply }] });
+
+                if (isTtsEnabled) speak(reply.replace(/```.*?```/g, ""));
+            }
+
+            cameraBtn.addEventListener("click", initCamera);
+            cameraCancel.addEventListener("click", stopCamera);
+            cameraShutter.addEventListener("click", captureAndSend);
+
+
+            function cleanUserSpeech(text) {
+                // Remove fillers
+                let cleaned = text.replace(/^(えー|あのー|えっと|あー|うーん|そのー)/g, "");
+                cleaned = cleaned.replace(/ (えー|あのー|えっと) /g, "");
+
+                // Resolve demonstratives
+                if (lastMentionedProduct && (cleaned.includes("これ") || cleaned.includes("それ") || cleaned.includes("あれ"))) {
+                    cleaned = cleaned.replace(/(これ|それ|あれ)/g, lastMentionedProduct);
+                    console.log("Resolved demonstrative:", cleaned);
+                }
+
+                // Append polite ending if missing (heuristic)
+                if (!cleaned.endsWith("です") && !cleaned.endsWith("ます") && !cleaned.endsWith("ですか") && !cleaned.endsWith("?") && !cleaned.endsWith("！")) {
+                    // Simple heuristic: just assume it's a question or statement. 
+                    // For now, let's strictly trust the STT but maybe correct minor things if needed.
+                    // Actually, user requested "文末を自然な「です／ます」調に補正".
+                    // This is hard to do perfectly with regex, so we'll rely on the LLM to understand partial sentences,
+                    // but we can add a slight hint if it's super short.
+                }
+                return cleaned;
+            }
+
+            // Enhanced TTS
+            function speak(text) {
+                if (!isTtsEnabled) return;
+
+                // Cancel current speech
+                speechSynthesis.cancel();
+
+                const utter = new SpeechSynthesisUtterance(text);
+
+                // Voice Tuning
+                const voices = speechSynthesis.getVoices();
+                // Try to find a friendly female JP voice (e.g., Google 日本語, Microsoft Haruka, etc.)
+                const targetVoice = voices.find(v => v.lang.includes("ja") && (v.name.includes("Google") || v.name.includes("Haruka") || v.name.includes("Ichiro") === false));
+                if (targetVoice) utter.voice = targetVoice;
+
+                utter.pitch = 1.1; // Slightly higher
+                utter.rate = 0.95; // Slightly slower
+
+                // Continuous Conversation
+                utter.onend = () => {
+                    if (isContinuousMode && isTtsEnabled) {
+                        // Restart listening automatically
+                        console.log("TTS ended, restarting STT...");
+                        setTimeout(() => {
+                            if (!isListening) startListening();
+                        }, 500);
+                    }
+                };
+
+                speechSynthesis.speak(utter);
+            }
+
+
+
+
+            // Enhanced TTS
+            function speak(text) {
+                if (!isTtsEnabled) return;
+
+                // Cancel current speech
+                speechSynthesis.cancel();
+
+                const utter = new SpeechSynthesisUtterance(text);
+
+                // Voice Tuning
+                const voices = speechSynthesis.getVoices();
+                // Try to find a friendly female JP voice (e.g., Google 日本語, Microsoft Haruka, etc.)
+                const targetVoice = voices.find(v => v.lang.includes("ja") && (v.name.includes("Google") || v.name.includes("Haruka") || v.name.includes("Ichiro") === false));
+                if (targetVoice) utter.voice = targetVoice;
+
+                utter.pitch = 1.1; // Slightly higher
+                utter.rate = 0.95; // Slightly slower
+
+                // Continuous Conversation
+                utter.onend = () => {
+                    if (isContinuousMode && isTtsEnabled) {
+                        // Restart listening automatically
+                        console.log("TTS ended, restarting STT...");
+                        setTimeout(() => {
+                            if (!isListening) startListening();
+                        }, 500);
+                    }
+                };
+
+                speechSynthesis.speak(utter);
+            }
+
+            function startListening() {
+                if (!recognition) return;
+                try {
+                    recognition.start();
+                    console.log("STT Started");
+                } catch (e) {
+                    // Already started or error
+                    console.error(e);
+                }
+            }
+
+            function stopListening() {
+                if (!recognition) return;
+                recognition.stop();
+                console.log("STT Stopped");
+            }
+
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'ja-JP';
+                recognition.continuous = false; // We handle loop manually
+                recognition.interimResults = false;
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    sttBtn.classList.add("listening");
+                };
+
+                recognition.onend = () => {
+                    isListening = false;
+                    sttBtn.classList.remove("listening");
+                    // Note: If continuous mode is on, we usually restart AFTER TTS. 
+                    // But if user didn't say anything (no result), we might need to handle timeout?
+                    // For now, we rely on TTS onend to loop, or manual click.
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    // Pre-process
+                    const processedText = cleanUserSpeech(transcript);
+                    chatInput.value = processedText;
+                    sendMessage();
+                };
+
+                recognition.onerror = (event) => {
+                    console.error("STT Error", event.error);
+                    isListening = false;
+                    sttBtn.classList.remove("listening");
+                };
+
+                sttBtn.addEventListener("click", () => {
+                    if (isListening) stopListening();
+                    else startListening();
+                });
+            } else { sttBtn.style.display = "none"; }
+
+            // Ensure clean state on init
+            if (sttBtn) sttBtn.classList.remove("listening", "recording");
+
+
+            // Product Detail Modal Logic
+            function showProductDetailModal(productId) {
+                const product = window.chatProductRegistry ? window.chatProductRegistry[productId] : null;
+
+                if (!product) {
+                    addMessage("申し訳ありません。この商品の詳細情報は現在取得できません。", "bot");
+                    return;
+                }
+
+                const modalHTML = `
+                    <div class="chat-detail-modal" aria-modal="true" role="dialog">
+                      <div class="chat-detail-modal__backdrop"></div>
+                      <div class="chat-detail-modal__content">
+                        <button class="chat-detail-modal__close" type="button">×</button>
+                        <div class="chat-detail-modal__img-wrapper">
+                          <img src="${product.imageUrl}" alt="${product.name}" loading="lazy" />
+                        </div>
+                        <div class="chat-detail-modal__body">
+                          <h3 class="chat-detail-modal__title">${product.name}</h3>
+                          <div class="chat-detail-modal__price">${product.price}</div>
+                          <div class="chat-detail-modal__tags">
+                            ${product.tags.map(t => `<span class="chat-detail-modal__tag">${t}</span>`).join('')}
+                          </div>
+                          <p class="chat-detail-modal__description">
+                            ${product.description || "詳細情報はありません。"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                `;
+
+                // Append to chat-inner
+                const chatInner = document.querySelector(".chat-inner");
+                const tempDiv = document.createElement("div");
+                tempDiv.innerHTML = modalHTML.trim();
+                const modal = tempDiv.firstChild;
+                chatInner.appendChild(modal);
+
+                // Close handlers
+                const close = () => modal.remove();
+                modal.querySelector(".chat-detail-modal__close").addEventListener("click", close);
+                modal.querySelector(".chat-detail-modal__backdrop").addEventListener("click", close);
+            }
+
+            // Event Delegation for "See Details"
+            document.addEventListener("click", (e) => {
+                if (e.target && e.target.classList.contains("chat-product-card__button")) {
+                    const id = e.target.getAttribute("data-product-id");
+                    if (id) {
+                        showProductDetailModal(id);
+                    }
+                }
+            });
+
+            // Send Initial Message
+            const initialMsg = getInitialMessage(options.siteName);
+            addMessage(initialMsg, "bot");
+        };
+
+        window.initConciergeWidget({
+            siteName: "Miryu Burger Demo",
+            primaryColor: "#4169e1",
+            position: "bottom-right"
+        });
+    </script>
+</body>
+
+</html>
