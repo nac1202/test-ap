@@ -7,13 +7,10 @@ export const BonfireProject: React.FC = () => {
 
     if (!project || project.isBuilt) return null
 
-    const remainingWood = project.requirements.wood - project.current.wood
-    const remainingStone = project.requirements.stone - project.current.stone
-
-    // Calculate visual progress (0 to 1)
+    // Calculate progress
     const totalReq = project.requirements.wood + project.requirements.stone
-    const totalCur = project.current.wood + project.current.stone
-    const progress = totalCur / totalReq
+    const currentAmount = project.current.wood + project.current.stone
+    const progress = Math.min((currentAmount / totalReq) * 100, 100)
 
     return (
         <group position={project.position}>
