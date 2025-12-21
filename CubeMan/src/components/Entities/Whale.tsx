@@ -52,9 +52,22 @@ export const Whale: React.FC<WhaleProps> = ({ data }) => {
         const newLen = THREE.MathUtils.lerp(currentLen, targetH, delta * 0.5)
         position.current.setLength(newLen)
 
-        // 3. Change direction slowly
-        if (Math.random() < 0.005) {
-            angle.current += (Math.random() - 0.5) * 1.0
+        // 3. Collision Avoidance (Land)
+        // Check point ahead
+        const checkDist = 5.0
+        const aheadPos = position.current.clone().add(forward.clone().multiplyScalar(checkDist))
+        // Project aheadPos to correct height on sphere surface to check terrain
+        const aheadH = getTerrainHeight(aheadPos.x, aheadPos.y, aheadPos.z)
+
+        // If terrain ahead is Land (or very shallow water)
+        if (aheadH > WATER_LEVEL - 1.0) {
+            // Steering force: Turn hard
+            angle.current += delta * 2.0 // Turn right
+        } else {
+            // 3b. Change direction slowly (Wander)
+            if (Math.random() < 0.005) {
+                angle.current += (Math.random() - 0.5) * 1.0
+            }
         }
 
         // 4. Update Visuals
