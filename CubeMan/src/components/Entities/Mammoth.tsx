@@ -34,7 +34,7 @@ export const Mammoth: React.FC<MammothProps> = ({ position }) => {
     const targetTreeId = useRef<string | null>(null)
     const eatTimer = useRef(0)
 
-    const SCALE = 4.5
+    const SCALE = 3.5
     // Adjusted offset for shorter legs/stout body
     const SURFACE_OFFSET = 0.1 * SCALE
 
