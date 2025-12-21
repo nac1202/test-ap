@@ -14,6 +14,7 @@ import { GodControls } from './components/Interaction/GodControls'
 import { useGameStore } from './store/gameStore'
 import { BonfireProject } from './components/Buildings/BonfireProject'
 import { Whale } from './components/Entities/Whale'
+import { Moon } from './components/World/Moon'
 
 
 // --- FIRE SHADER COMPONENT ---
@@ -238,6 +239,7 @@ function Scene() {
       <color attach="background" args={['#111']} />
 
       <SmoothPlanet />
+      <Moon />
       <Trees />
       <Stones />
 
