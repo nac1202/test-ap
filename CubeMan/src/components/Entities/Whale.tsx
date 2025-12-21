@@ -59,8 +59,10 @@ export const Whale: React.FC<WhaleProps> = ({ data }) => {
         // Project aheadPos to correct height on sphere surface to check terrain
         const aheadH = getTerrainHeight(aheadPos.x, aheadPos.y, aheadPos.z)
 
-        // If terrain ahead is Land (or very shallow water)
-        if (aheadH > WATER_LEVEL - 1.0) {
+        // If terrain ahead is Land (or very shallow beach)
+        // Relaxed check: Only turn if it's basically land (WATER_LEVEL - 0.2 is swim height)
+        // Let's avoid anything higher than WATER_LEVEL - 0.4
+        if (aheadH > WATER_LEVEL - 0.2) {
             // Steering force: Turn hard
             angle.current += delta * 2.0 // Turn right
         } else {
