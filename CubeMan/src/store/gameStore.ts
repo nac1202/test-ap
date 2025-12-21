@@ -36,6 +36,18 @@ export interface Fire {
   fuel: number // Decays over time?
 }
 
+export interface Fish {
+  id: string
+  position: [number, number, number]
+  color: string
+}
+
+export interface Whale {
+  id: string
+  position: [number, number, number]
+  rotation: [number, number, number]
+}
+
 export interface ConstructionProject {
   id: string
   type: 'bonfire'
@@ -57,6 +69,8 @@ export interface GameState {
   mammoths: Mammoth[]
   saberTooths: SaberTooth[]
   fires: Fire[]
+  fish: Fish[]
+  whales: Whale[]
 
   godPower: GodPower
   setGodPower: (power: GodPower) => void
@@ -80,6 +94,8 @@ export interface GameState {
   addSaberTooth: (position: [number, number, number]) => void
   removeSaberTooth: (id: string) => void
   addFire: (position: [number, number, number]) => void
+  addFish: (position: [number, number, number]) => void
+  addWhale: (position: [number, number, number]) => void
 
   lightningStrike: { start: { x: number, y: number, z: number }, end: { x: number, y: number, z: number } } | null
   setLightningStrike: (start: { x: number, y: number, z: number }, end: { x: number, y: number, z: number }) => void
@@ -97,6 +113,8 @@ export const useGameStore = create<GameState>((set) => ({
   mammoths: [],
   saberTooths: [],
   fires: [],
+  fish: [],
+  whales: [],
   godPower: 'none',
 
   setGodPower: (power) => {
@@ -180,6 +198,22 @@ export const useGameStore = create<GameState>((set) => ({
     set((state) => ({
       fires: [...state.fires, { id: uuidv4(), position: pos, fuel: 100 }]
     })),
+
+  addFish: (position) => set((state) => ({
+    fish: [...state.fish, {
+      id: uuidv4(),
+      position,
+      color: ['#ff4400', '#0099ff', '#ffff00'][Math.floor(Math.random() * 3)]
+    }]
+  })),
+
+  addWhale: (position) => set((state) => ({
+    whales: [...state.whales, {
+      id: uuidv4(),
+      position,
+      rotation: [0, Math.random() * Math.PI * 2, 0]
+    }]
+  })),
 
   removeTree: (id) =>
     set((state) => ({

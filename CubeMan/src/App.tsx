@@ -13,6 +13,9 @@ import { HUD } from './components/UI/HUD'
 import { GodControls } from './components/Interaction/GodControls'
 import { useGameStore } from './store/gameStore'
 import { BonfireProject } from './components/Buildings/BonfireProject'
+import { Fish } from './components/Entities/Fish'
+import { Whale } from './components/Entities/Whale'
+
 
 // --- FIRE SHADER COMPONENT ---
 const FireShaderMaterial = {
@@ -191,6 +194,44 @@ function Scene() {
         }
       }
     }
+
+    // 3. Marine Life
+    if (store.fish.length === 0) {
+      console.log("Spawning Fish")
+      let count = 0
+      let attempts = 0
+      while (count < 50 && attempts < 200) {
+        attempts++
+        const vec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize()
+        if (!isLand(vec.x, vec.y, vec.z)) {
+          // Spawn underwater
+          const h = getTerrainHeight(vec.x, vec.y, vec.z)
+          // Random depth between seabed and surface
+          const depth = h + 1.0 + Math.random() * (25.5 - h - 1.5)
+          store.addFish(vec.multiplyScalar(depth).toArray())
+          count++
+        }
+      }
+    }
+
+    if (store.whales.length === 0) {
+      console.log("Spawning Whales")
+      let count = 0
+      let attempts = 0
+      while (count < 3 && attempts < 100) {
+        attempts++
+        const vec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize()
+        if (!isLand(vec.x, vec.y, vec.z)) {
+          const h = getTerrainHeight(vec.x, vec.y, vec.z)
+          // Deep water check (heuristic)
+          if (h < 23.0) {
+            const depth = 24.0 // Specific depth
+            store.addWhale(vec.multiplyScalar(depth).toArray())
+            count++
+          }
+        }
+      }
+    }
   }, [])
 
   // Growth Loop
@@ -233,6 +274,14 @@ function Scene() {
 
       {fires.map((f) => (
         <FireMesh key={f.id} position={f.position} />
+      ))}
+
+      {/* Marine Life */}
+      {useGameStore(state => state.fish).map((f) => (
+        <Fish key={f.id} data={f} />
+      ))}
+      {useGameStore(state => state.whales).map((w) => (
+        <Whale key={w.id} data={w} />
       ))}
 
       <BonfireProject />
