@@ -80,7 +80,7 @@ export const Whale: React.FC<WhaleProps> = ({ data }) => {
         // Assuming model faces +Z?
     })
 
-    return (
+
     return (
         <group ref={meshRef}>
             {/* --- LEGO STYLE WHALE --- */}
