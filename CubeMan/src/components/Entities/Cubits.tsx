@@ -617,8 +617,6 @@ export const Cubits: React.FC<CubitsProps> = ({ entity }) => {
 
     return (
         <group ref={meshRef} scale={[SCALE, SCALE, SCALE]}>
-            {/* Pivot Debug: Show where (0,0,0) is */}
-            <axesHelper args={[1]} />
             {/* Voxel Centering Group (Shift up so feet are at 0) */}
             <group position={[0, 0.45, 0]}>
 
