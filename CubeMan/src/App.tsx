@@ -218,14 +218,14 @@ function Scene() {
       console.log("Spawning Whales")
       let count = 0
       let attempts = 0
-      while (count < 3 && attempts < 100) {
+      while (count < 5 && attempts < 200) {
         attempts++
         const vec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize()
         if (!isLand(vec.x, vec.y, vec.z)) {
           const h = getTerrainHeight(vec.x, vec.y, vec.z)
-          // Deep water check (heuristic)
-          if (h < 23.0) {
-            const depth = 24.0 // Specific depth
+          // Relaxed deep water check: just ensure it's not super shallow beach
+          if (h < 25.0) {
+            const depth = 25.2 // Surface spawn
             store.addWhale(vec.multiplyScalar(depth).toArray())
             count++
           }
