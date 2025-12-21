@@ -12,8 +12,8 @@ export const SmoothPlanet: React.FC<SmoothPlanetProps> = ({ radius = 26 }) => {
 
     // Generate Terrain Geometry
     const landGeometry = useMemo(() => {
-        // High count for detail
-        const geo = new THREE.SphereGeometry(radius, 128, 128)
+        // High count for detail (Increased from 128 to 256 for smoother coastlines)
+        const geo = new THREE.SphereGeometry(radius, 256, 256)
 
         const posAttribute = geo.attributes.position
 
@@ -121,7 +121,7 @@ export const SmoothPlanet: React.FC<SmoothPlanetProps> = ({ radius = 26 }) => {
         <group name="planet">
             {/* WATER SPHERE */}
             <mesh receiveShadow castShadow={false}>
-                <sphereGeometry args={[WATER_LEVEL, 64, 64]} />
+                <sphereGeometry args={[WATER_LEVEL, 128, 128]} />
                 <meshPhongMaterial
                     color="#0066cc"
                     transparent
