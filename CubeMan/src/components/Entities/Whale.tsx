@@ -83,95 +83,99 @@ export const Whale: React.FC<WhaleProps> = ({ data }) => {
 
     return (
         <group ref={meshRef}>
-            {/* --- LEGO STYLE WHALE --- */}
+            {/* Rotate 180 deg to face correct forward direction and Scale up */}
+            <group rotation={[0, Math.PI, 0]} scale={[2, 2, 2]}>
+                {/* --- LEGO STYLE WHALE --- */}
 
-            {/* MAIN BODY */}
-            {/* Top Blue Layer (Back) */}
-            <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
-                <boxGeometry args={[1.2, 0.4, 1.8]} />
-                <meshStandardMaterial color="#3a86ff" />
-            </mesh>
-            {/* Top Blue Layer (Front Slope) */}
-            <mesh position={[0, 0.4, 1.1]} castShadow receiveShadow>
-                <boxGeometry args={[1.2, 0.4, 0.4]} />
-                <meshStandardMaterial color="#3a86ff" />
-            </mesh>
+                {/* MAIN BODY */}
+                {/* Top Blue Layer (Back) */}
+                <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
+                    <boxGeometry args={[1.2, 0.4, 1.8]} />
+                    <meshStandardMaterial color="#3a86ff" />
+                </mesh>
+                {/* Top Blue Layer (Front Slope) */}
+                <mesh position={[0, 0.4, 1.1]} castShadow receiveShadow>
+                    <boxGeometry args={[1.2, 0.4, 0.4]} />
+                    <meshStandardMaterial color="#3a86ff" />
+                </mesh>
 
-            {/* Mid Blue Layer (Upper Body) */}
-            <mesh position={[0, 0, 0.2]} castShadow receiveShadow>
-                <boxGeometry args={[1.4, 0.4, 2.4]} />
-                <meshStandardMaterial color="#3a86ff" />
-            </mesh>
+                {/* Mid Blue Layer (Upper Body) */}
+                <mesh position={[0, 0, 0.2]} castShadow receiveShadow>
+                    <boxGeometry args={[1.4, 0.4, 2.4]} />
+                    <meshStandardMaterial color="#3a86ff" />
+                </mesh>
 
-            {/* LOWER BODY (White/Cream Belly) */}
-            <mesh position={[0, -0.4, 0.3]} castShadow receiveShadow>
-                <boxGeometry args={[1.4, 0.4, 2.0]} />
-                <meshStandardMaterial color="#f0f0f0" />
-            </mesh>
-            <mesh position={[0, -0.8, 0.3]} castShadow receiveShadow>
-                <boxGeometry args={[1.0, 0.4, 1.2]} />
-                <meshStandardMaterial color="#f0f0f0" />
-            </mesh>
+                {/* LOWER BODY (White/Cream Belly) */}
+                <mesh position={[0, -0.4, 0.3]} castShadow receiveShadow>
+                    <boxGeometry args={[1.4, 0.4, 2.0]} />
+                    <meshStandardMaterial color="#f0f0f0" />
+                </mesh>
+                <mesh position={[0, -0.8, 0.3]} castShadow receiveShadow>
+                    <boxGeometry args={[1.0, 0.4, 1.2]} />
+                    <meshStandardMaterial color="#f0f0f0" />
+                </mesh>
 
-            {/* TAIL SECTION */}
-            {/* Connects to body */}
-            <mesh position={[0, -0.1, -1.2]} castShadow receiveShadow>
-                <boxGeometry args={[0.8, 0.6, 0.6]} />
-                <meshStandardMaterial color="#3a86ff" />
-            </mesh>
-            {/* Tail Fluke Stem */}
-            <mesh position={[0, 0.1, -1.6]} castShadow receiveShadow>
-                <boxGeometry args={[0.4, 0.4, 0.4]} />
-                <meshStandardMaterial color="#3a86ff" />
-            </mesh>
-            {/* Tail Fluke (Horizontal Fins at back) */}
-            <mesh position={[0, 0.3, -1.9]} castShadow receiveShadow>
-                <boxGeometry args={[1.2, 0.2, 0.4]} />
-                <meshStandardMaterial color="#3a86ff" />
-            </mesh>
+                {/* TAIL SECTION */}
+                {/* Connects to body */}
+                <mesh position={[0, -0.1, -1.2]} castShadow receiveShadow>
+                    <boxGeometry args={[0.8, 0.6, 0.6]} />
+                    <meshStandardMaterial color="#3a86ff" />
+                </mesh>
+                {/* Tail Fluke Stem */}
+                <mesh position={[0, 0.1, -1.6]} castShadow receiveShadow>
+                    <boxGeometry args={[0.4, 0.4, 0.4]} />
+                    <meshStandardMaterial color="#3a86ff" />
+                </mesh>
+                {/* Tail Fluke (Horizontal Fins at back) */}
+                <mesh position={[0, 0.3, -1.9]} castShadow receiveShadow>
+                    <boxGeometry args={[1.2, 0.2, 0.4]} />
+                    <meshStandardMaterial color="#3a86ff" />
+                </mesh>
 
-            {/* SIDE FINS */}
-            {/* Left Fin */}
-            <mesh position={[0.8, -0.4, 0.6]} rotation={[0, 0, 0.2]} castShadow receiveShadow>
-                <boxGeometry args={[0.6, 0.2, 0.4]} />
-                <meshStandardMaterial color="#3a86ff" />
-            </mesh>
-            {/* Right Fin */}
-            <mesh position={[-0.8, -0.4, 0.6]} rotation={[0, 0, -0.2]} castShadow receiveShadow>
-                <boxGeometry args={[0.6, 0.2, 0.4]} />
-                <meshStandardMaterial color="#3a86ff" />
-            </mesh>
+                {/* SIDE FINS */}
+                {/* Left Fin */}
+                <mesh position={[0.8, -0.4, 0.6]} rotation={[0, 0, 0.2]} castShadow receiveShadow>
+                    <boxGeometry args={[0.6, 0.2, 0.4]} />
+                    <meshStandardMaterial color="#3a86ff" />
+                </mesh>
+                {/* Right Fin */}
+                <mesh position={[-0.8, -0.4, 0.6]} rotation={[0, 0, -0.2]} castShadow receiveShadow>
+                    <boxGeometry args={[0.6, 0.2, 0.4]} />
+                    <meshStandardMaterial color="#3a86ff" />
+                </mesh>
 
-            {/* EYES */}
-            {/* White Plate */}
-            <mesh position={[0.71, -0.1, 1.0]} rotation={[0, 0, 0]}>
-                <cylinderGeometry args={[0.15, 0.15, 0.05, 16]} />
-                <meshStandardMaterial color="white" />
-            </mesh>
-            <mesh position={[-0.71, -0.1, 1.0]} rotation={[0, 0, 0]}>
-                <cylinderGeometry args={[0.15, 0.15, 0.05, 16]} />
-                <meshStandardMaterial color="white" />
-            </mesh>
-            {/* Pupil (Closed eye dash or dot) */}
-            <mesh position={[0.74, -0.1, 1.0]} rotation={[0, 0, Math.PI / 2]}>
-                <boxGeometry args={[0.02, 0.15, 0.02]} />
-                <meshStandardMaterial color="black" />
-            </mesh>
-            <mesh position={[-0.74, -0.1, 1.0]} rotation={[0, 0, Math.PI / 2]}>
-                <boxGeometry args={[0.02, 0.15, 0.02]} />
-                <meshStandardMaterial color="black" />
-            </mesh>
+                {/* EYES */}
+                {/* White Plate */}
+                <mesh position={[0.71, -0.1, 1.0]} rotation={[0, 0, 0]}>
+                    <cylinderGeometry args={[0.15, 0.15, 0.05, 16]} />
+                    <meshStandardMaterial color="white" />
+                </mesh>
+                <mesh position={[-0.71, -0.1, 1.0]} rotation={[0, 0, 0]}>
+                    <cylinderGeometry args={[0.15, 0.15, 0.05, 16]} />
+                    <meshStandardMaterial color="white" />
+                </mesh>
+                {/* Pupil (Closed eye dash or dot) */}
+                <mesh position={[0.74, -0.1, 1.0]} rotation={[0, 0, Math.PI / 2]}>
+                    <boxGeometry args={[0.02, 0.15, 0.02]} />
+                    <meshStandardMaterial color="black" />
+                </mesh>
+                <mesh position={[-0.74, -0.1, 1.0]} rotation={[0, 0, Math.PI / 2]}>
+                    <boxGeometry args={[0.02, 0.15, 0.02]} />
+                    <meshStandardMaterial color="black" />
+                </mesh>
 
-            {/* SPOUT (Water Spray) */}
-            <mesh position={[0, 0.6, 0.5]}>
-                <cylinderGeometry args={[0.05, 0.05, 0.6, 8]} />
-                <meshStandardMaterial color="#a0c4ff" transparent opacity={0.6} />
-            </mesh>
-            <mesh position={[0, 0.9, 0.5]}>
-                <cylinderGeometry args={[0.15, 0.02, 0.2, 8]} />
-                <meshStandardMaterial color="#a0c4ff" transparent opacity={0.6} />
-            </mesh>
+                {/* SPOUT (Water Spray) */}
+                <mesh position={[0, 0.6, 0.5]}>
+                    <cylinderGeometry args={[0.05, 0.05, 0.6, 8]} />
+                    <meshStandardMaterial color="#a0c4ff" transparent opacity={0.6} />
+                </mesh>
+                <mesh position={[0, 0.9, 0.5]}>
+                    <cylinderGeometry args={[0.15, 0.02, 0.2, 8]} />
+                    <meshStandardMaterial color="#a0c4ff" transparent opacity={0.6} />
+                </mesh>
 
+            </group>
         </group>
     )
 }
+

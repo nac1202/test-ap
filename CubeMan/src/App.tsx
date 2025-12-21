@@ -218,7 +218,7 @@ function Scene() {
       console.log("Spawning Whales")
       let count = 0
       let attempts = 0
-      while (count < 5 && attempts < 200) {
+      while (count < 1 && attempts < 200) {
         attempts++
         const vec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize()
         if (!isLand(vec.x, vec.y, vec.z)) {
