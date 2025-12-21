@@ -37,8 +37,8 @@ export const Whale: React.FC<WhaleProps> = ({ data }) => {
         position.current.add(forward.multiplyScalar(speed * delta))
 
         // 2. Depth Logic (Bobbing)
-        // Keep somewhat deep but surface occasionally
-        const idealHeight = WATER_LEVEL - 1.5 + Math.sin(state.clock.elapsedTime * 0.2) * 1.0
+        // Keep right at surface or slightly submerged
+        const idealHeight = WATER_LEVEL - 0.2 + Math.sin(state.clock.elapsedTime * 0.5) * 0.3
 
         const currentLen = position.current.length()
         const surfaceH = getTerrainHeight(position.current.x, position.current.y, position.current.z)
