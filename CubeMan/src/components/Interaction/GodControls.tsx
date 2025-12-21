@@ -88,6 +88,20 @@ export const GodControls: React.FC = () => {
             const normal = pos.clone().normalize()
             const start = pos.clone().add(normal.multiplyScalar(20))
             setLightningStrike(start, pos)
+        } else if (currentPower === 'spawn_cubit') {
+            if (isLand(pos.x, pos.y, pos.z)) {
+                const h = getTerrainHeight(pos.x, pos.y, pos.z)
+                const spawnPos = pos.clone().normalize().multiplyScalar(h)
+                console.log("God Power: Spawn Cubit at", spawnPos)
+                useGameStore.getState().addEntity(spawnPos.toArray())
+            }
+        } else if (currentPower === 'spawn_sabertooth') {
+            if (isLand(pos.x, pos.y, pos.z)) {
+                const h = getTerrainHeight(pos.x, pos.y, pos.z)
+                const spawnPos = pos.clone().normalize().multiplyScalar(h)
+                console.log("God Power: Spawn SaberTooth at", spawnPos)
+                useGameStore.getState().addSaberTooth(spawnPos.toArray())
+            }
         } else if (currentPower === 'place_bonfire') {
             if (isLand(pos.x, pos.y, pos.z)) {
                 const h = getTerrainHeight(pos.x, pos.y, pos.z)

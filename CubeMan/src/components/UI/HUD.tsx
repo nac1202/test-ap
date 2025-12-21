@@ -5,7 +5,7 @@ import { useGameStore, type GodPower } from '../../store/gameStore'
 export const HUD: React.FC = () => {
     const { resources, godPower, setGodPower, entities } = useGameStore()
 
-    const powers: GodPower[] = ['none', 'place_bonfire', 'spawn_tree', 'spawn_stone', 'lightning']
+    const powers: GodPower[] = ['none', 'spawn_cubit', 'spawn_sabertooth', 'place_bonfire', 'spawn_tree', 'spawn_stone', 'lightning']
 
     return (
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none select-none" style={{ pointerEvents: 'none' }}>
@@ -22,24 +22,28 @@ export const HUD: React.FC = () => {
             </div>
 
             {/* God Powers Toolbar */}
-            <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 w-[95%] md:w-auto bg-white/90 p-2 rounded-2xl flex flex-wrap justify-center gap-2 pointer-events-auto shadow-2xl border border-white/50 backdrop-blur-md">
-                {powers.map((p) => (
-                    <button
-                        key={p}
-                        onClick={() => setGodPower(p)}
-                        className={`px-4 py-2 md:px-6 md:py-3 text-sm md:text-base rounded-xl font-bold transition-all transform hover:scale-105 active:scale-95 whitespace-nowrap ${godPower === p
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                    >
-                        {
-                            p === 'none' ? '✋ Hand' :
-                                p === 'place_bonfire' ? '🔥 Bonfire' :
-                                    p === 'spawn_tree' ? '🌲 Tree' :
-                                        p === 'spawn_stone' ? '🪨 Stone' : '⚡ Smite'
-                        }
-                    </button>
-                ))}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-[95%] md:w-auto md:max-w-none px-4 md:px-0 bg-transparent md:bg-white/90 p-0 md:p-2 rounded-2xl flex flex-wrap justify-center gap-2 pointer-events-auto md:shadow-2xl md:border md:border-white/50 md:backdrop-blur-md">
+                <div className="flex flex-wrap justify-center gap-2 bg-white/90 p-2 rounded-2xl shadow-xl backdrop-blur-md border border-white/50 w-full md:w-auto">
+                    {powers.map((p) => (
+                        <button
+                            key={p}
+                            onClick={() => setGodPower(p)}
+                            className={`flex-grow md:flex-grow-0 px-3 py-2 md:px-6 md:py-3 text-xs md:text-base rounded-xl font-bold transition-all transform hover:scale-105 active:scale-95 whitespace-nowrap ${godPower === p
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                        >
+                            {
+                                p === 'none' ? '✋ Hand' :
+                                    p === 'spawn_cubit' ? '👶 Cubit' :
+                                        p === 'spawn_sabertooth' ? '🐯 Tiger' :
+                                            p === 'place_bonfire' ? '🔥 Bonfire' :
+                                                p === 'spawn_tree' ? '🌲 Tree' :
+                                                    p === 'spawn_stone' ? '🪨 Stone' : '⚡ Smite'
+                            }
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     )

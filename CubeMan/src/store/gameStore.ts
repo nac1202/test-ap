@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 console.log("GAME STORE MODULE LOADED - " + Math.random())
 
 export type ResourceType = 'wood' | 'food' | 'stone'
-export type GodPower = 'none' | 'spawn_tree' | 'spawn_stone' | 'lightning' | 'place_bonfire'
+export type GodPower = 'none' | 'spawn_tree' | 'spawn_stone' | 'lightning' | 'place_bonfire' | 'spawn_cubit' | 'spawn_sabertooth'
 
 export type EntityState = 'IDLE' | 'MOVING' | 'GATHERING' | 'FLEEING' | 'WORSHIPPING' | 'DELIVERING' | 'DYING' | 'SITTING' | 'DANCING'
 
