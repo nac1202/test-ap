@@ -265,7 +265,7 @@ function Scene() {
 
       <BonfireProject />
 
-      <OrbitControls makeDefault minDistance={30} maxDistance={80} />
+      <OrbitControls makeDefault minDistance={30} maxDistance={120} />
       <GodControls />
     </>
   )
@@ -288,7 +288,7 @@ export default function App() {
     <div className="w-full h-screen bg-black">
       <Canvas
         shadows
-        camera={{ position: [0, 40, 40], fov: 45 }}
+        camera={{ position: [0, 80, 80], fov: 45 }}
         onPointerMissed={() => console.log("Missed")}
       >
         <Suspense fallback={null}>
