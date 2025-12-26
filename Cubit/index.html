@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>きゅびっと - 放置型箱庭ペット</title>
+    <!-- On-Device ML for Discovery Feature -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.sh/@google/generative-ai"
+        }
+      }
+    </script>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-bg: rgba(255, 255, 255, 0.1);
+            --text-color: #e0e0e0;
+            --primary-accent: #a29bfe;
+            --mood-color: #fdcb6e;
+            --energy-color: #55efc4;
+            --sleep-color: #6c5ce7;
+            --bond-color: #ff7675;
+            --exp-color: #fab1a0;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-color);
+        }
+
+        canvas {
+            display: block;
+            touch-action: none;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px;
+        }
+
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            gap: 8px;
+        }
+
+        .hud-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 12px 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            pointer-events: auto;
+        }
+
+        .bubble-panel {
+            min-width: 80px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-radius: 22px;
+            font-size: 1.2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #state-display {
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            width: 70px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .stat-indicator {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .progress-container {
+            flex-grow: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--primary-accent);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        #bottom-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            pointer-events: auto;
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        #ui-overlay.hidden #collection-btn,
+        #ui-overlay.hidden #discovery-btn,
+        #ui-overlay.hidden #bottom-bar {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+
+        #ui-overlay.hidden #collection-btn,
+        #ui-overlay.hidden #discovery-btn {
+            transform: translateY(-20px);
+        }
+
+        #ui-toggle-btn {
+            position: absolute;
+            bottom: 24px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 200;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        #ui-toggle-btn:hover {
+            opacity: 1;
+        }
+
+        #ui-toggle-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--primary-accent);
+        }
+
+        #sensor-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--primary-accent);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.4);
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 100;
+        }
+
+        #sensor-btn.hidden {
+            display: none;
+        }
+
+        #title-logo {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: 900;
+            font-style: italic;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            white-space: nowrap;
+            width: 100%;
+            text-align: center;
+            text-shadow: 0 0 10px var(--primary-accent), 0 0 20px var(--primary-accent);
+            z-index: 150;
+            pointer-events: none;
+            animation: floatingLogo 3s ease-in-out infinite;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+
+        #title-logo.hidden {
+            opacity: 0;
+            transform: translate(-50%, -100%) scale(0.8);
+            pointer-events: none;
+        }
+
+        @keyframes floatingLogo {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%);
+            }
+
+            50% {
+                transform: translate(-50%, -60%);
+            }
+        }
+
+        @media (max-width: 600px) {
+            #title-logo {
+                font-size: 2.5rem;
+                top: 30%;
+            }
+        }
+
+        #discovery-btn {
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #collection-btn {
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--primary-accent);
+        }
+
+        #collection-drawer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 85%;
+            max-width: 400px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 24px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: auto;
+        }
+
+        #collection-drawer.visible {
+            display: flex;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .drawer-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--energy-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--energy-color);
+            padding-bottom: 8px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .discovery-list {
+            width: 100%;
+            max-height: 350px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .discovery-entry {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .discovery-thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .discovery-info {
+            flex: 1;
+        }
+
+        .discovery-label {
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: var(--energy-color);
+            margin-bottom: 2px;
+        }
+
+        .discovery-desc {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.3;
+        }
+
+        #close-drawer {
+            margin-top: 20px;
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            border-radius: 20px;
+            padding: 8px 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body style="touch-action:none; user-select:none; -webkit-user-select:none;">
+    <canvas id="gameCanvas"></canvas>
+    <div id="title-logo">きゅびっと</div>
+
+    <div id="ui-overlay" class="hidden">
+        <div id="top-bar">
+            <div class="hud-panel bubble-panel">
+                <div id="state-display">よみこみちゅう...</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <div id="discovery-btn" class="hud-panel bubble-panel"
+                    style="display: none; background: var(--energy-color); color: #1a1a2e; font-weight: 800; width: 60px;">
+                    📷</div>
+                <div id="collection-btn" class="hud-panel bubble-panel">ずかん</div>
+            </div>
+        </div>
+
+        <input type="file" id="camera-input" accept="image/*" capture="camera" style="display: none;">
+        <button id="sensor-btn">ぼくとあそぶ</button>
+
+        <div id="ui-toggle-btn" style="display: none;">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+            </svg>
+        </div>
+
+        <div id="collection-drawer">
+            <div id="zukan-view" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+                <div style="display:flex; justify-content:center; align-items:center; width:100%; position:relative;">
+                    <div class="drawer-title" style="margin-bottom:0; flex:1;">ひみつのずかん</div>
+                    <div id="open-settings"
+                        style="cursor:pointer; font-size:1.2rem; opacity:0.6; position:absolute; right:0;">⚙️</div>
+                </div>
+                <div id="discovery-list" class="discovery-list" style="margin-top:20px;">
+                    <!-- Discovered items populated by JS -->
+                </div>
+                <button id="close-drawer">とじる</button>
+            </div>
+
+            <div id="settings-view" style="display:none; flex-direction:column; gap:16px; width:100%;">
+                <div class="drawer-title">せってい</div>
+                <div style="font-size:0.75rem; color:rgba(255,255,255,0.7); line-height:1.4;">
+                    Gemini APIキーを入力すると、植物や昆虫の名前を特定する「AIはっけん」が使えるようになります。<br>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                        style="color:var(--energy-color);">こちら</a>から、無料でキーを取得できます。
+                </div>
+                <input type="password" id="api-key-input" placeholder="Google AI API Key を入力"
+                    style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); color:#fff; padding:12px; border-radius:12px; width:100%; outline:none;">
+                <button id="save-key-btn"
+                    style="background:var(--primary-accent); border:none; color:#fff; padding:12px; border-radius:12px; cursor:pointer; font-weight:bold;">ほぞんする</button>
+                <button id="back-to-zukan"
+                    style="background:transparent; border:1px solid rgba(255,255,255,0.4); color:#fff; padding:10px; border-radius:12px; cursor:pointer;">もどる</button>
+            </div>
+        </div>
+
+        <div id="bottom-bar" class="hud-panel">
+            <div class="stat-row">
+                <div class="stat-label" style="color:#ff7675">なつき</div>
+                <div class="progress-container">
+                    <div id="bond-bar" class="progress-bar"></div>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label" style="color:#fab1a0">レベル</div>
+                <div class="progress-container">
+                    <div id="exp-bar" class="progress-bar"></div>
+                </div>
+            </div>
+            <div style="height:1px; background:rgba(255,255,255,0.1); margin:8px 0;"></div>
+            <div class="stat-row">
+                <div class="stat-label">きげん</div>
+                <div class="stat-indicator">わるい</div>
+                <div class="progress-container">
+                    <div id="mood-bar" class="progress-bar"></div>
+                </div>
+                <div class="stat-indicator">よい</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">げんき</div>
+                <div class="stat-indicator">わるい</div>
+                <div class="progress-container">
+                    <div id="energy-bar" class="progress-bar"></div>
+                </div>
+                <div class="stat-indicator">よい</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">すっきり</div>
+                <div class="stat-indicator">わるい</div>
+                <div class="progress-container">
+                    <div id="sleepiness-bar" class="progress-bar"></div>
+                </div>
+                <div class="stat-indicator">よい</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /** Cubit MVP - Core Logic */
+        const DECAY_RATES = { energy: 0.02, sleepiness: 0.05, mood: 0.01, bond: 0.005 };
+        const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 5000];
+        const RECOVERY_RATES = { energy_sleep: 1.0, mood_sleep: 0.2, sleepiness_sleep: 2.5 };
+        const THRESHOLDS = { shake: 15, longPress: 500, tapCombo: 300, tickle: 100 };
+        const PHYSICS = { gravityScale: 0.5, friction: 0.98, bounce: 0.8, size: 120 };
+
+        const FACE_CONFIGS = {
+            idle: { eyeV: 0.07, eyeH: 0.07, eyeArch: 0, eyeSlant: 0, mouthY: 0.15, mouthW: 0.1, mouthH: 0.05, eyeAlpha: 1, specialAlpha: 0, specialType: '' },
+            happy: { eyeV: 0.1, eyeH: 0.1, eyeArch: 1, eyeSlant: 0, mouthY: 0.18, mouthW: 0.15, mouthH: 0.1, eyeAlpha: 1, specialAlpha: 0, specialType: '' },
+            angry: { eyeV: 0.07, eyeH: 0.07, eyeArch: 0, eyeSlant: 0.3, mouthY: 0.12, mouthW: 0.1, mouthH: 0.02, eyeAlpha: 1, specialAlpha: 0, specialType: '' },
+            astonished: { eyeV: 0.12, eyeH: 0.12, eyeArch: 0, eyeSlant: 0, mouthY: 0.18, mouthW: 0.08, mouthH: 0.12, eyeAlpha: 1, specialAlpha: 0, specialType: '' },
+            sleep: { eyeV: 0.01, eyeH: 0.1, eyeArch: 0, eyeSlant: 0, mouthY: 0.15, mouthW: 0.05, mouthH: 0.02, eyeAlpha: 1, specialAlpha: 1, specialType: '' },
+            laugh: { eyeV: 0.08, eyeH: 0.08, eyeArch: 1, eyeSlant: 0, mouthY: 0.2, mouthW: 0.2, mouthH: 0.1, eyeAlpha: 1, specialAlpha: 0, specialType: '' },
+            dizzy: { eyeV: 0.05, eyeH: 0.05, eyeArch: 0, eyeSlant: 0, mouthY: 0.15, mouthW: 0.1, mouthH: 0.05, eyeAlpha: 0, specialAlpha: 1, specialType: 'spiral' },
+            impact: { eyeV: 0.05, eyeH: 0.05, eyeArch: 0, eyeSlant: 0, mouthY: 0.15, mouthW: 0.1, mouthH: 0.08, eyeAlpha: 0, specialAlpha: 1, specialType: 'cross' },
+            grabbed: { eyeV: 0.05, eyeH: 0.05, eyeArch: 0, eyeSlant: 0, mouthY: 0.15, mouthW: 0.1, mouthH: 0.08, eyeAlpha: 0, specialAlpha: 1, specialType: 'cross' }
+        };
+
+        let canvas, ctx, lastTime = 0, sensorActive = false, pointers = new Map(), sensorData = { tiltX: 0, tiltY: 0, accX: 0, accY: -9.8 };
+        let gameData = {
+            stats: { mood: 80, energy: 100, sleepiness: 0, bond: 20, level: 1, exp: 0, streak: 0 },
+            cubit: { x: window.innerWidth / 2, y: window.innerHeight / 2, vx: 0, vy: 0, state: 'idle', timer: 0, tickleScore: 0, dailyColor: '#00d2ff', face: { ...FACE_CONFIGS.idle }, anim: { shakeX: 0, shakeY: 0, rot: 0, scaleX: 1, scaleY: 1 } },
+            particles: [], foods: [], collection: []
+        };
+
+        const SoundEngine = {
+            ctx: null,
+            init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+            play(type, v = 0) {
+                if (!this.ctx) return; this.resume(); const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                switch (type) {
+                    case 'impact':
+                        const speed = v || 0; const intensity = Math.min(1.0, speed / 80);
+                        osc.type = speed > 60 ? 'triangle' : 'sine';
+                        osc.frequency.setValueAtTime(300 + intensity * 600, now);
+                        osc.frequency.exponentialRampToValueAtTime(100 + intensity * 100, now + 0.1);
+                        gain.gain.setValueAtTime(0.4 + intensity * 0.4, now);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                        osc.start(now); osc.stop(now + 0.1); break;
+                    case 'happy':
+                        osc.type = 'sine'; osc.frequency.setValueAtTime(440, now);
+                        osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+                        gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                        osc.start(now); osc.stop(now + 0.2); break;
+                    case 'astonished':
+                        osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now);
+                        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                        osc.start(now); osc.stop(now + 0.1); break;
+                    case 'grabbed':
+                        osc.type = 'sine'; osc.frequency.setValueAtTime(600, now);
+                        osc.frequency.exponentialRampToValueAtTime(900, now + 0.15);
+                        gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                        osc.start(now); osc.stop(now + 0.15); break;
+                    case 'dizzy':
+                        osc.type = 'sine'; osc.frequency.setValueAtTime(800, now);
+                        osc.frequency.linearRampToValueAtTime(400, now + 0.5);
+                        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                        osc.start(now); osc.stop(now + 0.5); break;
+                    case 'laugh':
+                        for (let i = 0; i < 4; i++) {
+                            const t = now + i * 0.1; const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                            o.connect(g); g.connect(this.ctx.destination); o.type = 'sine';
+                            o.frequency.setValueAtTime(800 + Math.random() * 400, t);
+                            o.frequency.exponentialRampToValueAtTime(1200, t + 0.05);
+                            g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+                            o.start(t); o.stop(t + 0.05);
+                        } break;
+                }
+            }
+        };
+
+        const DiscoveryDB = {
+            dbName: 'CubitDiscoveryDB', version: 1, db: null,
+            init() {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open(this.dbName, this.version);
+                    req.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains('items')) e.target.result.createObjectStore('items', { keyPath: 'id', autoIncrement: true }); };
+                    req.onsuccess = e => { this.db = e.target.result; resolve(); }; req.onerror = e => reject(e);
+                });
+            },
+            async add(blob, label, description) {
+                if (!this.db) await this.init();
+                return new Promise((resolve, reject) => {
+                    const trans = this.db.transaction(['items'], 'readwrite');
+                    const store = trans.objectStore('items');
+                    const req = store.add({ blob, label, description, timestamp: Date.now() });
+                    req.onsuccess = () => resolve(); req.onerror = e => reject(e);
+                });
+            },
+            async getAll() {
+                if (!this.db) await this.init();
+                return new Promise((resolve, reject) => {
+                    const trans = this.db.transaction(['items'], 'readonly');
+                    const req = trans.objectStore('items').getAll();
+                    req.onsuccess = () => resolve(req.result); req.onerror = e => reject(e);
+                });
+            }
+        };
+
+        let classifier = null, detector = null;
+        async function loadModel() {
+            if (!classifier) { console.log("Loading MobileNet..."); classifier = await mobilenet.load(); }
+            if (!detector) { console.log("Loading COCO-SSD..."); detector = await cocoSsd.load(); }
+            console.log("Models Loaded.");
+        }
+        async function identifyObject(img, file) {
+            await loadModel();
+
+            // 0. Gemini APIが有効なら、超高精度認識を試みる
+            const apiKey = localStorage.getItem('cubit_gemini_api_key');
+            if (apiKey && file) {
+                console.log("Using Gemini AI for discovery...");
+                const result = await identifyWithGemini(apiKey, file);
+                if (result) return result;
+            }
+
+            // 1. COCO-SSDで汎用的な検知を試みる
+            const detections = await detector.detect(img);
+            if (detections.length > 0 && detections[0].score > 0.6) {
+                console.log("Detection (COCO-SSD):", detections[0]);
+                return { className: detections[0].class, score: detections[0].score, source: 'coco-ssd' };
+            }
+            // 2. 検知できない場合はMobileNetで詳細分類を試みる
+            const predictions = await classifier.classify(img);
+            if (predictions.length > 0 && predictions[0].probability > 0.6) {
+                console.log("Prediction (MobileNet):", predictions[0]);
+                return { className: predictions[0].className, score: predictions[0].probability, source: 'mobilenet' };
+            }
+            // 3. どちらも自信がない場合
+            return { className: "Unknown", score: 0, source: 'none' };
+        }
+
+        async function identifyWithGemini(apiKey, file) {
+            try {
+                const { GoogleGenerativeAI } = await import("@google/generative-ai");
+                const genAI = new GoogleGenerativeAI(apiKey);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const reader = new FileReader();
+                const base64Promise = new Promise(resolve => {
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.readAsDataURL(file);
+                });
+                const base64Data = await base64Promise;
+                const prompt = "あなたは宇宙ペットのきゅびっとです。写真に写っているものを教えてください。特に植物や昆虫は正確な種類名を教えてください。ただし、もし何かわからなかったり、不鮮明だったり、写っていない可能性がある場合は、無理に推測せず正直に『なんだか よくわからないや…』と答えて、お子さんにヒントを求めてください。5歳児に分かる言葉で、80文字以内の日本語で。";
+                const result = await model.generateContent([
+                    prompt,
+                    { inlineData: { data: base64Data, mimeType: file.type } }
+                ]);
+                const text = await result.response.text();
+                const isUnknown = text.includes('わからない') || text.includes('判別できません');
+                return { className: isUnknown ? "Unknown" : "AIはっけん", description: text, source: 'gemini' };
+            } catch (err) {
+                console.error("Gemini Error:", err);
+                return null;
+            }
+
+
+
+            canvas = document.getElementById('gameCanvas'); ctx = canvas.getContext('2d');
+            window.addEventListener('resize', resize); resize();
+            const saved = localStorage.getItem('cubit_save');
+            if (saved) {
+                const data = JSON.parse(saved); Object.assign(gameData.stats, data.stats);
+                if (data.collection) gameData.collection = data.collection;
+                gameData.lastLogin = data.lastLogin || Date.now();
+            }
+            checkDaily(); DiscoveryDB.init(); setupInputs(); setupDiscovery();
+
+            // Settings UI
+            const zukanView = document.getElementById('zukan-view');
+            const settingsView = document.getElementById('settings-view');
+            document.getElementById('open-settings').onclick = () => {
+                zukanView.style.display = 'none';
+                settingsView.style.display = 'flex';
+                document.getElementById('api-key-input').value = localStorage.getItem('cubit_gemini_api_key') || '';
+            };
+            document.getElementById('back-to-zukan').onclick = () => {
+                settingsView.style.display = 'none';
+                zukanView.style.display = 'flex';
+            };
+            document.getElementById('save-key-btn').onclick = () => {
+                const key = document.getElementById('api-key-input').value.trim();
+                localStorage.setItem('cubit_gemini_api_key', key);
+                settingsView.style.display = 'none';
+                zukanView.style.display = 'flex';
+                showBubble(key ? "AIキーを ほぞんしたよ！" : "AIキーを けしたよ。", 2000);
+            };
+
+            document.getElementById('sensor-btn').onclick = async function () {
+                SoundEngine.init(); loadModel();
+                document.getElementById('ui-overlay').classList.remove('hidden');
+                document.getElementById('title-logo').classList.add('hidden');
+                if (screen.orientation && screen.orientation.lock) try { await screen.orientation.lock('portrait').catch(() => { }); } catch (e) { }
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    try { if (await DeviceOrientationEvent.requestPermission() === 'granted') startSensors(); } catch (e) { }
+                } else startSensors();
+                this.classList.add('hidden');
+            };
+            document.getElementById('ui-toggle-btn').onclick = () => { SoundEngine.resume(); document.getElementById('ui-overlay').classList.toggle('hidden'); };
+            const drawer = document.getElementById('collection-drawer');
+            document.getElementById('collection-btn').onclick = () => { SoundEngine.resume(); drawer.style.display = 'flex'; setTimeout(() => drawer.classList.add('visible'), 10); updateDiscoveryUI(); };
+            document.getElementById('close-drawer').onclick = () => { drawer.classList.remove('visible'); setTimeout(() => drawer.style.display = 'none', 300); };
+            lastTime = performance.now(); requestAnimationFrame(update);
+        }
+
+        async function updateDiscoveryUI() {
+            const list = document.getElementById('discovery-list'); if (!list) return;
+            const items = await DiscoveryDB.getAll();
+            if (items.length === 0) { list.innerHTML = `<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.5); font-size:0.8rem;">まだ はっけんが ありません。<br>カメラで なにかを とってみてね！</div>`; return; }
+            list.innerHTML = items.reverse().map(item => `
+                <div class="discovery-entry">
+                    <img src="${URL.createObjectURL(item.blob)}" class="discovery-thumb" onload="URL.revokeObjectURL(this.src)">
+                    <div class="discovery-info">
+                        <div class="discovery-label">${item.label}</div>
+                        <div class="discovery-desc">${item.description}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setupDiscovery() {
+            const camInput = document.getElementById('camera-input');
+            document.getElementById('discovery-btn').onclick = () => camInput.click();
+            camInput.onchange = async e => {
+                const file = e.target.files[0]; if (!file) return;
+                console.log("Captured:", file.name);
+                triggerState('astonished', 3000); showBubble("なにか みつけたの！？ ちょっと まってね...", 3000);
+                const img = new Image(); img.src = URL.createObjectURL(file);
+                img.onload = async () => {
+                    try {
+                        const res = await identifyObject(img, file);
+                        if (!res) throw new Error("No Result");
+
+                        const explanation = res.source === 'gemini' ? res.description : getChildFriendlyExplanation(res.className);
+                        const label = res.className === 'Unknown' ? "なんだろう？" : (res.source === 'gemini' ? "AIはっけん" : res.className);
+                        const isUnknown = res.className === 'Unknown';
+
+                        await DiscoveryDB.add(file, label, explanation);
+                        if (isUnknown) {
+                            triggerState('idle', 5000); showBubble(explanation, 8000); SoundEngine.play('collision');
+                        } else {
+                            triggerState('happy', 8000); showBubble(explanation, 8000); SoundEngine.play('happy'); addExp(50);
+                        }
+                        updateDiscoveryUI();
+                    } catch (err) { console.error(err); showBubble("ごめんね、うまく わからなかったみたい...", 3000); }
+                    finally { URL.revokeObjectURL(img.src); }
+                };
+            };
+        }
+
+        function getChildFriendlyExplanation(label) {
+            const dictionary = {
+                // --- COCO-SSD 80 Category Mapping ---
+                'person': 'あ！だれか いるね。きゅびっとと おともだちに なれるかな？',
+                'bicycle': 'じてんしゃだ！これに のって いろんな ところへ いけるね。',
+                'car': 'くるまだ！ブーンって はしるの、かっこいいよね。',
+                'motorcycle': 'ばいくかな？とっても はやそう！',
+                'airplane': 'ひこうきだ！おそらの おさんぽ、たのしそうだね。',
+                'bus': 'ばすだね。みんなで のると たのしいよね。',
+                'train': 'でんしゃだ！ガタンゴトンって、どこまで いくのかな？',
+                'truck': 'とらっくだ！おおきな おにもつを はこんでるのかな？',
+                'boat': 'おふねだ！うみの うえを スイスイ すすむんだね。',
+                'traffic light': 'しんごうきだね。あか・きいろ・あお、ちゃんと みてね。',
+                'bird': 'とりさんだ！パタパタ おそらを とんでるね。',
+                'cat': 'ねこちゃんだ！そーっと みまもってあげようね。',
+                'dog': 'わんわんだ！とっても なかよしに なれそうだね。',
+                'horse': 'おうまさんだ！パカパカ はしるの、はやいんだよ。',
+                'sheep': 'ひつじさんかな？もこもこしていて あたたかそう。',
+                'cow': 'うしさんだ！モーモーって なくんだよ。',
+                'elephant': 'ぞうさんだ！おはなが ながくて、とっても おおきいね。',
+                'bear': 'くまさんかな？がぉーっ！',
+                'zebra': 'しまうまだ！しましま もようが オシャレだね。',
+                'giraffe': 'きりんさんだ！くびが とっても ながいね。',
+                'backpack': 'りゅっくだ！なかに なにを いれて おでかけする？',
+                'umbrella': 'かさだね。あめが ふっても これが あれば だいじょうぶ！',
+                'handbag': 'かばんだね。おでかけに つかうのかな？',
+                'tie': 'ねくたいだ！おとなの おしごと、かっこいいね。',
+                'suitcase': 'こうり（すーつけーす）だね。りょこうに いくのかな？',
+                'frisbee': 'ふりすびーだ！いっしょに とばして あそびたいね。',
+                'skis': 'すきーだね！ゆきの うえを すべるの、たのしいよ。',
+                'snowboard': 'すのぼーだ！ゆきあそび、いいなぁ。',
+                'sports ball': 'ぼーるだ！えいっ！って なげて あそぼうよ。',
+                'kite': 'たこだ！おそら たかくまで あがると いいね。',
+                'baseball bat': 'バットだ！ホームラン、うてるかな？',
+                'baseball glove': 'ぐろーぶだね。ぼーるを キャッチしてね。',
+                'skateboard': 'すけぼーだ！かっこよく のりこなせるかな？',
+                'surfboard': 'さーふぼーどだ！なみに のるの、たのしそう。',
+                'tennis racket': 'らけっとだね。テニス、いっしょに やる？',
+                'bottle': 'すいとうかな？のどが かわいたら のもうね。',
+                'wine glass': 'きれいな グラスだね。われてしまわないように きをつけて。',
+                'cup': 'コップだね。なにか おいしいものが はいってるのかな？',
+                'fork': 'ふぉーくだ。おいしい ごはんを たべようね。',
+                'knife': 'ないふだね。きを つけて つかってね。',
+                'spoon': 'すぷーんだ！ぱくぱく、いっぱいたべてね。',
+                'bowl': 'おさら（ぼうる）だね。なにが はいっているのかな？',
+                'banana': 'ばななだ！あまくて おいしそうだね。',
+                'apple': 'りんごだ！まっ赤で ピカピカしてるね。',
+                'sandwich': 'さんどいっちだ！ピクニックに いきたくなっちゃうね。',
+                'orange': 'おれんじだ！ビタミン いっぱいだね。',
+                'broccoli': 'ぶろっこりーだ！もりもり たべて 元気に なろう。',
+                'carrot': 'にんじんだね。きゅうしょくにも でてくるかな？',
+                'hot dog': 'ほっとどっぐだ！おいしそう、おなかがすいてきちゃった。',
+                'pizza': 'ぴざだ！みんなで たべると もっと おいしいね。',
+                'donut': 'どーなつだ！まんなかに あなが あいているね。',
+                'cake': 'けーきだ！おたんじょうびかな？おめでとう！',
+                'chair': 'いすだね。座って ちょっと ひとやすみ しよう。',
+                'couch': 'そふぁーだ！のんびり ゴロゴロ しちゃおう。',
+                'potted plant': 'おへやの しょくぶつだね。みずを あげると よろこぶよ。',
+                'bed': 'おふとんだ！。ぐっすり ねむって、いいゆめ みてね。',
+                'dining table': 'てーぶるだね。みんなで ごはんを たべる ところだよ。',
+                'toilet': 'おてあらいだね。ひとりで ちゃんと いけるかな？',
+                'tv': 'てれびだ！なにを うつしているのかな？',
+                'laptop': 'ぱそこんだね！おとなが おしごと するのに つかうんだよ。',
+                'mouse': 'ぱそこんの まうすだね！ Cubitも それで あそべるかな？',
+                'remote': 'りもこんだ！どれを おすと テレビが つくのかな？',
+                'keyboard': 'きーぼーどだ！カタカタ おとがして おもしろいね。',
+                'cell phone': 'けいたいでんわだ！だれと おはなし してるのかな？',
+                'microwave': 'ちん！って するやつだね。ごはんが あたたかくなるよ。',
+                'oven': 'おーぶんだね。おいしい クッキーが やけるかな？',
+                'toaster': 'とーすたーだ！パンが こんがり やけるね。',
+                'sink': 'おてあらい（しんく）かな？てを きれいに あらおうね。',
+                'refrigerator': 'れいぞうこだ！なかに つめたい 飲みものが あるかな？',
+                'book': 'ほんだ！おもしろい おはなしが かいてあるかな？',
+                'clock': 'とけいだね。チクタク、いま なんじかな？',
+                'vase': 'かびんだ！きれいな おはなを かざろうね。',
+                'scissors': 'はさみだね。おえかきや こうさくに つかうのかな？',
+                'teddy bear': 'くまの ぬいぐるみだ！ぎゅっ、て したくなるね。',
+                'hair drier': 'どらいやーだ！かみのけを サラサラに しようね。',
+                'toothbrush': 'はぶらしだ！はを ピカピカに みがこうね。',
+
+                // --- MobileNet Fallbacks / Legacy ---
+                'daisy': 'デイジーっていう、しろくて かわいい おはなだね！',
+                'tabby': 'ねこちゃんだ！そーっと みまもってあげようね。',
+                'siamese cat': 'ねこちゃんだ！とっても すらっとしていて かっこいいよね。',
+                'monitor': 'がめんだ！なにが うつっているのかな？',
+                'pen': 'ペンだね。これで おえかき したら たのしそう！',
+                'packet': 'なにかの ふくろかな？なにが はいっているんだろう？'
+            };
+            const l = label.toLowerCase();
+            for (let key in dictionary) if (l.includes(key)) return dictionary[key];
+
+            if (l.includes('dog') || l.includes('hound') || l.includes('terrier')) return 'わんわんだ！いっしょに おさんぽ したいね。';
+            if (l.includes('cat')) return 'ねこちゃんだ！とっても かわいいね。';
+            if (l.includes('flower') || l.includes('bloom') || l.includes('plant') || l.includes('tree')) return 'きれいな しょくぶつだね！ Cubitも おはな だいすき。';
+            if (l.includes('screen') || l.includes('computer')) return 'ぱそこんだね！おとなが おしごと するのに つかうんだよ。';
+            if (l.includes('watch') || l.includes('clock')) return 'とけいだ！いま、なんじかな？';
+
+            if (l.includes('unknown')) return 'うーん、これは なにかなぁ…？ ちょっと むずかしいかも。こんど ヒントを おしえてね！';
+
+            return `これは「${label}」っていうんだって！はじめて みたよ、すごいね！`;
+        }
+
+        function showBubble(text, duration = 3000) {
+            const disp = document.getElementById('state-display'); const old = disp.innerHTML;
+            disp.innerHTML = `<span style="font-size:0.85rem; line-height:1.2; display:block;">${text}</span>`;
+            setTimeout(() => { disp.innerHTML = old; }, duration);
+        }
+
+        /** Utility */
+        function lerp(a, b, t) { return a + (b - a) * t; }
+        function resize() { canvas.width = window.innerWidth * window.devicePixelRatio; canvas.height = window.innerHeight * window.devicePixelRatio; ctx.scale(window.devicePixelRatio, window.devicePixelRatio); clampCubitPosition(); }
+        let lastImpactTime = 0;
+        function clampCubitPosition() {
+            const h = PHYSICS.size / 2;
+            const c = gameData.cubit;
+            const w = window.innerWidth, H = window.innerHeight;
+            const now = Date.now();
+
+            if (c.x < h) {
+                if (c.vx < 0 && Math.abs(c.vx) > 10 && now - lastImpactTime > 250) { SoundEngine.play('impact', Math.abs(c.vx)); lastImpactTime = now; }
+                c.x = h; c.vx *= -0.95;
+            }
+            if (c.x > w - h) {
+                if (c.vx > 0 && Math.abs(c.vx) > 10 && now - lastImpactTime > 250) { SoundEngine.play('impact', Math.abs(c.vx)); lastImpactTime = now; }
+                c.x = w - h; c.vx *= -0.95;
+            }
+            if (c.y < h) {
+                if (c.vy < 0 && Math.abs(c.vy) > 10 && now - lastImpactTime > 250) { SoundEngine.play('impact', Math.abs(c.vy)); lastImpactTime = now; }
+                c.y = h; c.vy *= -0.95;
+            }
+            if (c.y > H - h) {
+                if (c.vy > 0 && Math.abs(c.vy) > 10 && now - lastImpactTime > 250) { SoundEngine.play('impact', Math.abs(c.vy)); lastImpactTime = now; }
+                c.y = H - h; c.vy *= -0.95;
+            }
+        }
+        function save() { localStorage.setItem('cubit_save', JSON.stringify({ stats: gameData.stats, collection: gameData.collection, lastLogin: gameData.lastLogin || Date.now() })); }
+        function addExp(amount) { gameData.stats.exp += amount; while (gameData.stats.level < LEVEL_THRESHOLDS.length - 1 && gameData.stats.exp >= LEVEL_THRESHOLDS[gameData.stats.level]) { gameData.stats.level++; triggerState('happy', 2000); SoundEngine.play('happy'); for (let i = 0; i < 20; i++) createSparkle(gameData.cubit.x, gameData.cubit.y); } save(); }
+        function triggerState(state, duration = 0) { if (gameData.cubit.state === 'sleep' && state !== 'idle') return; gameData.cubit.state = state; gameData.cubit.timer = duration; save(); }
+        function checkDaily() { const now = new Date(), last = new Date(gameData.lastLogin || 0); if (now.toDateString() !== last.toDateString()) { gameData.cubit.dailyColor = ['#00d2ff', '#ffd700', '#ff007f', '#a29bfe', '#55efc4', '#fab1a0'][Math.floor(Math.random() * 6)]; if ((now.getTime() - last.getTime()) / 86400000 < 2) gameData.stats.streak++; else gameData.stats.streak = 1; addExp(50 * gameData.stats.streak); gameData.lastLogin = now.getTime(); save(); } }
+        function spawnFood(x, y) { if (gameData.foods.length > 5) gameData.foods.shift(); gameData.foods.push({ x, y, life: 1.0, size: 8 + Math.random() * 8 }); SoundEngine.play('happy'); }
+        function createSparkle(x, y) {
+            const lv = gameData.stats.level;
+            let colors = ['#fff', '#ffd700', '#00d2ff', '#ff007f'];
+            if (lv >= 10) colors = ['#ffd700', '#fff', '#ffa502'];
+            else if (lv >= 7) colors = ['#ff7675', '#a29bfe', '#fff'];
+            else if (lv >= 4) colors = ['#55efc4', '#00b894', '#fff'];
+            gameData.particles.push({ x, y, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2 - 1, life: 1.0, size: 2 + Math.random() * 6, rot: Math.random() * Math.PI, rotV: (Math.random() - 0.5) * 0.2, color: colors[Math.floor(Math.random() * colors.length)] });
+            if (gameData.particles.length > 150) gameData.particles.shift();
+        }
+
+        function setupInputs() {
+            let dragLastX = 0, dragLastY = 0, dragVx = 0, dragVy = 0;
+            let velocityHistory = [];
+            let activePointerId = null;
+            let prevDist = null; // For pinch scaling
+
+            canvas.addEventListener('pointerdown', e => {
+                if (!SoundEngine.ctx) SoundEngine.init(); SoundEngine.resume();
+                pointers.set(e.pointerId, e);
+                e.target.setPointerCapture(e.pointerId);
+
+                // Check for pinch start
+                if (pointers.size === 2) {
+                    const pts = Array.from(pointers.values());
+                    prevDist = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
+                }
+
+                if (activePointerId !== null) return; // Already holding
+
+                const pos = getPointerPos(e);
+                const dx = pos.x - gameData.cubit.x, dy = pos.y - gameData.cubit.y, dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < PHYSICS.size * 2.5) {
+                    activePointerId = e.pointerId;
+                    dragLastX = pos.x; dragLastY = pos.y;
+                    dragVx = 0; dragVy = 0;
+                    velocityHistory = [];
+                    gameData.cubit.vx = 0; gameData.cubit.vy = 0;
+                    triggerState('grabbed'); SoundEngine.play('grabbed');
+                } else spawnFood(pos.x, pos.y);
+            });
+            canvas.addEventListener('pointermove', e => {
+                e.preventDefault();
+                if (!pointers.has(e.pointerId)) return;
+                pointers.set(e.pointerId, e);
+
+                if (pointers.size === 2) {
+                    const pts = Array.from(pointers.values());
+                    const dist = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
+                    if (prevDist && dist > 0 && prevDist > 0) {
+                        const scale = dist / prevDist;
+                        PHYSICS.size = Math.max(60, Math.min(300, PHYSICS.size * scale));
+                    }
+                    prevDist = dist;
+                }
+
+                if (e.pointerId === activePointerId && gameData.cubit.state === 'grabbed') {
+                    const pos = getPointerPos(e);
+
+                    const now = Date.now();
+                    velocityHistory.push({ x: pos.x, y: pos.y, t: now });
+                    velocityHistory = velocityHistory.filter(p => now - p.t < 150);
+
+                    const dx = pos.x - gameData.cubit.x, dy = pos.y - gameData.cubit.y;
+                    gameData.cubit.tickleScore += Math.sqrt(dx * dx + dy * dy);
+                    // Disabled tickle-induced state change to prevent dropping the Cubit during drag
+                    if (false && gameData.cubit.tickleScore > THRESHOLDS.tickle) {
+                        triggerState('laugh', 1000); gameData.cubit.tickleScore = 0;
+                    }
+                    gameData.cubit.x = pos.x; gameData.cubit.y = pos.y;
+                }
+            });
+            function handleRelease(e) {
+                if (!pointers.has(e.pointerId)) return;
+                pointers.delete(e.pointerId);
+                if (e.pointerId === activePointerId) {
+                    activePointerId = null;
+                    if (gameData.cubit.state === 'grabbed') {
+                        const now = Date.now();
+                        velocityHistory = velocityHistory.filter(p => now - p.t < 150);
+
+                        let throwVx = 0, throwVy = 0;
+                        if (velocityHistory.length >= 2) {
+                            const first = velocityHistory[0];
+                            const last = velocityHistory[velocityHistory.length - 1];
+                            const dt = last.t - first.t;
+                            if (dt > 10) {
+                                throwVx = (last.x - first.x) / dt;
+                                throwVy = (last.y - first.y) / dt;
+                            }
+                        }
+
+                        const multiplier = 30.0;
+                        gameData.cubit.vx = throwVx * multiplier;
+                        gameData.cubit.vy = throwVy * multiplier;
+
+                        triggerState('dizzy', 4000);
+                        SoundEngine.play('happy');
+                    } else {
+                        triggerState('idle');
+                    }
+                }
+            }
+            canvas.addEventListener('pointerup', handleRelease);
+            canvas.addEventListener('pointercancel', handleRelease);
+            // canvas.addEventListener('pointerleave', handleRelease); // Removed to prevent accidental drops
+            window.addEventListener('keydown', e => { if (e.code === 'ArrowLeft') sensorData.tiltX = -20; if (e.code === 'ArrowRight') sensorData.tiltX = 20; if (e.code === 'ArrowUp') sensorData.tiltY = -20; if (e.code === 'ArrowDown') sensorData.tiltY = 20; });
+            window.addEventListener('keyup', e => { if (['ArrowLeft', 'ArrowRight'].includes(e.code)) sensorData.tiltX = 0; if (['ArrowUp', 'ArrowDown'].includes(e.code)) sensorData.tiltY = 0; });
+
+            const sensorBtn = document.getElementById('sensor-btn');
+            if (sensorBtn) {
+                sensorBtn.addEventListener('click', function () {
+                    const btn = this;
+                    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                        DeviceOrientationEvent.requestPermission()
+                            .then(response => {
+                                if (response === 'granted') {
+                                    startSensors();
+                                    btn.style.display = 'none';
+                                    const title = document.getElementById('title-logo');
+                                    if (title) title.style.display = 'none';
+                                } else {
+                                    alert('センサーの許可が必要です');
+                                }
+                            })
+                            .catch(console.error);
+                    } else {
+                        startSensors();
+                        btn.style.display = 'none';
+                        const title = document.getElementById('title-logo');
+                        if (title) title.style.display = 'none';
+                    }
+                    const discoveryBtn = document.getElementById('discovery-btn');
+                    if (discoveryBtn) discoveryBtn.style.display = 'none';
+                });
+            }
+        }
+        function getPointerPos(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+        function startSensors() {
+            sensorActive = true;
+            window.addEventListener('deviceorientation', e => {
+                sensorData.tiltX = e.gamma || 0;
+                sensorData.tiltY = e.beta || 0;
+            });
+            window.addEventListener('devicemotion', e => {
+                const acc = e.accelerationIncludingGravity;
+                if (!acc) return;
+                sensorData.accX = acc.x || 0;
+                sensorData.accY = acc.y || 0; // Capture gravity vector
+
+                if (Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z) > THRESHOLDS.shake) {
+                    if (gameData.cubit.state !== 'dizzy') SoundEngine.play('dizzy');
+                    triggerState('dizzy', 2500);
+                }
+            });
+        }
+
+        function update(time) {
+            let dt = Math.min(0.1, (time - lastTime) / 1000);
+            if (dt < 0.001) dt = 0.016;
+            lastTime = time;
+
+            const RAD = Math.PI / 180;
+            const tiltX = sensorData.tiltX, tiltY = sensorData.tiltY;
+            const accX = sensorData.accX, accY = sensorData.accY;
+
+            // 1. Stats
+            if (gameData.cubit.state === 'sleep') {
+                gameData.stats.energy = Math.min(100, gameData.stats.energy + RECOVERY_RATES.energy_sleep * dt);
+                gameData.stats.mood = Math.min(100, gameData.stats.mood + RECOVERY_RATES.mood_sleep * dt);
+                gameData.stats.sleepiness = Math.max(0, gameData.stats.sleepiness - RECOVERY_RATES.sleepiness_sleep * dt);
+                if (gameData.stats.energy >= 100 && gameData.stats.sleepiness <= 0) triggerState('idle');
+            } else {
+                gameData.stats.energy = Math.max(0, gameData.stats.energy - DECAY_RATES.energy * dt);
+                gameData.stats.sleepiness = Math.min(100, gameData.stats.sleepiness + DECAY_RATES.sleepiness * dt);
+                gameData.stats.mood = Math.max(0, gameData.stats.mood - DECAY_RATES.mood * dt);
+                gameData.stats.bond = Math.max(0, gameData.stats.bond - DECAY_RATES.bond * dt);
+                if (gameData.stats.sleepiness >= 95) triggerState('sleep');
+            }
+
+            // 2. Physics & Movement
+            const c = gameData.cubit;
+            if (!sensorActive) {
+                c.x = window.innerWidth / 2; c.y = window.innerHeight / 2;
+                c.vx = 0; c.vy = 0;
+            } else if (c.state === 'grabbed') {
+                c.vx = 0; c.vy = 0;
+            } else {
+                const neutralY = 0, ay = (tiltY - neutralY) * 0.15, ax = tiltX * 0.15;
+                const gMult = Math.sin(Math.abs(tiltY) * RAD) || 0.5;
+                c.vx += ax * gMult * dt * 60;
+                c.vy += ay * gMult * dt * 60;
+
+                if (gameData.foods.length > 0 && ['idle', 'happy'].includes(c.state)) {
+                    const f = gameData.foods[0];
+                    const dx = f.x - c.x, dy = f.y - c.y, d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < PHYSICS.size * 0.8) {
+                        gameData.foods.shift();
+                        gameData.stats.energy = Math.min(100, gameData.stats.energy + 15);
+                        gameData.stats.mood = Math.min(100, gameData.stats.mood + 10);
+                        triggerState('laugh', 1000); SoundEngine.play('happy'); addExp(10);
+                    } else {
+                        const trackSpeed = 5.0;
+                        c.vx = lerp(c.vx, (dx / d) * trackSpeed, 0.05);
+                        c.vy = lerp(c.vy, (dy / d) * trackSpeed, 0.05);
+                    }
+                }
+
+                const fric = (c.state === 'dizzy' || c.state === 'grabbed') ? 0.992 : PHYSICS.friction;
+                c.vx *= fric; c.vy *= fric;
+                c.x += c.vx; c.y += c.vy;
+                clampCubitPosition();
+            }
+
+            // 3. Animations & Posture
+            if (c.timer > 0) { c.timer -= dt * 1000; if (c.timer <= 0) c.state = 'idle'; }
+
+            const pxSpeed = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
+            let targetRot = 0;
+            if (accX !== 0 || accY !== 0) {
+                // Use atan2 to align with gravity (Up points opposite to gravity vector)
+                targetRot = Math.atan2(-accX, -accY);
+            }
+            const targetAnim = { rot: targetRot, scaleX: 1, scaleY: 1, shakeX: 0, shakeY: 0 };
+
+            if (pxSpeed > 0.5) {
+                if (Math.random() < pxSpeed * 0.1) {
+                    createSparkle(c.x + (Math.random() - 0.5) * PHYSICS.size * 0.5, c.y + (Math.random() - 0.5) * PHYSICS.size * 0.5);
+                }
+                const stretch = Math.min(0.3, pxSpeed * 0.04);
+                targetAnim.scaleY = 1 + stretch;
+                targetAnim.scaleX = 1 - stretch * 0.4;
+            }
+
+            if (c.state === 'idle' || c.state === 'sleep') {
+                const b = Math.sin(time * 0.003);
+                targetAnim.scaleY += b * 0.02; targetAnim.scaleX -= b * 0.01;
+            } else if (c.state === 'grabbed') {
+                targetAnim.scaleY = 1.35; targetAnim.scaleX = 0.8;
+                targetAnim.shakeX = (Math.random() - 0.5) * 2;
+            } else if (['dizzy', 'impact', 'astonished'].includes(c.state)) {
+                targetAnim.shakeX = (Math.random() - 0.5) * 5;
+                targetAnim.shakeY = (Math.random() - 0.5) * 5;
+            }
+
+            for (let k in c.anim) c.anim[k] = lerp(c.anim[k], targetAnim[k], 0.15);
+
+            const targetFace = { ...FACE_CONFIGS[c.state] || FACE_CONFIGS.idle };
+            if (targetFace.specialAlpha > 0.5) targetFace.eyeAlpha = 0;
+            for (let k in c.face) {
+                if (typeof c.face[k] === 'number') c.face[k] = lerp(c.face[k], targetFace[k], 0.2);
+                else c.face[k] = targetFace[k];
+            }
+
+            for (let i = gameData.particles.length - 1; i >= 0; i--) {
+                let p = gameData.particles[i]; p.x += p.vx; p.y += p.vy; p.life -= dt;
+                if (p.life <= 0) gameData.particles.splice(i, 1);
+            }
+            updateUI(); draw(time); requestAnimationFrame(update);
+        }
+
+        function updateUI() {
+            const emojis = { idle: '😐', sleep: '😪', dizzy: '😵‍💫', happy: '😊', astonished: '😲', impact: '💥', grabbed: '🤏', laugh: '😋' };
+            document.getElementById('state-display').innerHTML = `<span>${emojis[gameData.cubit.state] || '😐'}</span>`;
+            const bars = [['mood-bar', gameData.stats.mood], ['energy-bar', gameData.stats.energy], ['sleepiness-bar', 100 - gameData.stats.sleepiness], ['bond-bar', gameData.stats.bond]];
+            bars.forEach(b => { const el = document.getElementById(b[0]); if (el) { el.style.width = b[1] + '%'; el.style.background = b[1] < 30 ? '#ff7675' : b[1] < 70 ? '#fdcb6e' : '#55efc4'; } });
+            document.getElementById('exp-bar').style.width = (gameData.stats.exp / LEVEL_THRESHOLDS[gameData.stats.level] * 100) + '%';
+        }
+
+        function draw(time) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const f of gameData.foods) {
+                ctx.save();
+                ctx.translate(f.x, f.y);
+                const s = 1 + Math.sin(time * 0.003) * 0.1;
+                ctx.scale(s, s);
+                ctx.shadowBlur = 15 + Math.sin(time * 0.005) * 5;
+                ctx.shadowColor = '#ffd700';
+                ctx.fillStyle = '#ffd700';
+                drawStar(ctx, 0, 0, 5, f.size, f.size / 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            for (const p of gameData.particles) {
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+                g.addColorStop(0, 'rgba(255, 255, 255, 1)');
+                g.addColorStop(0.4, p.color);
+                g.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
+            const c = gameData.cubit; ctx.save(); ctx.translate(c.x + c.anim.shakeX, c.y + c.anim.shakeY); ctx.rotate(c.anim.rot); ctx.scale(c.anim.scaleX, c.anim.scaleY); drawCubitShape(ctx, c.state, time); ctx.restore();
+        }
+
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3, x = cx, y = cy, step = Math.PI / spikes;
+            ctx.beginPath(); ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius; ctx.lineTo(x, y); rot += step;
+                x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius; ctx.lineTo(x, y); rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius); ctx.closePath();
+        }
+
+        function drawCubitShape(ctx, state, time) {
+            const size = PHYSICS.size, r = size * 0.24, f = gameData.cubit.face;
+            const color = { angry: '#ff4d4d', dizzy: '#cfd8dc', astonished: '#90caf9', grabbed: '#fff59d', laugh: '#fff59d', sleep: '#7986cb' }[state] || '#fff';
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color; ctx.lineWidth = size * 0.05;
+            ctx.beginPath(); ctx.roundRect(-size / 2, -size / 2, size, size, r); ctx.fill(); ctx.stroke();
+
+            // Eyes
+            const eyeY = -size * 0.15, eyeS = size * 0.3;
+            [-eyeS, eyeS].forEach((x, i) => {
+                ctx.save(); ctx.translate(x, eyeY);
+                ctx.rotate(f.eyeSlant * (i === 0 ? 1 : -1));
+                ctx.fillStyle = '#1a1a2e'; ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = size * 0.05; ctx.lineCap = 'round';
+
+                if (f.eyeAlpha > 0.01) {
+                    ctx.save();
+                    ctx.globalAlpha = f.eyeAlpha;
+                    if (f.eyeArch > 0.5) {
+                        ctx.beginPath(); ctx.arc(0, size * 0.05, size * f.eyeH, Math.PI, 0); ctx.stroke();
+                    } else {
+                        ctx.beginPath(); ctx.ellipse(0, 0, size * f.eyeH, size * f.eyeV, 0, 0, Math.PI * 2); ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                if (f.specialAlpha > 0.01) {
+                    ctx.save();
+                    ctx.globalAlpha = f.specialAlpha;
+                    if (f.specialType === 'spiral') { ctx.beginPath(); for (let j = 0; j < 20; j++) ctx.lineTo(Math.cos(0.5 * j) * j * 0.5, Math.sin(0.5 * j) * j * 0.5); ctx.stroke(); }
+                    if (f.specialType === 'cross') { ctx.beginPath(); ctx.moveTo(-size * 0.1, -size * 0.1); ctx.lineTo(size * 0.1, size * 0.1); ctx.moveTo(size * 0.1, -size * 0.1); ctx.lineTo(-size * 0.1, size * 0.1); ctx.stroke(); }
+                    ctx.restore();
+                }
+                ctx.restore();
+            });
+            // Mouth
+            ctx.strokeStyle = '#000';
+            ctx.beginPath(); ctx.ellipse(0, size * f.mouthY, size * f.mouthW, size * f.mouthH, 0, 0, Math.PI * 2); ctx.stroke();
+
+            // Accessories
+            const lv = gameData.stats.level;
+            if (lv >= 10) { // Crown
+                ctx.save(); ctx.translate(0, -size * 0.55);
+                ctx.fillStyle = '#ffd700'; ctx.strokeStyle = '#b8860b'; ctx.lineWidth = size * 0.02;
+                ctx.beginPath();
+                ctx.moveTo(-size * 0.25, 0); ctx.lineTo(-size * 0.15, -size * 0.2); ctx.lineTo(0, -size * 0.1); ctx.lineTo(size * 0.15, -size * 0.2); ctx.lineTo(size * 0.25, 0);
+                ctx.lineTo(size * 0.25, size * 0.1); ctx.lineTo(-size * 0.25, size * 0.1); ctx.closePath();
+                ctx.fill(); ctx.stroke(); ctx.restore();
+            } else if (lv >= 7) { // Bow Tie
+                ctx.save(); ctx.translate(0, size * 0.4);
+                ctx.fillStyle = '#ff7675'; ctx.beginPath();
+                ctx.moveTo(0, 0); ctx.lineTo(-size * 0.15, -size * 0.1); ctx.lineTo(-size * 0.15, size * 0.1); ctx.lineTo(0, 0);
+                ctx.lineTo(size * 0.15, -size * 0.1); ctx.lineTo(size * 0.15, size * 0.1); ctx.lineTo(0, 0);
+                ctx.fill(); ctx.restore();
+            } else if (lv >= 4) { // Sprout
+                ctx.save(); ctx.translate(0, -size * 0.5);
+                ctx.strokeStyle = '#55efc4'; ctx.lineWidth = size * 0.05; ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(0, -size * 0.15, size * 0.1, -size * 0.25); ctx.stroke();
+                ctx.fillStyle = '#55efc4'; ctx.beginPath(); ctx.ellipse(size * 0.1, -size * 0.25, size * 0.06, size * 0.1, 0.5, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        async function populateDiscoveryList() {
+            const list = document.getElementById('discovery-list');
+            if (!list) return;
+            const items = await DiscoveryDB.getAll();
+            list.innerHTML = '';
+            if (items.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:20px;">まだ なにも みつけてないよ</div>';
+                return;
+            }
+            items.sort((a, b) => b.timestamp - a.timestamp);
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'discovery-item';
+                div.style.cssText = 'background:rgba(255,255,255,0.05); border-radius:12px; padding:12px; display:flex; gap:12px; margin-bottom:12px; align-items:center;';
+
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(item.blob);
+                img.style.cssText = 'width:60px; height:60px; object-fit:cover; border-radius:8px; background:#000;';
+
+                const info = document.createElement('div');
+                info.style.flex = '1';
+                info.innerHTML = `<div style="font-weight:bold; color:var(--energy-color); margin-bottom:4px;">${item.label}</div><div class="discovery-desc">${item.description}</div>`;
+
+                div.appendChild(img); div.appendChild(info);
+                list.appendChild(div);
+            });
+        }
+
+        function init() {
+            canvas = document.getElementById('gameCanvas'); ctx = canvas.getContext('2d');
+            window.addEventListener('resize', resize); resize();
+            const saved = localStorage.getItem('cubit_save');
+            if (saved) {
+                const d = JSON.parse(saved);
+                gameData.stats = { ...gameData.stats, ...d.stats };
+                gameData.collection = d.collection || [];
+                gameData.lastLogin = d.lastLogin || Date.now();
+            }
+            checkDaily(); setupInputs();
+            populateDiscoveryList();
+            requestAnimationFrame(update);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>
