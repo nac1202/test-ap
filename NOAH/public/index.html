@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NOA - 空席状況</title>
+  <meta property="og:title" content="NOA - 空席状況">
+  <meta property="og:description" content="只今の空席状況をご確認いただけます。">
+  <meta property="og:image" content="https://noa-occupancy.vercel.app/images/logo.jpg">
+  <meta property="og:url" content="https://noa-occupancy.vercel.app/">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap"
+    rel="stylesheet">
+
+  <!-- PWA Setup -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="NOA">
+  <link rel="apple-touch-icon" href="/images/logo.jpg">
+
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <main class="container">
+    <header class="site-header">
+      <img src="/images/logo.jpg" alt="NOA Logo" class="logo">
+      <p class="subtitle">只今の空席状況</p>
+      <div id="clock" class="clock"></div>
+    </header>
+
+    <div id="holiday-message" class="holiday-message hidden">
+      <h2>本日は定休日です</h2>
+    </div>
+
+    <div id="closed-message" class="holiday-message hidden">
+      <h2>本日の営業は終了しました</h2>
+    </div>
+
+    <div id="areas" class="areas">
+      <div class="area" id="area-counter">
+        <div class="area-inner">
+          <div class="status-indicator">
+            <div class="dot" data-status="green"></div>
+            <div class="glow"></div>
+            <div class="reserved-text hidden">貸切</div>
+          </div>
+          <div class="label-group">
+            <h2 class="area-name">COUNTER</h2>
+            <span class="area-desc">カウンター席</span>
+            <span class="area-seats">(5 Seats)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="area" id="area-box">
+        <div class="area-inner">
+          <div class="status-indicator">
+            <div class="dot" data-status="green"></div>
+            <div class="glow"></div>
+            <div class="reserved-text hidden">貸切</div>
+          </div>
+          <div class="label-group">
+            <h2 class="area-name">BOX SEATS</h2>
+            <span class="area-desc">ボックス席</span>
+            <span class="area-seats">(6 Seats)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend (Moved here) -->
+    <div class="legend-container">
+      <div class="legend-container">
+        <p class="footer-msg">ご来店をお待ちしております。</p>
+        <div class="legend" id="legend">
+          <div class="legend-item">
+            <div class="dot-small" data-status="green"></div>
+            <div class="legend-text">
+              <span class="lang-en">VACANT</span>
+              <span class="lang-ja">空席</span>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="dot-small" data-status="yellow"></div>
+            <div class="legend-text">
+              <span class="lang-en">LIMITED</span>
+              <span class="lang-ja">残りわずか</span>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="dot-small" data-status="red"></div>
+            <div class="legend-text">
+              <span class="lang-en">FULL</span>
+              <span class="lang-ja">満席</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cast Section -->
+      <div id="cast-section" class="cast-section">
+        <h3 class="section-title">只今の出勤状況</h3>
+        <div id="cast-list" class="cast-list">
+          <!-- JS will populate -->
+        </div>
+      </div>
+
+      <!-- Business Hours Section -->
+      <div class="business-hours-section">
+        <h3 class="section-title">営業時間</h3>
+        <p>通常営業<br>18時〜23時(23時30分閉店)</p>
+        <p class="note-small">※通常営業以降2時半までは要相談</p>
+      </div>
+
+      <footer class="site-footer">
+        <p class="note">Auto-update: <span id="interval">10</span>s</p>
+        <a href="/install.html" class="install-link">アプリとして保存する方法</a>
+      </footer>
+  </main>
+  <script>
+    /* Clock Logic */
+    function updateClock() {
+      const now = new Date();
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const m = now.getMonth() + 1;
+      const d = now.getDate();
+      const day = days[now.getDay()];
+      const t = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('clock').textContent = `${m}.${d} ${day} ${t}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    const castNames = {
+      miryu: 'MIRYU (みりゅう)',
+      micchan: 'MICCHAN (みっちゃん)',
+      eri: 'ERI (えり)',
+      uru: 'URU (うる)',
+      ikuko: 'IKUKO (いくこ)'
+    };
+
+    async function fetchStatus() {
+      const res = await fetch('/api/status-v2');
+      if (!res.ok) return;
+      const s = await res.json();
+      updateUI(s);
+    }
+
+    function updateUI(s) {
+      // 1. Shop Status
+      const areasDiv = document.getElementById('areas');
+      const holidayDiv = document.getElementById('holiday-message');
+      const closedDiv = document.getElementById('closed-message');
+      const castSection = document.getElementById('cast-section');
+
+      if (s.shopStatus === 'holiday') {
+        areasDiv.style.display = 'none';
+        holidayDiv.classList.remove('hidden');
+        closedDiv.classList.add('hidden');
+        castSection.style.display = 'none';
+      } else if (s.shopStatus === 'closed') {
+        areasDiv.style.display = 'none';
+        holidayDiv.classList.add('hidden');
+        closedDiv.classList.remove('hidden');
+        castSection.style.display = 'none';
+      } else {
+        areasDiv.style.display = 'flex';
+        holidayDiv.classList.add('hidden');
+        closedDiv.classList.add('hidden');
+        castSection.style.display = 'block';
+
+        // Reserved Logic
+        const isReserved = (s.shopStatus === 'reserved');
+
+        ['counter', 'box'].forEach(area => {
+          const container = document.getElementById('area-' + area);
+          if (!container) return;
+
+          const dot = container.querySelector('.dot');
+          const glow = container.querySelector('.glow');
+          const reservedText = container.querySelector('.reserved-text');
+
+          if (isReserved) {
+            dot.style.display = 'none';
+            glow.style.display = 'none';
+            reservedText.classList.remove('hidden');
+          } else {
+            dot.style.display = 'block';
+            glow.style.display = 'block';
+            reservedText.classList.add('hidden');
+            dot.dataset.status = s[area];
+            glow.dataset.status = s[area];
+          }
+        });
+      }
+
+      // 2. Cast List 
+      // Always re-render or update class
+      const listDiv = document.getElementById('cast-list');
+      listDiv.innerHTML = '';
+      if (s.cast) {
+        Object.keys(castNames).forEach(key => {
+          const isPresent = s.cast[key];
+          const div = document.createElement('div');
+          div.className = 'cast-item';
+
+          // Pink Lamp
+          const lamp = document.createElement('div');
+          lamp.className = isPresent ? 'dot-pink' : 'dot-pink off';
+
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = castNames[key];
+
+          div.appendChild(lamp);
+          div.appendChild(nameSpan);
+          listDiv.appendChild(div);
+        });
+      }
+    }
+    fetchStatus();
+    setInterval(fetchStatus, 10000);
+  </script>
+</body>
+
+</html>
