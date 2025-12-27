@@ -497,7 +497,7 @@
         let canvas, ctx, lastTime = 0, sensorActive = false, pointers = new Map(), sensorData = { tiltX: 0, tiltY: 0, accX: 0, accY: -9.8 };
         let gameData = {
             stats: { mood: 80, energy: 100, sleepiness: 0, bond: 20, level: 1, exp: 0, streak: 0 },
-            cubit: { x: window.innerWidth / 2, y: window.innerHeight / 2, vx: 0, vy: 0, state: 'idle', timer: 0, tickleScore: 0, dailyColor: '#00d2ff', face: { ...FACE_CONFIGS.idle }, anim: { shakeX: 0, shakeY: 0, rot: 0, scaleX: 1, scaleY: 1 } },
+            cubit: { x: window.innerWidth / 2, y: window.innerHeight / 2, vx: 0, vy: 0, state: 'idle', timer: 0, tickleScore: 0, dailyColor: '#00d2ff', face: { ...FACE_CONFIGS.idle }, anim: { shakeX: 0, shakeY: 0, rot: 0, scaleX: 1, scaleY: 1 }, gaze: { x: 0, y: 0 }, blinkTimer: 0 },
             particles: [], foods: [], collection: []
         };
 
@@ -1062,20 +1062,55 @@
                 c.vx += ax * gMult * dt * 60;
                 c.vy += ay * gMult * dt * 60;
 
+                let targetGaze = { x: 0, y: 0 };
                 if (gameData.foods.length > 0 && ['idle', 'happy'].includes(c.state)) {
-                    const f = gameData.foods[0];
-                    const dx = f.x - c.x, dy = f.y - c.y, d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < PHYSICS.size * 0.8) {
-                        gameData.foods.shift();
-                        gameData.stats.energy = Math.min(100, gameData.stats.energy + 15);
-                        gameData.stats.mood = Math.min(100, gameData.stats.mood + 10);
-                        triggerState('laugh', 1000); SoundEngine.play('happy'); addExp(10);
-                    } else {
-                        const trackSpeed = 5.0;
-                        c.vx = lerp(c.vx, (dx / d) * trackSpeed, 0.05);
-                        c.vy = lerp(c.vy, (dy / d) * trackSpeed, 0.05);
+                    let closest = null, minD = Infinity, closestIdx = -1;
+                    for (let i = 0; i < gameData.foods.length; i++) {
+                        const f = gameData.foods[i];
+                        const dx = f.x - c.x, dy = f.y - c.y, d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < minD) { minD = d; closest = f; closestIdx = i; }
+                    }
+
+                    if (closest) {
+                        const dx = closest.x - c.x, dy = closest.y - c.y;
+                        const dist = minD;
+
+                        // Gaze logic
+                        const maxGaze = PHYSICS.size * 0.25; // Increased range
+                        if (dist > 0) {
+                            targetGaze.x = (dx / dist) * maxGaze;
+                            targetGaze.y = (dy / dist) * maxGaze;
+                        }
+
+                        // Anticipation (Look at food, Open Mouth)
+                        if (dist < PHYSICS.size * 2.5) {
+                            // Lean towards food
+                            const leanAmt = (dx / dist) * 0.2;
+                            c.anim.rot = lerp(c.anim.rot, leanAmt, 0.1);
+
+                            // Open mouth / Excited eyes
+                            c.face.mouthH = lerp(c.face.mouthH, 0.15, 0.1);
+                            c.face.eyeH = lerp(c.face.eyeH, 0.12, 0.1); // Widen eyes
+                        }
+
+                        if (dist < PHYSICS.size * 0.8) {
+                            gameData.foods.splice(closestIdx, 1);
+                            gameData.stats.energy = Math.min(100, gameData.stats.energy + 15);
+                            gameData.stats.mood = Math.min(100, gameData.stats.mood + 10);
+                            triggerState('laugh', 1000); SoundEngine.play('happy'); addExp(10);
+                            c.face.mouthH = 0.05; // Reset mouth pop
+                        } else {
+                            const trackSpeed = 6.0; // Faster
+                            c.vx = lerp(c.vx, (dx / dist) * trackSpeed, 0.08);
+                            c.vy = lerp(c.vy, (dy / dist) * trackSpeed, 0.08);
+                        }
                     }
                 }
+
+                // Update gaze
+                if (!c.gaze) c.gaze = { x: 0, y: 0 };
+                c.gaze.x = lerp(c.gaze.x, targetGaze.x, 0.15); // Faster eye movement
+                c.gaze.y = lerp(c.gaze.y, targetGaze.y, 0.15);
 
                 const fric = (c.state === 'dizzy' || c.state === 'grabbed') ? 0.992 : PHYSICS.friction;
                 c.vx *= fric; c.vy *= fric;
@@ -1121,6 +1156,21 @@
             for (let k in c.face) {
                 if (typeof c.face[k] === 'number') c.face[k] = lerp(c.face[k], targetFace[k], 0.2);
                 else c.face[k] = targetFace[k];
+            }
+
+            // Blinking and Morphing Variations
+            if (!['dizzy', 'sleep', 'astonished', 'impact'].includes(c.state)) {
+                if (c.blinkTimer === undefined) c.blinkTimer = 3;
+                c.blinkTimer -= dt;
+                if (c.blinkTimer < -0.15) {
+                    c.blinkTimer = 2 + Math.random() * 4;
+                } else if (c.blinkTimer < 0) {
+                    c.face.eyeV = 0.02; // Close eyes (blink)
+                }
+
+                // Micro-movements for aliveness
+                c.face.mouthW += Math.sin(time * 0.005) * 0.005;
+                c.face.eyeH += Math.sin(time * 0.003 + 2) * 0.002;
             }
 
             for (let i = gameData.particles.length - 1; i >= 0; i--) {
@@ -1185,8 +1235,9 @@
 
             // Eyes
             const eyeY = -size * 0.15, eyeS = size * 0.3;
+            const gaze = gameData.cubit.gaze || { x: 0, y: 0 };
             [-eyeS, eyeS].forEach((x, i) => {
-                ctx.save(); ctx.translate(x, eyeY);
+                ctx.save(); ctx.translate(x + gaze.x, eyeY + gaze.y);
                 ctx.rotate(f.eyeSlant * (i === 0 ? 1 : -1));
                 ctx.fillStyle = '#1a1a2e'; ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = size * 0.05; ctx.lineCap = 'round';
 
@@ -1197,6 +1248,16 @@
                         ctx.beginPath(); ctx.arc(0, size * 0.05, size * f.eyeH, Math.PI, 0); ctx.stroke();
                     } else {
                         ctx.beginPath(); ctx.ellipse(0, 0, size * f.eyeH, size * f.eyeV, 0, 0, Math.PI * 2); ctx.fill();
+
+                        // Eye Highlight (New)
+                        if (state !== 'sleep' && state !== 'dizzy' && f.eyeV > 0.03) {
+                            ctx.fillStyle = 'white';
+                            ctx.globalAlpha = 0.6;
+                            ctx.beginPath();
+                            // Reflection stays top-left relative to the eye center
+                            ctx.arc(-size * 0.02, -size * 0.02, size * 0.02, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
                     }
                     ctx.restore();
                 }
