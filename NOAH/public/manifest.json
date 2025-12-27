@@ -1,0 +1,20 @@
+{
+    "short_name": "NOA",
+    "name": "NOA 空席状況",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "icons": [
+        {
+            "src": "/images/logo.jpg",
+            "type": "image/jpeg",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/images/logo.jpg",
+            "type": "image/jpeg",
+            "sizes": "512x512"
+        }
+    ]
+}

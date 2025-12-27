@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NOA 管理画面</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <main class="container">
+    <h1>管理画面</h1>
+    <p>各エリアの状態を選択してください</p>
+    <div class="controls">
+      <!-- Shop Status -->
+      <section class="admin-section">
+        <h2>営業ステータス</h2>
+        <div class="status-options">
+          <label><input type="radio" name="shopStatus" value="open" checked> 通常営業</label>
+          <label><input type="radio" name="shopStatus" value="holiday"> 定休日</label>
+          <label><input type="radio" name="shopStatus" value="reserved"> 貸切</label>
+          <label><input type="radio" name="shopStatus" value="closed"> 終了</label>
+        </div>
+      </section>
+
+      <!-- Cast Status -->
+      <section class="admin-section">
+        <h2>キャスト出勤</h2>
+        <div id="cast-container" class="cast-toggles">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="add-cast-form">
+          <h3>キャスト追加</h3>
+          <input type="text" id="new-cast-name" placeholder="例: HANAKO (はなこ)" />
+          <button id="btn-add-cast">追加</button>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <p>各エリアの状態を選択してください</p>
+      <section>
+        <h2>カウンター</h2>
+        <div class="btns" data-area="counter">
+          <button data-status="green">VACANT<br><small>空席</small></button>
+          <button data-status="yellow">LIMITED<br><small>残りわずか</small></button>
+          <button data-status="red">FULL<br><small>満席</small></button>
+        </div>
+      </section>
+      <section>
+        <h2>ボックス席</h2>
+        <div class="btns" data-area="box">
+          <button data-status="green">VACANT<br><small>空席</small></button>
+          <button data-status="yellow">LIMITED<br><small>残りわずか</small></button>
+          <button data-status="red">FULL<br><small>満席</small></button>
+        </div>
+      </section>
+    </div>
+    <p id="msg"></p>
+    <p><a href="/">公開ページへ戻る</a></p>
+  </main>
+  <script>
+    const msg = document.getElementById('msg');
+    const castContainer = document.getElementById('cast-container');
+
+    // Generic API poster
+    async function apiPost(payload) {
+      const res = await fetch('/api/status-v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        msg.textContent = '更新しました';
+        msg.style.color = 'green';
+        setTimeout(() => msg.textContent = '', 2000);
+        await init(); // Refresh UI
+      } else {
+        const txt = await res.text();
+        msg.textContent = `更新に失敗しました (${res.status}): ${txt}`;
+        msg.style.color = 'red';
+      }
+      return res;
+    }
+
+    // Initialize
+    async function init() {
+      const res = await fetch('/api/status-v2');
+      const data = await res.json();
+
+      // Shop Status
+      if (data.shopStatus) {
+        const radio = document.querySelector(`input[name="shopStatus"][value="${data.shopStatus}"]`);
+        if (radio) radio.checked = true;
+      }
+
+      // Cast Status
+      renderCast(data.cast || {});
+    }
+
+    function renderCast(castData) {
+      castContainer.innerHTML = '';
+      Object.values(castData).forEach(member => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'cast-control';
+
+        // Toggle Button
+        const btn = document.createElement('button');
+        btn.className = member.isPresent ? 'cast-btn active' : 'cast-btn';
+        btn.textContent = member.name;
+        btn.onclick = () => {
+          apiPost({ castUpdate: { id: member.id, isPresent: !member.isPresent } });
+        };
+
+        // Delete Button
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '🗑️';
+        delBtn.className = 'delete-btn';
+        delBtn.onclick = () => {
+          if (confirm(`${member.name} を削除しますか？`)) {
+            apiPost({ removeCast: { id: member.id } });
+          }
+        };
+
+        wrapper.appendChild(btn);
+        wrapper.appendChild(delBtn);
+        castContainer.appendChild(wrapper);
+      });
+    }
+
+    init();
+
+    // Shop Status Listeners
+    document.querySelectorAll('input[name="shopStatus"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        apiPost({ shopStatus: e.target.value });
+      });
+    });
+
+    // Add Cast Listener
+    document.getElementById('btn-add-cast').addEventListener('click', () => {
+      const nameInput = document.getElementById('new-cast-name');
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      // Simple ID generation
+      const id = 'cast_' + Date.now();
+      apiPost({ addCast: { id, name } });
+      nameInput.value = '';
+    });
+
+    // Seat Buttons Listeners
+    document.querySelectorAll('.btns').forEach(group => {
+      group.addEventListener('click', async (e) => {
+        if (!e.target.closest('button')) return;
+        const btn = e.target.closest('button');
+        const area = group.dataset.area;
+        const status = btn.dataset.status;
+        await apiPost({ area, status });
+      });
+    });
+  </script>
+</body>
+
+</html>

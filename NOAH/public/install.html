@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>NOA - アプリとして保存</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&family=Noto+Sans+JP:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+
+    <!-- PWA Setup -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="NOA">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
+    <style>
+        .install-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .step-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(197, 160, 89, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .active-os {
+            border-color: var(--gold-primary);
+            background: rgba(197, 160, 89, 0.1);
+        }
+
+        .step-title {
+            font-family: var(--font-serif);
+            color: var(--gold-primary);
+            font-size: 1.2rem;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.3);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .step-list li {
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .step-num {
+            color: var(--gold-primary);
+            font-weight: bold;
+            min-width: 1.2em;
+        }
+
+        .icon-ref {
+            display: inline-block;
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            border: 1px solid #555;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.8rem 2rem;
+            background: transparent;
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-primary);
+            text-decoration: none;
+            border-radius: 30px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: var(--gold-primary);
+            color: #000;
+        }
+
+        .instruction-note {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo img {
+            max-width: 120px;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="install-container">
+        <div class="logo">
+            <img src="images/logo.jpg" alt="NOA Logo">
+        </div>
+
+        <h1 style="font-family: var(--font-serif); margin-bottom: 2rem; font-size: 1.5rem;">アプリとして保存する方法</h1>
+
+        <div class="step-card" id="ios-steps">
+            <h2 class="step-title">iPhone (Safari / Chrome)</h2>
+            <ul class="step-list">
+                <li>
+                    <span class="step-num">1.</span>
+                    <span>
+                        <span class="icon-ref">共有ボタン</span>をタップ<br>
+                        <span style="font-size: 0.85em; opacity: 0.8; display: block; margin-top: 0.3rem;">
+                            (Safari: 画面下中央 / Chrome: 画面右上)
+                        </span>
+                    </span>
+                </li>
+                <li>
+                    <span class="step-num">2.</span>
+                    <span>メニューをスクロールして<span class="icon-ref">ホーム画面に追加</span>をタップ</span>
+                </li>
+                <li>
+                    <span class="step-num">3.</span>
+                    <span>右上の<span class="icon-ref">追加</span>ボタンをタップ</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="step-card" id="android-steps">
+            <h2 class="step-title">Android (Chrome)</h2>
+            <ul class="step-list">
+                <li>
+                    <span class="step-num">1.</span>
+                    <span>画面右上の<span class="icon-ref">︙</span>メニューをタップ</span>
+                </li>
+                <li>
+                    <span class="step-num">2.</span>
+                    <span><span class="icon-ref">アプリをインストール</span>または<span class="icon-ref">ホーム画面に追加</span>をタップ</span>
+                </li>
+                <li>
+                    <span class="step-num">3.</span>
+                    <span>確認画面で<span class="icon-ref">追加</span>をタップ</span>
+                </li>
+            </ul>
+        </div>
+
+        <p class="instruction-note">
+            ※LINEなどのアプリ内ブラウザで見ている場合は、一度「Safariで開く」や「Chromeで開く」を選択してから操作してください。
+        </p>
+
+        <a href="/" class="back-btn">TOPへ戻る</a>
+    </div>
+</body>
+
+</html>

@@ -136,14 +136,6 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    const castNames = {
-      miryu: 'MIRYU (みりゅう)',
-      micchan: 'MICCHAN (みっちゃん)',
-      eri: 'ERI (えり)',
-      uru: 'URU (うる)',
-      ikuko: 'IKUKO (いくこ)'
-    };
-
     async function fetchStatus() {
       const res = await fetch('/api/status-v2');
       if (!res.ok) return;
@@ -204,17 +196,17 @@
       const listDiv = document.getElementById('cast-list');
       listDiv.innerHTML = '';
       if (s.cast) {
-        Object.keys(castNames).forEach(key => {
-          const isPresent = s.cast[key];
+        // dynamic rendering
+        Object.values(s.cast).forEach(member => {
           const div = document.createElement('div');
           div.className = 'cast-item';
 
           // Pink Lamp
           const lamp = document.createElement('div');
-          lamp.className = isPresent ? 'dot-pink' : 'dot-pink off';
+          lamp.className = member.isPresent ? 'dot-pink' : 'dot-pink off';
 
           const nameSpan = document.createElement('span');
-          nameSpan.textContent = castNames[key];
+          nameSpan.textContent = member.name;
 
           div.appendChild(lamp);
           div.appendChild(nameSpan);
@@ -225,6 +217,7 @@
     fetchStatus();
     setInterval(fetchStatus, 10000);
   </script>
+  <script src="/fireflies.js"></script>
 </body>
 
 </html>

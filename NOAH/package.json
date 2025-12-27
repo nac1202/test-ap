@@ -1,0 +1,13 @@
+{
+  "name": "noa-occupancy",
+  "version": "1.0.0",
+  "description": "Simple occupancy status app for NOA snack bar",
+  "main": "server.js",
+  "scripts": {
+    "start": "node local-server.js"
+  },
+  "dependencies": {
+    "@vercel/kv": "^3.0.0",
+    "express": "^4.18.2"
+  }
+}

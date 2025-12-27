@@ -367,9 +367,26 @@ body {
 
 .cast-toggles {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.cast-control {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
+  /* Prevent too wide on large screens */
+}
+
+.cast-btn {
+  flex: 1;
+  /* Make name button take available space */
+  text-align: center;
 }
 
 .cast-btn {
@@ -481,4 +498,121 @@ a:hover {
   font-size: 0.8rem;
   color: var(--text-secondary);
   margin-top: 0.5rem;
+}
+
+/* Admin Cast Controls */
+.cast-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 1rem;
+}
+
+.cast-btn {
+  /* Existing style override if needed, but mostly governed effectively by earlier rules. 
+     Let's make sure it fills space nicely. */
+  flex-grow: 1;
+  text-align: center;
+}
+
+.delete-btn {
+  padding: 0.5rem 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #666;
+  color: #666;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.delete-btn:hover {
+  border-color: red;
+  color: red;
+}
+
+.add-cast-form {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #444;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+#new-cast-name {
+  background: #222;
+  border: 1px solid #444;
+  color: white;
+  padding: 0.5rem;
+  font-family: var(--font-sans);
+}
+
+#btn-add-cast {
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  padding: 0.5rem 1rem;
+}
+
+/* Firefly Effect */
+.firefly {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  background-color: #ffffe0;
+  /* Whitish yellow */
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 224, 0.6);
+  pointer-events: none;
+  z-index: 0;
+  /* Behind content */
+  opacity: 0.6;
+  animation-name: floatX, floatY, flicker;
+  animation-timing-function: ease-in-out, ease-in-out, ease-in-out;
+  animation-iteration-count: infinite, infinite, infinite;
+  animation-duration: 20s, 15s, 4s;
+  /* Default fallback */
+}
+
+@keyframes floatX {
+  0% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(50px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes floatY {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-50px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes flicker {
+
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
 }
