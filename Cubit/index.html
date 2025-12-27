@@ -1204,7 +1204,12 @@
                 if (f.specialAlpha > 0.01) {
                     ctx.save();
                     ctx.globalAlpha = f.specialAlpha;
-                    if (f.specialType === 'spiral') { ctx.beginPath(); for (let j = 0; j < 20; j++) ctx.lineTo(Math.cos(0.5 * j) * j * 0.5, Math.sin(0.5 * j) * j * 0.5); ctx.stroke(); }
+                    if (f.specialType === 'spiral') {
+                        ctx.save();
+                        ctx.rotate(time * -0.01);
+                        ctx.beginPath(); for (let j = 0; j < 20; j++) ctx.lineTo(Math.cos(0.5 * j) * j * 0.5, Math.sin(0.5 * j) * j * 0.5); ctx.stroke();
+                        ctx.restore();
+                    }
                     if (f.specialType === 'cross') { ctx.beginPath(); ctx.moveTo(-size * 0.1, -size * 0.1); ctx.lineTo(size * 0.1, size * 0.1); ctx.moveTo(size * 0.1, -size * 0.1); ctx.lineTo(-size * 0.1, size * 0.1); ctx.stroke(); }
                     ctx.restore();
                 }
