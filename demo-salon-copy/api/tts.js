@@ -24,14 +24,46 @@ export default async function handler(req) {
         // Text Normalization for better Japanese pronunciation
         let cleanText = text;
 
-        // Fix time format: 20:00 -> 20時
-        // Matches HH:MM pattern (00-23):(00-59)
+        console.log("Original Text:", text); // Debug log
+
+        // Fix time format: 20:00 -> 20時, 9:00 -> 9時
         cleanText = cleanText.replace(/(\d{1,2}):(\d{2})/g, (match, hour, minute) => {
-            if (minute === '00') return `${hour}時`;
-            return `${hour}時${minute}分`;
+            // Simple check to ensure reasonable time range
+            const h = parseInt(hour, 10);
+            const m = parseInt(minute, 10);
+            if (h >= 0 && h <= 24 && m >= 0 && m <= 59) {
+                if (minute === '00') return `${hour}時`;
+                return `${hour}時${minute}分`;
+            }
+            return match; // Return original if not a valid time
         });
 
-        // Additional fixes can be added here
+        // Fix date format: 12/31 -> 12月31日
+        // Be careful not to break URLs, so look for boundaries or surrounding text context if possible. 
+        // For now, simple slash pattern often used in chat.
+        cleanText = cleanText.replace(/(\d{1,2})\/(\d{1,2})/g, (match, month, day) => {
+            const m = parseInt(month, 10);
+            const d = parseInt(day, 10);
+            if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+                return `${month}月${day}日`;
+            }
+            return match;
+        });
+
+        // Common Kanji Fixes (Custom Dictionary)
+        const commonFixes = {
+            '明日': 'あした',
+            '今日': 'きょう',
+            '昨日': 'きのう',
+            // Add more here based on user feedback
+        };
+
+        for (const [key, value] of Object.entries(commonFixes)) {
+            // specific simple replace
+            cleanText = cleanText.split(key).join(value);
+        }
+
+        console.log("Normalized Text:", cleanText); // Debug log
 
         // --- CHECK CONFIG ---
         // Priority 1: Azure (New Request)
