@@ -62,6 +62,7 @@ export default async function handler(req) {
             '明日': 'あした',
             '今日': 'きょう',
             '昨日': 'きのう',
+            'ご用件': 'ごようけん',
             // Add more here based on user feedback
         };
 
