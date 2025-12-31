@@ -628,6 +628,8 @@ body[class^="theme-"] {
   background-attachment: fixed;
   background-position: bottom 20px right 20px;
   background-size: 150px auto;
+  /* Use screen blend mode to make black background in icons transparent against the gradient */
+  background-blend-mode: screen, normal;
 }
 
 body.theme-new-year {
