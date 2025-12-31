@@ -601,6 +601,20 @@ ${langInstruction}
 }
 ]]
 
+========================
+■ 5. 音声読み上げ用データ（必須）
+========================
+回答の最後には、**必ず** 音声読み上げ用のテキストを以下の形式で付与してください。
+これは、漢字の読み間違いを防ぐため、**すべてカタカナ（または数字などはそのまま）** に変換した文章です。
+ユーザーには表示されず、バックグラウンド音声生成にのみ使われます。
+
+[[TTS: コチラハ、オススメノ ハンバーガーデス。ジカンハ ジュウジカラ ニジュウジマデデス。]]
+
+※ 注意：
+・「10:00」は「ジュウジ」と書くなど、**完全に読み上げ可能な状態**にしてください。
+・JSONデータ等がある場合も、その説明文を読み上げ用に変換してください。
+]]
+
 ルール：
 - すべてのキーを書かなくても構いません。更新したい項目だけを含めてください。
 - 分からない項目は書かないでください（推測で true/false を入れないこと）。
@@ -1067,22 +1081,36 @@ ${langInstruction}
             try {
                 const deltaJson = JSON.parse(deltaMatch[1]);
                 console.log("Profile Delta:", deltaJson);
-
                 // Merge delta into userProfile
                 userProfile = { ...userProfile, ...deltaJson };
                 saveUserProfile();
-
-                cleanReply = rawReply.replace(deltaMatch[0], "").trim();
+                cleanReply = cleanReply.replace(deltaMatch[0], "").trim();
             } catch (e) {
                 console.error("Delta Parse Error", e);
             }
         }
 
-        addMessage(cleanReply, "bot");
-        conversationHistory.push({ role: "model", parts: [{ text: cleanReply }] }); // Save clean text to history to avoid loop
+        // Parse TTS Text (Katakana Reading)
+        const ttsRegex = /\[\[TTS:\s*([\s\S]*?)\]\]/;
+        const ttsMatch = cleanReply.match(ttsRegex);
+        let ttsText = "";
 
-        const cleanTextForTTS = cleanReply.replace(/```(?:json)?[\s\S]*?```/i, "").trim();
-        if (isTtsEnabled) speak(cleanTextForTTS);
+        if (ttsMatch) {
+            // Found explicit reading guide
+            const rawTts = ttsMatch[1].trim();
+            console.log("TTS Reading Found:", rawTts);
+            ttsText = rawTts;
+            // Remove from visual display
+            cleanReply = cleanReply.replace(ttsMatch[0], "").trim();
+        } else {
+            // Fallback: use display text if LLM forgot to include TTS block
+            ttsText = cleanReply.replace(/```(?:json)?[\s\S]*?```/i, "").trim();
+        }
+
+        addMessage(cleanReply, "bot");
+        conversationHistory.push({ role: "model", parts: [{ text: cleanReply }] });
+
+        if (isTtsEnabled && ttsText) speak(ttsText);
     }
 
     // Event Listeners
