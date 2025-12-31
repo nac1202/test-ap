@@ -601,20 +601,7 @@ ${langInstruction}
 }
 ]]
 
-========================
-■ 5. 音声読み上げ用データ（必須）
-========================
-回答の最後には、**必ず** 音声読み上げ用のテキストを以下の形式で付与してください。
-これは、漢字の読み間違いを防ぐため、**すべてカタカナ（または数字などはそのまま）** に変換した文章です。
-ユーザーには表示されず、バックグラウンド音声生成にのみ使われます。
 
-[[TTS: コチラハ、オススメノ ハンバーガーデス。ジカンハ ジュウジカラ ニジュウジマデデス。]]
-
-※ 注意：
-・「10:00」は「ジュウジ」と書くなど、**完全に読み上げ可能な状態**にしてください。
-・JSONデータ等がある場合も、その説明文を読み上げ用に変換してください。
-・**助詞の「は」は「ワ」と書いてください。（例：私は → ワタシワ、こんにちは → コンニチワ）**
-]]
 
 ルール：
 - すべてのキーを書かなくても構いません。更新したい項目だけを含めてください。
@@ -1386,8 +1373,8 @@ ${langInstruction}
         processSpeechQueue();
     }
 
-    ttsToggle.style.display = "flex"; // Show TTS Toggle
-    isTtsEnabled = true; // Default to Enabled per user request
+    ttsToggle.style.display = "none"; // Hide TTS Toggle (Feature disabled)
+    isTtsEnabled = false; // Default to Disabled
 
     // Disabled TTS Toggle
     // TTS Toggle Click Handler
