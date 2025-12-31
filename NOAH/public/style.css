@@ -626,7 +626,7 @@ body.theme-normal {
 body[class^="theme-"] {
   background-repeat: no-repeat;
   background-attachment: fixed;
-  background-position: bottom 20px right 20px;
+  background-position: bottom 0px right 0px;
   background-size: 150px auto;
   /* Use screen blend mode to make black background in icons transparent against the gradient */
   background-blend-mode: screen, normal;
@@ -635,8 +635,8 @@ body[class^="theme-"] {
 body.theme-new-year {
   background-color: #1a0505;
   background-image: url('/images/icon_new_year.png'), linear-gradient(to bottom, #1a0505, #3d0000);
-  background-position: bottom 30px right 30px, center;
-  background-size: 120px auto, cover;
+  background-position: bottom 5px right 5px, center;
+  background-size: 130px auto, cover;
   background-repeat: no-repeat, no-repeat;
   background-attachment: fixed, fixed;
   --text-primary: #f7e6b0;
@@ -646,8 +646,8 @@ body.theme-new-year {
 body.theme-valentine {
   background-color: #1a050a;
   background-image: url('/images/icon_valentine.png'), linear-gradient(to bottom, #1a050a, #3d0015);
-  background-position: bottom 30px right 30px, center;
-  background-size: 120px auto, cover;
+  background-position: bottom 5px right 5px, center;
+  background-size: 130px auto, cover;
   background-repeat: no-repeat, no-repeat;
   background-attachment: fixed, fixed;
   --text-primary: #ffb7c5;
@@ -657,8 +657,8 @@ body.theme-valentine {
 body.theme-whiteday {
   background-color: #05101a;
   background-image: url('/images/icon_whiteday.png'), linear-gradient(to bottom, #05101a, #00223d);
-  background-position: bottom 30px right 30px, center;
-  background-size: 120px auto, cover;
+  background-position: bottom 5px right 5px, center;
+  background-size: 130px auto, cover;
   background-repeat: no-repeat, no-repeat;
   background-attachment: fixed, fixed;
   --text-primary: #b7e3ff;
@@ -668,8 +668,8 @@ body.theme-whiteday {
 body.theme-sakura {
   background-color: #1a0510;
   background-image: url('/images/icon_sakura.png'), linear-gradient(to bottom, #1a0510, #3d0022);
-  background-position: bottom 30px right 30px, center;
-  background-size: 120px auto, cover;
+  background-position: bottom 5px right 5px, center;
+  background-size: 130px auto, cover;
   background-repeat: no-repeat, no-repeat;
   background-attachment: fixed, fixed;
   --text-primary: #ffc2d1;
@@ -679,8 +679,8 @@ body.theme-sakura {
 body.theme-tanabata {
   background-color: #02021a;
   background-image: url('/images/icon_tanabata.png'), linear-gradient(to bottom, #02021a, #000033);
-  background-position: bottom 30px right 30px, center;
-  background-size: 120px auto, cover;
+  background-position: bottom 5px right 5px, center;
+  background-size: 130px auto, cover;
   background-repeat: no-repeat, no-repeat;
   background-attachment: fixed, fixed;
   --text-primary: #fffacd;
@@ -690,8 +690,8 @@ body.theme-tanabata {
 body.theme-halloween {
   background-color: #12051a;
   background-image: url('/images/icon_halloween.png'), linear-gradient(to bottom, #12051a, #2a003d);
-  background-position: bottom 30px right 30px, center;
-  background-size: 120px auto, cover;
+  background-position: bottom 5px right 5px, center;
+  background-size: 130px auto, cover;
   background-repeat: no-repeat, no-repeat;
   background-attachment: fixed, fixed;
   --text-primary: #e0b0ff;
@@ -701,8 +701,8 @@ body.theme-halloween {
 body.theme-christmas {
   background-color: #051a08;
   background-image: url('/images/icon_christmas.png'), linear-gradient(to bottom, #051a08, #003d0f);
-  background-position: bottom 30px right 30px, center;
-  background-size: 120px auto, cover;
+  background-position: bottom 5px right 5px, center;
+  background-size: 130px auto, cover;
   background-repeat: no-repeat, no-repeat;
   background-attachment: fixed, fixed;
   --text-primary: #ffcccc;
