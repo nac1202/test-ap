@@ -27,13 +27,20 @@ export default async function handler(req) {
         console.log("Original Text:", text); // Debug log
 
         // Fix time format: 20:00 -> 20時, 9:00 -> 9時
-        cleanText = cleanText.replace(/(\d{1,2}):(\d{2})/g, (match, hour, minute) => {
-            // Simple check to ensure reasonable time range
-            const h = parseInt(hour, 10);
-            const m = parseInt(minute, 10);
+        // Supports half-width (:) and full-width (：) and full-width numbers
+        cleanText = cleanText.replace(/([0-9０-９]{1,2})[:：]([0-9０-９]{2})/g, (match, hour, minute) => {
+            // Normalize to half-width for parsing
+            const toHalfWidth = (s) => s.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+
+            const hStr = toHalfWidth(hour);
+            const mStr = toHalfWidth(minute);
+
+            const h = parseInt(hStr, 10);
+            const m = parseInt(mStr, 10);
+
             if (h >= 0 && h <= 24 && m >= 0 && m <= 59) {
-                if (minute === '00') return `${hour}時`;
-                return `${hour}時${minute}分`;
+                if (m === 0) return `${h}時`; // 00分 -> Just Hour
+                return `${h}時${m}分`;
             }
             return match; // Return original if not a valid time
         });
