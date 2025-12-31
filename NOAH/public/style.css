@@ -616,3 +616,51 @@ a:hover {
     opacity: 0.8;
   }
 }
+
+/* Themes */
+body.theme-normal {
+  background-color: var(--bg-color);
+}
+
+body.theme-new-year {
+  background: linear-gradient(to bottom, #1a0505, #3d0000);
+  --text-primary: #f7e6b0;
+  /* Gold-ish */
+  --text-secondary: #d4af37;
+}
+
+body.theme-valentine {
+  background: linear-gradient(to bottom, #1a050a, #3d0015);
+  --text-primary: #ffb7c5;
+  --text-secondary: #ff8fa3;
+}
+
+body.theme-whiteday {
+  background: linear-gradient(to bottom, #05101a, #00223d);
+  --text-primary: #b7e3ff;
+  --text-secondary: #8fcaff;
+}
+
+body.theme-sakura {
+  background: linear-gradient(to bottom, #1a0510, #3d0022);
+  --text-primary: #ffc2d1;
+  --text-secondary: #ff9ebb;
+}
+
+body.theme-tanabata {
+  background: linear-gradient(to bottom, #02021a, #000033);
+  --text-primary: #fffacd;
+  --text-secondary: #d4e6f1;
+}
+
+body.theme-halloween {
+  background: linear-gradient(to bottom, #12051a, #2a003d);
+  --text-primary: #e0b0ff;
+  --text-secondary: #ff9900;
+}
+
+body.theme-christmas {
+  background: linear-gradient(to bottom, #051a08, #003d0f);
+  --text-primary: #ffcccc;
+  --text-secondary: #ffd700;
+}

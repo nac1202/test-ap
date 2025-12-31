@@ -15,6 +15,7 @@ let memoryStatus = {
     counter: 'green',
     box: 'green',
     shopStatus: 'open',
+    theme: 'normal',
     cast: {
         miryu: { name: 'MIRYU (みりゅう)', isPresent: false, id: 'miryu' },
         micchan: { name: 'MICCHAN (みっちゃん)', isPresent: false, id: 'micchan' },
@@ -128,6 +129,12 @@ app.post('/api/status-v2', authMiddleware, async (req, res) => {
             if (['open', 'holiday', 'reserved', 'closed'].includes(body.shopStatus)) {
                 s.shopStatus = body.shopStatus;
             }
+        }
+
+        // Update Theme
+        if (body.theme) {
+            // Validate theme if strict, but flexible for now
+            s.theme = body.theme;
         }
 
         // Toggle Cast Status

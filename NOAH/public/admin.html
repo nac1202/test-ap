@@ -24,6 +24,24 @@
         </div>
       </section>
 
+      <!-- Theme Selection -->
+      <section class="admin-section">
+        <h2>背景テーマ</h2>
+        <div class="status-options">
+          <select id="theme-select"
+            style="padding: 0.5rem; font-size: 1rem; background: #333; color: white; border: 1px solid #555;">
+            <option value="normal">ノーマル</option>
+            <option value="new-year">お正月</option>
+            <option value="valentine">バレンタイン</option>
+            <option value="whiteday">ホワイトデー</option>
+            <option value="sakura">桜</option>
+            <option value="tanabata">七夕</option>
+            <option value="halloween">ハロウィン</option>
+            <option value="christmas">クリスマス</option>
+          </select>
+        </div>
+      </section>
+
       <!-- Cast Status -->
       <section class="admin-section">
         <h2>キャスト出勤</h2>
@@ -96,6 +114,11 @@
         if (radio) radio.checked = true;
       }
 
+      // Theme
+      if (data.theme) {
+        document.getElementById('theme-select').value = data.theme;
+      }
+
       // Cast Status
       renderCast(data.cast || {});
     }
@@ -137,6 +160,11 @@
       radio.addEventListener('change', (e) => {
         apiPost({ shopStatus: e.target.value });
       });
+    });
+
+    // Theme Listener
+    document.getElementById('theme-select').addEventListener('change', (e) => {
+      apiPost({ theme: e.target.value });
     });
 
     // Add Cast Listener

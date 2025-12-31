@@ -149,17 +149,59 @@
       const holidayDiv = document.getElementById('holiday-message');
       const closedDiv = document.getElementById('closed-message');
       const castSection = document.getElementById('cast-section');
+      const footerMsg = document.querySelector('.footer-msg');
+
+      // Theme
+      if (s.theme) {
+        document.body.className = `theme-${s.theme}`;
+      } else {
+        document.body.className = 'theme-normal';
+      }
+
+      // New Year Logic
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1; // 0-indexed
+      const d = now.getDate();
+      const isNewYear2026 = (year === 2026 && month === 1 && (d >= 1 && d <= 3));
+
+      if (footerMsg) {
+        if (isNewYear2026) {
+          footerMsg.textContent = '1月6日から営業となります';
+        } else if (s.shopStatus === 'closed' || s.shopStatus === 'holiday') {
+          footerMsg.textContent = 'またのご来店をお待ちしております。';
+        } else {
+          footerMsg.textContent = 'ご来店をお待ちしております。';
+        }
+      }
 
       if (s.shopStatus === 'holiday') {
         areasDiv.style.display = 'none';
         holidayDiv.classList.remove('hidden');
         closedDiv.classList.add('hidden');
         castSection.style.display = 'none';
+
+        // Allow override if client date is special range, though "holiday" usually shows holiday msg
+        // If user wants specific message "本日の営業は終了しました" -> "New Year...", that was for 'closed'.
+        // But let's check if we should override 'holiday' too, or just 'closed'.
+        // User request: "本日の営業は終了しました" (closed) should become "New Year..."
+
+        if (isNewYear2026) {
+          holidayDiv.innerHTML = '<h2>2026年明けましておめでとうございます</h2>';
+        }
+
       } else if (s.shopStatus === 'closed') {
         areasDiv.style.display = 'none';
         holidayDiv.classList.add('hidden');
         closedDiv.classList.remove('hidden');
         castSection.style.display = 'none';
+
+        if (isNewYear2026) {
+          closedDiv.innerHTML = '<h2>2026年明けましておめでとうございます</h2>';
+        } else {
+          // Restore default in case it was changed in previous render (SPA-like behavior precaution)
+          closedDiv.innerHTML = '<h2>本日の営業は終了しました</h2>';
+        }
       } else {
         areasDiv.style.display = 'flex';
         holidayDiv.classList.add('hidden');
