@@ -11,19 +11,35 @@ const STATUS_FILE = path.join('/tmp', 'status.json');
 const ADMIN_USER = process.env.ADMIN_USER || 'miryu';
 const ADMIN_PASS = process.env.ADMIN_PASS || '0418';
 
-let memoryStatus = {
-    counter: 'green',
-    box: 'green',
-    shopStatus: 'open',
+// Default Memory State
+let memoryData = {
+    // Current Seat Status (Manual)
+    seats: {
+        counter: 'green',
+        box: 'green'
+    },
+    // Calendar Schedules: "YYYY-MM-DD": { openTime, closeTime, type, cast: [] }
+    schedules: {},
+    // Master Cast List (Dynamic)
+    // Key = ID, Value = Display Name
+    castMaster: {
+        'MIRYU': 'MIRYU (みりゅう)',
+        'URU': 'URU (うる)',
+        'MICCHAN': 'MICCHAN (みっちゃん)',
+        'ERI': 'ERI (えり)',
+        'IKUKO': 'IKUKO (いくこ)'
+    },
     theme: 'normal',
-    cast: {
-        miryu: { name: 'MIRYU (みりゅう)', isPresent: false, id: 'miryu' },
-        micchan: { name: 'MICCHAN (みっちゃん)', isPresent: false, id: 'micchan' },
-        eri: { name: 'ERI (えり)', isPresent: false, id: 'eri' },
-        uru: { name: 'URU (うる)', isPresent: false, id: 'uru' },
-        ikuko: { name: 'IKUKO (いくこ)', isPresent: false, id: 'ikuko' }
-    }
+    mamaMessage: ''
 };
+
+// Helper: Get JST Date
+function getJSTNow() {
+    // Vercel might be UTC, so we manually shift
+    const now = new Date();
+    // UTC time + 9 hours
+    return new Date(now.getTime() + (9 * 60 * 60 * 1000));
+}
 
 // Support both Vercel KV (KV_...) and Marketplace Upstash (UPSTASH_...)
 const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -42,46 +58,33 @@ if (KV_URL && KV_TOKEN) {
     }
 }
 
-async function readStatus() {
+async function readData() {
     if (kv) {
         try {
-            const s = await kv.get('status');
-            // Migration helper: if old format (boolean values), convert to object
-            if (s && s.cast) {
-                let needsFix = false;
-                for (const key of Object.keys(s.cast)) {
-                    if (typeof s.cast[key] === 'boolean') {
-                        // Fallback names for existing keys if migration happens live
-                        const fallbackNames = {
-                            miryu: 'MIRYU (みりゅう)',
-                            micchan: 'MICCHAN (みっちゃん)',
-                            eri: 'ERI (えり)',
-                            uru: 'URU (うる)',
-                            ikuko: 'IKUKO (いくこ)'
-                        };
-                        s.cast[key] = {
-                            name: fallbackNames[key] || key.toUpperCase(),
-                            isPresent: s.cast[key],
-                            id: key
-                        };
-                        needsFix = true;
-                    }
-                }
-                if (needsFix) await writeStatus(s); // Save converted
+            const data = await kv.get('noa_data_v2');
+            if (data) {
+                return {
+                    ...memoryData,
+                    ...data,
+                    seats: { ...memoryData.seats, ...(data.seats || {}) },
+                    schedules: { ...memoryData.schedules, ...(data.schedules || {}) },
+                    schedules: { ...memoryData.schedules, ...(data.schedules || {}) },
+                    castMaster: { ...memoryData.castMaster, ...(data.castMaster || {}) },
+                    mamaMessage: data.mamaMessage || memoryData.mamaMessage
+                };
             }
-            if (s) return s;
         } catch (e) {
             console.error('KV Read Error:', e);
         }
     }
-    return memoryStatus;
+    return memoryData;
 }
 
-async function writeStatus(s) {
-    memoryStatus = s;
+async function writeData(data) {
+    memoryData = data;
     if (kv) {
         try {
-            await kv.set('status', s);
+            await kv.set('noa_data_v2', data);
         } catch (e) {
             console.error('KV Write Error:', e);
         }
@@ -105,76 +108,117 @@ function authMiddleware(req, res, next) {
 }
 
 app.use(express.json());
-// Static files are handled by Vercel automatically from public/ folder
 
+// Main Public API
 app.get('/api/status-v2', async (req, res) => {
-    res.json(await readStatus());
+    const data = await readData();
+    const nowJST = getJSTNow();
+
+    const currentHour = nowJST.getUTCHours();
+    const currentMin = nowJST.getUTCMinutes();
+
+    let targetDateStr = nowJST.toISOString().split('T')[0];
+    let displayState = 'PRE_OPEN';
+
+    if (currentHour < 7) {
+        displayState = 'ENDED';
+    } else {
+        const schedule = data.schedules[targetDateStr] || {
+            openTime: '18:00', closeTime: '23:30', type: 'normal', cast: []
+        };
+        const [openH, openM] = schedule.openTime.split(':').map(Number);
+        const [closeH, closeM] = schedule.closeTime.split(':').map(Number);
+        const nowMinutes = currentHour * 60 + currentMin;
+        const openMinutes = openH * 60 + openM;
+        const closeMinutes = closeH * 60 + closeM;
+
+        if (nowMinutes < openMinutes) {
+            displayState = 'PRE_OPEN';
+        } else if (nowMinutes >= openMinutes && nowMinutes < closeMinutes) {
+            displayState = 'OPEN';
+        } else {
+            displayState = 'ENDED';
+        }
+        if (schedule.type === 'holiday') displayState = 'HOLIDAY';
+    }
+
+    const todaySchedule = data.schedules[targetDateStr] || {
+        openTime: '18:00', closeTime: '23:30', type: 'normal', cast: []
+    };
+
+    res.json({
+        displayState,
+        serverTime: nowJST.toISOString(),
+        schedule: todaySchedule, // For public page convenience
+        schedules: data.schedules, // For admin calendar
+        seats: data.seats,
+        theme: data.theme,
+        theme: data.theme,
+        castMaster: data.castMaster,
+        mamaMessage: data.mamaMessage
+    });
 });
 
+// Admin API
 app.post('/api/status-v2', authMiddleware, async (req, res) => {
     try {
         const body = req.body || {};
-        const s = await readStatus();
-        if (!s.cast) s.cast = {};
+        const data = await readData();
 
         // Update Seat Status
-        if (body.area && body.status) {
-            if (['counter', 'box'].includes(body.area) && ['green', 'yellow', 'red'].includes(body.status)) {
-                s[body.area] = body.status;
+        if (body.updateSeats) {
+            const { area, status } = body.updateSeats;
+            if (data.seats && data.seats[area]) {
+                data.seats[area] = status;
             }
         }
 
-        // Update Shop Status
-        if (body.shopStatus) {
-            if (['open', 'holiday', 'reserved', 'closed'].includes(body.shopStatus)) {
-                s.shopStatus = body.shopStatus;
+        // Update Schedule (Calendar)
+        if (body.updateSchedule) {
+            const { date, schedule } = body.updateSchedule;
+            if (date && schedule) {
+                if (!data.schedules) data.schedules = {};
+                data.schedules[date] = schedule;
             }
         }
 
-        // Update Theme
-        if (body.theme) {
-            // Validate theme if strict, but flexible for now
-            s.theme = body.theme;
-        }
-
-        // Toggle Cast Status
-        if (body.castUpdate) {
-            const { id, isPresent } = body.castUpdate;
-            if (s.cast[id]) {
-                s.cast[id].isPresent = isPresent;
-            }
-        }
-
-        // Add New Cast
+        // Add Cast
         if (body.addCast) {
             const { id, name } = body.addCast;
             if (id && name) {
-                s.cast[id] = { id, name, isPresent: false };
+                if (!data.castMaster) data.castMaster = {};
+                data.castMaster[id] = name;
             }
         }
 
         // Remove Cast
         if (body.removeCast) {
             const { id } = body.removeCast;
-            if (s.cast[id]) {
-                delete s.cast[id];
+            if (data.castMaster && data.castMaster[id]) {
+                delete data.castMaster[id];
             }
         }
 
-        await writeStatus(s);
-        res.json(s);
+        // Theme Update (Global)
+        if (body.theme) {
+            data.theme = body.theme;
+        }
+
+        // Mama Message Update
+        if (body.updateMamaMessage !== undefined) {
+            data.mamaMessage = body.updateMamaMessage;
+        }
+
+        await writeData(data);
+        res.json({ success: true, data });
     } catch (e) {
         console.error('API Error:', e);
         res.status(500).json({ error: e.message });
     }
 });
 
-// Admin Route - Handled by static file serving usually?
-// But we want Auth protection.
-// In Vercel serverless, app.get('/admin') will be hit if rewriting /admin -> /api/index
+// Admin Route
 app.get('/admin', authMiddleware, (req, res) => {
-    // We need to serve the file content manually if we want to protect it via middleware here.
-    // path join from __dirname (which is api/) up one level to public/
     const adminPath = path.join(__dirname, '../public', 'admin.html');
     res.sendFile(adminPath);
 });

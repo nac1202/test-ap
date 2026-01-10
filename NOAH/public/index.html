@@ -23,241 +23,527 @@
   <link rel="apple-touch-icon" href="/images/logo.jpg">
 
   <link rel="stylesheet" href="/style.css">
+  <style>
+    /* Additional states styles */
+    .state-message {
+      text-align: center;
+      margin-top: 4rem;
+      padding: 2rem;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+    }
+
+    .state-message h2 {
+      font-size: 1.5rem;
+      color: #e94560;
+      margin-bottom: 1rem;
+    }
+
+    .state-message p {
+      color: #ccc;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Weekly Schedule Styles */
+    .weekly-section {
+      margin-top: 3rem;
+      border-top: 1px solid rgba(197, 160, 89, 0.1);
+      padding-top: 2rem;
+      width: 100%;
+    }
+
+    .weekly-title {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+
+    .weekly-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .weekly-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .weekly-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--text-secondary);
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.2rem;
+      opacity: 0.9;
+    }
+
+    .weekly-date {
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+
+    .weekly-status {
+      font-size: 0.9rem;
+    }
+
+    .status-cls-normal {
+      color: var(--status-green);
+    }
+
+    .status-cls-holiday {
+      color: var(--status-red);
+      font-weight: bold;
+    }
+
+    .status-cls-reserved {
+      color: blue;
+      font-weight: bold;
+    }
+
+    /* Fallback blue */
+
+    .weekly-cast-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .weekly-cast-item {
+      color: #ccc;
+    }
+
+    /* Navigation Menu Styles */
+    .menu-btn {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 0.5rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      backdrop-filter: blur(2px);
+    }
+
+    .bar {
+      width: 25px;
+      height: 2px;
+      background: var(--text-primary);
+      transition: 0.3s;
+    }
+
+    .nav-overlay {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 250px;
+      /* Drawer width */
+      height: 100%;
+      background: rgba(10, 10, 10, 0.95);
+      border-left: 1px solid #444;
+      z-index: 999;
+      transition: 0.3s;
+      display: flex;
+      flex-direction: column;
+      padding-top: 5rem;
+      padding-left: 2rem;
+      gap: 1.5rem;
+    }
+
+    .nav-overlay.active {
+      right: 0;
+    }
+
+    .nav-link {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      border: none;
+    }
+
+    .close-area {
+      /* Transparent overlay for clicking outside */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 998;
+      display: none;
+    }
+
+    .close-area.active {
+      display: block;
+    }
+  </style>
 </head>
 
 <body>
   <main class="container">
     <header class="site-header">
       <img src="/images/logo.jpg" alt="NOA Logo" class="logo">
-      <p class="subtitle">只今の空席状況</p>
       <div id="clock" class="clock"></div>
     </header>
 
-    <div id="holiday-message" class="holiday-message hidden">
+    <!-- Menu Button -->
+    <button id="menu-btn" class="menu-btn" aria-label="Menu">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </button>
+
+    <!-- Navigation Overlay -->
+    <div id="nav-overlay" class="nav-overlay">
+      <a href="#" class="nav-link" onclick="toggleMenu()">TOP</a>
+      <a href="#view-open" class="nav-link" onclick="toggleMenu()">SEATS</a>
+      <a href="#cast-section" class="nav-link" onclick="toggleMenu()">TODAY'S CAST</a>
+      <a href="#weekly-section" class="nav-link" onclick="toggleMenu()">WEEKLY SCHEDULE</a>
+      <a href="/install.html" class="nav-link" style="font-size:0.9rem;" onclick="toggleMenu()">アプリ設定</a>
+    </div>
+    <div id="close-area" class="close-area" onclick="toggleMenu()"></div>
+
+    <!-- Content Containers -->
+
+    <!-- 1. ENDED View -->
+    <div id="view-ended" class="state-message hidden">
+      <h2>本日の営業は終了いたしました</h2>
+      <p>またのご来店をお待ちしております。</p>
+    </div>
+
+    <!-- 2. PRE_OPEN View -->
+    <div id="view-pre-open" class="state-message hidden">
+      <h2 id="pre-open-msg">本日の営業は18時からです</h2>
+      <p>ご来店お待ちしております</p>
+    </div>
+
+    <!-- 3. HOLIDAY View -->
+    <div id="view-holiday" class="state-message hidden">
       <h2>本日は定休日です</h2>
     </div>
 
-    <div id="closed-message" class="holiday-message hidden">
-      <h2>本日の営業は終了しました</h2>
+    <!-- 4. OPEN (Live) View -->
+    <div id="view-open" class="hidden">
+      <p class="subtitle" style="text-align:center; margin-bottom:1rem;">只今の空席状況</p>
+
+      <div id="areas" class="areas">
+        <div class="area" id="area-counter">
+          <div class="area-inner">
+            <div class="status-indicator">
+              <div class="dot" data-status="green"></div>
+              <div class="glow"></div>
+              <div class="reserved-text hidden">貸切</div>
+            </div>
+            <div class="label-group">
+              <h2 class="area-name">COUNTER</h2>
+              <span class="area-desc">カウンター席</span>
+              <span class="area-seats">(5 Seats)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="area" id="area-box">
+          <div class="area-inner">
+            <div class="status-indicator">
+              <div class="dot" data-status="green"></div>
+              <div class="glow"></div>
+              <div class="reserved-text hidden">貸切</div>
+            </div>
+            <div class="label-group">
+              <h2 class="area-name">BOX SEATS</h2>
+              <span class="area-desc">ボックス席</span>
+              <span class="area-seats">(6 Seats)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend" id="legend">
+        <div class="legend-item">
+          <div class="dot-small" data-status="green"></div>
+          <div class="legend-text"><span class="lang-en">VACANT</span><span class="lang-ja">空席</span></div>
+        </div>
+        <div class="legend-item">
+          <div class="dot-small" data-status="yellow"></div>
+          <div class="legend-text"><span class="lang-en">LIMITED</span><span class="lang-ja">残りわずか</span></div>
+        </div>
+        <div class="legend-item">
+          <div class="dot-small" data-status="red"></div>
+          <div class="legend-text"><span class="lang-en">FULL</span><span class="lang-ja">満席</span></div>
+        </div>
+      </div>
     </div>
 
-    <div id="areas" class="areas">
-      <div class="area" id="area-counter">
-        <div class="area-inner">
-          <div class="status-indicator">
-            <div class="dot" data-status="green"></div>
-            <div class="glow"></div>
-            <div class="reserved-text hidden">貸切</div>
-          </div>
-          <div class="label-group">
-            <h2 class="area-name">COUNTER</h2>
-            <span class="area-desc">カウンター席</span>
-            <span class="area-seats">(5 Seats)</span>
-          </div>
-        </div>
-      </div>
+    <!-- 5. Mama Message Board -->
+    <div id="mama-message-section" class="mama-message-board hidden">
+      <h3 class="mama-title">みりゅうママからの伝言</h3>
+      <p id="mama-message-text" class="mama-text"></p>
+    </div>
 
-      <div class="area" id="area-box">
-        <div class="area-inner">
-          <div class="status-indicator">
-            <div class="dot" data-status="green"></div>
-            <div class="glow"></div>
-            <div class="reserved-text hidden">貸切</div>
-          </div>
-          <div class="label-group">
-            <h2 class="area-name">BOX SEATS</h2>
-            <span class="area-desc">ボックス席</span>
-            <span class="area-seats">(6 Seats)</span>
-          </div>
-        </div>
+    <!-- CAST Section (Visible in PRE_OPEN and OPEN, hidden in ENDED or HOLIDAY usually) -->
+    <div id="cast-section" class="cast-section hidden">
+      <h3 class="section-title">本日のキャスト</h3> <!-- Changed label slightly to fit both pre/open -->
+      <div id="cast-list" class="cast-list">
+        <!-- JS will populate -->
       </div>
     </div>
 
-    <!-- Legend (Moved here) -->
-    <div class="legend-container">
-      <div class="legend-container">
-        <p class="footer-msg">ご来店をお待ちしております。</p>
-        <div class="legend" id="legend">
-          <div class="legend-item">
-            <div class="dot-small" data-status="green"></div>
-            <div class="legend-text">
-              <span class="lang-en">VACANT</span>
-              <span class="lang-ja">空席</span>
-            </div>
-          </div>
-          <div class="legend-item">
-            <div class="dot-small" data-status="yellow"></div>
-            <div class="legend-text">
-              <span class="lang-en">LIMITED</span>
-              <span class="lang-ja">残りわずか</span>
-            </div>
-          </div>
-          <div class="legend-item">
-            <div class="dot-small" data-status="red"></div>
-            <div class="legend-text">
-              <span class="lang-en">FULL</span>
-              <span class="lang-ja">満席</span>
-            </div>
-          </div>
-        </div>
+    <!-- Weekly Schedule Section -->
+    <section id="weekly-section" class="weekly-section">
+      <h3 class="weekly-title">WEEKLY SCHEDULE</h3>
+      <div id="weekly-list" class="weekly-list">
+        <!-- JS will populate -->
       </div>
+    </section>
 
-      <!-- Cast Section -->
-      <div id="cast-section" class="cast-section">
-        <h3 class="section-title">只今の出勤状況</h3>
-        <div id="cast-list" class="cast-list">
-          <!-- JS will populate -->
-        </div>
-      </div>
-
-      <!-- Business Hours Section -->
-      <div class="business-hours-section">
-        <h3 class="section-title">営業時間</h3>
-        <p>通常営業<br>18時〜23時(23時30分閉店)</p>
-        <p class="note-small">※通常営業以降2時半までは要相談</p>
-      </div>
-
-      <footer class="site-footer">
-        <p class="note">Auto-update: <span id="interval">10</span>s</p>
-        <a href="/install.html" class="install-link">アプリとして保存する方法</a>
-      </footer>
+    <footer class="site-footer">
+      <p class="note">Auto-update: <span id="interval">10</span>s</p>
+      <a href="/install.html" class="install-link">アプリとして保存する方法</a>
+    </footer>
   </main>
+
   <script>
-    /* Clock Logic */
+    /* Clock */
     function updateClock() {
       const now = new Date();
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const days = ['日', '月', '火', '水', '木', '金', '土'];
       const m = now.getMonth() + 1;
       const d = now.getDate();
       const day = days[now.getDay()];
       const t = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-      document.getElementById('clock').textContent = `${m}.${d} ${day} ${t}`;
+      document.getElementById('clock').textContent = `${m}月${d}日(${day}) ${t}`;
     }
     setInterval(updateClock, 1000);
     updateClock();
 
+    /* Main Logic */
     async function fetchStatus() {
-      const res = await fetch('/api/status-v2');
-      if (!res.ok) return;
-      const s = await res.json();
-      updateUI(s);
+      try {
+        const res = await fetch('/api/status-v2');
+        if (!res.ok) return;
+        const data = await res.json();
+        updateUI(data);
+      } catch (e) { console.error(e); }
     }
 
-    function updateUI(s) {
-      // 1. Shop Status
-      const areasDiv = document.getElementById('areas');
-      const holidayDiv = document.getElementById('holiday-message');
-      const closedDiv = document.getElementById('closed-message');
-      const castSection = document.getElementById('cast-section');
-      const footerMsg = document.querySelector('.footer-msg');
+    function updateUI(data) {
+      const state = data.displayState; // ENDED, PRE_OPEN, OPEN, HOLIDAY
+      const schedule = data.schedule;
+      const seats = data.seats;
+      const castMaster = data.castMaster || {}; // Map ID -> Name
 
       // Theme
-      if (s.theme) {
-        document.body.className = `theme-${s.theme}`;
+      document.body.className = `theme-${data.theme || 'normal'}`;
+
+      // Hide all views first
+      document.getElementById('view-ended').classList.add('hidden');
+      document.getElementById('view-pre-open').classList.add('hidden');
+      document.getElementById('view-holiday').classList.add('hidden');
+      document.getElementById('view-open').classList.add('hidden');
+      document.getElementById('cast-section').classList.add('hidden');
+
+      // Show appropriate view
+      if (state === 'ENDED') {
+        document.getElementById('view-ended').classList.remove('hidden');
+      }
+      else if (state === 'HOLIDAY') {
+        document.getElementById('view-holiday').classList.remove('hidden');
+      }
+      else if (state === 'PRE_OPEN') {
+        const el = document.getElementById('view-pre-open');
+        el.classList.remove('hidden');
+
+        // Dynamic Time
+        const openTime = schedule.openTime || '18:00';
+        // Strip leading zero if needed
+        const [h, m] = openTime.split(':');
+        const hour = parseInt(h, 10);
+        const min = parseInt(m, 10);
+
+        let timeStr = `${hour}時`;
+        if (min > 0) {
+          timeStr += `${min}分`;
+        }
+        document.getElementById('pre-open-msg').textContent = `本日の営業は${timeStr}からです`;
+
+        // Show Cast
+        renderCast(schedule.cast || [], castMaster);
+      }
+      else if (state === 'OPEN') {
+        document.getElementById('view-open').classList.remove('hidden');
+
+        // Render Seats
+        renderSeats(seats, schedule.type === 'reserved');
+
+        // Show Cast
+        renderCast(schedule.cast || [], castMaster);
+      }
+
+      // Mama Message
+      const mamaMsg = data.mamaMessage;
+      if (mamaMsg && mamaMsg.trim() !== "") {
+        document.getElementById('mama-message-section').classList.remove('hidden');
+        document.getElementById('mama-message-text').textContent = mamaMsg;
       } else {
-        document.body.className = 'theme-normal';
+        document.getElementById('mama-message-section').classList.add('hidden');
       }
 
-      // New Year Logic
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1; // 0-indexed
-      const d = now.getDate();
-      const isNewYear2026 = (year === 2026 && month === 1 && (d >= 1 && d <= 3));
+      // Always render weekly schedule regardless of state
+      renderWeeklySchedule(data.schedules, castMaster);
+    }
 
-      if (footerMsg) {
-        if (isNewYear2026) {
-          footerMsg.textContent = '1月6日から営業となります';
-        } else if (s.shopStatus === 'closed' || s.shopStatus === 'holiday') {
-          footerMsg.textContent = 'またのご来店をお待ちしております。';
+    function renderSeats(seats, isReserved) {
+      ['counter', 'box'].forEach(area => {
+        const container = document.getElementById('area-' + area);
+        const dot = container.querySelector('.dot');
+        const glow = container.querySelector('.glow');
+        const resText = container.querySelector('.reserved-text');
+
+        if (isReserved) {
+          dot.style.display = 'none';
+          glow.style.display = 'none';
+          resText.classList.remove('hidden');
         } else {
-          footerMsg.textContent = 'ご来店をお待ちしております。';
+          dot.style.display = 'block';
+          glow.style.display = 'block';
+          resText.classList.add('hidden');
+
+          const s = seats[area] || 'green';
+          dot.dataset.status = s;
+          glow.dataset.status = s;
         }
+      });
+    }
+
+    function renderCast(castList, castMaster) {
+      const section = document.getElementById('cast-section');
+      section.classList.remove('hidden');
+      const list = document.getElementById('cast-list');
+      list.innerHTML = '';
+
+      if (castList.length === 0) {
+        list.innerHTML = '<div style="color:#aaa;">(予定なし)</div>';
+        return;
       }
 
-      if (s.shopStatus === 'holiday') {
-        areasDiv.style.display = 'none';
-        holidayDiv.classList.remove('hidden');
-        closedDiv.classList.add('hidden');
-        castSection.style.display = 'none';
+      castList.forEach(key => {
+        // Check if key exists in master, else just use key
+        const name = castMaster[key] || key;
 
-        // Allow override if client date is special range, though "holiday" usually shows holiday msg
-        // If user wants specific message "本日の営業は終了しました" -> "New Year...", that was for 'closed'.
-        // But let's check if we should override 'holiday' too, or just 'closed'.
-        // User request: "本日の営業は終了しました" (closed) should become "New Year..."
+        const div = document.createElement('div');
+        div.className = 'cast-item';
 
-        if (isNewYear2026) {
-          holidayDiv.innerHTML = '<h2>2026年明けましておめでとうございます</h2>';
-        }
+        const lamp = document.createElement('div');
+        lamp.className = 'dot-pink';
 
-      } else if (s.shopStatus === 'closed') {
-        areasDiv.style.display = 'none';
-        holidayDiv.classList.add('hidden');
-        closedDiv.classList.remove('hidden');
-        castSection.style.display = 'none';
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = name;
 
-        if (isNewYear2026) {
-          closedDiv.innerHTML = '<h2>2026年明けましておめでとうございます</h2>';
+        div.appendChild(lamp);
+        div.appendChild(nameSpan);
+        list.appendChild(div);
+      });
+    }
+
+    function renderWeeklySchedule(allSchedules, castMaster) {
+      const listEl = document.getElementById('weekly-list');
+      listEl.innerHTML = '';
+      allSchedules = allSchedules || {};
+
+      const today = new Date();
+      // Loop 7 days starting today
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const dateKey = `${y}-${m}-${d}`;
+
+        const days = ['日', '月', '火', '水', '木', '金', '土'];
+        const dayLabel = `${Number(m)}月${Number(d)}日(${days[date.getDay()]})`;
+
+        const sched = allSchedules[dateKey] || { type: 'normal', openTime: '18:00', closeTime: '23:30', cast: [] };
+
+        // Build Card
+        const card = document.createElement('div');
+        card.className = 'weekly-card';
+
+        // Status Text
+        let statusText = '';
+        let statusClass = 'status-cls-normal';
+        if (sched.type === 'holiday') {
+          statusText = '定休日';
+          statusClass = 'status-cls-holiday';
+        } else if (sched.type === 'reserved') {
+          statusText = '貸切';
+          statusClass = 'status-cls-reserved';
         } else {
-          // Restore default in case it was changed in previous render (SPA-like behavior precaution)
-          closedDiv.innerHTML = '<h2>本日の営業は終了しました</h2>';
+          statusText = `${sched.openTime || '18:00'} OPEN`;
         }
-      } else {
-        areasDiv.style.display = 'flex';
-        holidayDiv.classList.add('hidden');
-        closedDiv.classList.add('hidden');
-        castSection.style.display = 'block';
 
-        // Reserved Logic
-        const isReserved = (s.shopStatus === 'reserved');
+        // Cast Text
+        let castHtml = '';
+        if (sched.type !== 'holiday' && sched.cast && sched.cast.length > 0) {
+          const names = sched.cast.map(id => castMaster[id] || id).join(', ');
+          castHtml = `<div class="weekly-cast-row"><span class="weekly-cast-item">Cast: ${names}</span></div>`;
+        } else if (sched.type !== 'holiday') {
+          castHtml = `<div class="weekly-cast-row"><span style="color:#666;">(キャスト未定)</span></div>`;
+        }
 
-        ['counter', 'box'].forEach(area => {
-          const container = document.getElementById('area-' + area);
-          if (!container) return;
+        card.innerHTML = `
+             <div class="weekly-header">
+               <span class="weekly-date">${dayLabel}</span>
+               <span class="weekly-status ${statusClass}">${statusText}</span>
+             </div>
+             ${castHtml}
+            `;
 
-          const dot = container.querySelector('.dot');
-          const glow = container.querySelector('.glow');
-          const reservedText = container.querySelector('.reserved-text');
-
-          if (isReserved) {
-            dot.style.display = 'none';
-            glow.style.display = 'none';
-            reservedText.classList.remove('hidden');
-          } else {
-            dot.style.display = 'block';
-            glow.style.display = 'block';
-            reservedText.classList.add('hidden');
-            dot.dataset.status = s[area];
-            glow.dataset.status = s[area];
-          }
-        });
-      }
-
-      // 2. Cast List 
-      // Always re-render or update class
-      const listDiv = document.getElementById('cast-list');
-      listDiv.innerHTML = '';
-      if (s.cast) {
-        // dynamic rendering
-        Object.values(s.cast).forEach(member => {
-          const div = document.createElement('div');
-          div.className = 'cast-item';
-
-          // Pink Lamp
-          const lamp = document.createElement('div');
-          lamp.className = member.isPresent ? 'dot-pink' : 'dot-pink off';
-
-          const nameSpan = document.createElement('span');
-          nameSpan.textContent = member.name;
-
-          div.appendChild(lamp);
-          div.appendChild(nameSpan);
-          listDiv.appendChild(div);
-        });
+        listEl.appendChild(card);
       }
     }
+
     fetchStatus();
-    setInterval(fetchStatus, 10000);
+    setInterval(fetchStatus, 10000); // 10s Poll
+
+    /* Menu Logic */
+    function toggleMenu() {
+      const overlay = document.getElementById('nav-overlay');
+      const closeArea = document.getElementById('close-area');
+      const active = overlay.classList.contains('active');
+
+      if (active) {
+        overlay.classList.remove('active');
+        closeArea.classList.remove('active');
+      } else {
+        overlay.classList.add('active');
+        closeArea.classList.add('active');
+      }
+    }
+    document.getElementById('menu-btn').onclick = toggleMenu;
   </script>
   <script src="/fireflies.js"></script>
 </body>

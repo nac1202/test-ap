@@ -12,6 +12,9 @@
   --status-yellow-glow: rgba(255, 215, 0, 0.4);
   --status-red: #ff004c;
   --status-red-glow: rgba(255, 0, 76, 0.4);
+
+  --card-bg: rgba(20, 20, 30, 0.85);
+  --card-border: rgba(255, 255, 255, 0.15);
 }
 
 * {
@@ -414,10 +417,7 @@ body {
   margin: 2.5rem 0;
 }
 
-.admin-body {
-  /* To be used if admin page needs specific overrides, 
-     but mostly it will inherit correctly. */
-}
+
 
 h1.admin-title {
   font-family: var(--font-serif);
@@ -642,6 +642,8 @@ body.theme-new-year {
   background-attachment: fixed, fixed;
   --text-primary: #f7e6b0;
   --text-secondary: #d4af37;
+  --card-bg: rgba(40, 10, 10, 0.85);
+  --card-border: #d4af37;
 }
 
 body.theme-valentine {
@@ -653,6 +655,8 @@ body.theme-valentine {
   background-attachment: fixed, fixed;
   --text-primary: #ffb7c5;
   --text-secondary: #ff8fa3;
+  --card-bg: rgba(40, 10, 20, 0.85);
+  --card-border: #ff8fa3;
 }
 
 body.theme-whiteday {
@@ -664,6 +668,8 @@ body.theme-whiteday {
   background-attachment: fixed, fixed;
   --text-primary: #b7e3ff;
   --text-secondary: #8fcaff;
+  --card-bg: rgba(10, 20, 40, 0.85);
+  --card-border: #8fcaff;
 }
 
 body.theme-sakura {
@@ -675,6 +681,8 @@ body.theme-sakura {
   background-attachment: fixed, fixed;
   --text-primary: #ffc2d1;
   --text-secondary: #ff9ebb;
+  --card-bg: rgba(40, 10, 20, 0.85);
+  --card-border: #ff9ebb;
 }
 
 body.theme-tanabata {
@@ -686,6 +694,8 @@ body.theme-tanabata {
   background-attachment: fixed, fixed;
   --text-primary: #fffacd;
   --text-secondary: #d4e6f1;
+  --card-bg: rgba(10, 10, 40, 0.85);
+  --card-border: #d4e6f1;
 }
 
 body.theme-halloween {
@@ -697,6 +707,8 @@ body.theme-halloween {
   background-attachment: fixed, fixed;
   --text-primary: #e0b0ff;
   --text-secondary: #ff9900;
+  --card-bg: rgba(30, 10, 40, 0.85);
+  --card-border: #ff9900;
 }
 
 body.theme-christmas {
@@ -708,4 +720,48 @@ body.theme-christmas {
   background-attachment: fixed, fixed;
   --text-primary: #ffcccc;
   --text-secondary: #ffd700;
+  --card-bg: rgba(5, 30, 10, 0.85);
+  --card-border: #ffd700;
+}
+
+/* Mama Message Board */
+.mama-message-board {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--text-secondary);
+  border-radius: 8px;
+  text-align: center;
+  position: relative;
+}
+
+.mama-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.mama-text {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  /* Preserve newlines */
+}
+
+/* Admin Mama Editor */
+#mama-message-input {
+  width: 100%;
+  height: 100px;
+  background: #16213e;
+  border: 1px solid #444;
+  color: white;
+  padding: 0.5rem;
+  font-family: sans-serif;
+  resize: vertical;
 }

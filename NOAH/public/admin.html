@@ -6,189 +6,612 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>NOA 管理画面</title>
   <link rel="stylesheet" href="/style.css">
+  <style>
+    /* Admin Specific Styles */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 2rem;
+    }
+
+    .calendar-header {
+      font-weight: bold;
+      text-align: center;
+      padding: 0.5rem;
+      background: #444;
+    }
+
+    .calendar-day {
+      background: #222;
+      min-height: 100px;
+      padding: 0.5rem;
+      cursor: pointer;
+      border: 1px solid #444;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .calendar-day:hover {
+      background: #333;
+    }
+
+    .calendar-day.today {
+      border-color: #e94560;
+    }
+
+    .day-number {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .day-status {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    .status-holiday {
+      color: #ff4444 !important;
+      font-weight: bold;
+    }
+
+    .status-reserved {
+      color: #4444ff !important;
+      font-weight: bold;
+    }
+
+    .status-normal {
+      color: #55ff55 !important;
+    }
+
+    /* Highlight the whole cell slightly for non-normal */
+    .calendar-day.is-holiday {
+      background: #331111;
+      border-color: #ff4444;
+    }
+
+    .calendar-day.is-reserved {
+      background: #111133;
+      border-color: #4444ff;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #1a1a2e;
+      padding: 2rem;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 8px;
+      border: 1px solid #e94560;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #ccc;
+    }
+
+    .form-group input[type="time"],
+    .form-group select {
+      width: 100%;
+      padding: 0.5rem;
+      background: #16213e;
+      border: 1px solid #444;
+      color: white;
+    }
+
+    .cast-checklist {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .cast-check-item {
+      background: #16213e;
+      padding: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .cast-check-item input {
+      margin-right: 0.5rem;
+    }
+
+    .seat-controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      justify-content: center;
+    }
+
+    .seat-group {
+      background: #222;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      /* Seat Controls Stack */
+      .seat-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      /* Calendar Adjustments */
+      .calendar-day {
+        min-height: 60px;
+        padding: 2px;
+      }
+
+      .day-number {
+        font-size: 0.9rem;
+      }
+
+      .day-status {
+        font-size: 0.65rem;
+        margin-top: 2px;
+        line-height: 1.1;
+      }
+
+      /* Header & Nav Stack */
+      section>div[style*="justify-content:space-between"] {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      /* Adjust Modal */
+      .modal-content {
+        padding: 1rem;
+        width: 95%;
+      }
+
+      .cast-checklist {
+        grid-template-columns: 1fr 1fr;
+        /* Keep 2 cols but maybe tighter? */
+      }
+    }
+  </style>
 </head>
 
 <body>
   <main class="container">
-    <h1>管理画面</h1>
-    <p>各エリアの状態を選択してください</p>
-    <div class="controls">
-      <!-- Shop Status -->
-      <section class="admin-section">
-        <h2>営業ステータス</h2>
-        <div class="status-options">
-          <label><input type="radio" name="shopStatus" value="open" checked> 通常営業</label>
-          <label><input type="radio" name="shopStatus" value="holiday"> 定休日</label>
-          <label><input type="radio" name="shopStatus" value="reserved"> 貸切</label>
-          <label><input type="radio" name="shopStatus" value="closed"> 終了</label>
-        </div>
-      </section>
-
-      <!-- Theme Selection -->
-      <section class="admin-section">
-        <h2>背景テーマ</h2>
-        <div class="status-options">
-          <select id="theme-select"
-            style="padding: 0.5rem; font-size: 1rem; background: #333; color: white; border: 1px solid #555;">
-            <option value="normal">ノーマル</option>
-            <option value="new-year">お正月</option>
-            <option value="valentine">バレンタイン</option>
-            <option value="whiteday">ホワイトデー</option>
-            <option value="sakura">桜</option>
-            <option value="tanabata">七夕</option>
-            <option value="halloween">ハロウィン</option>
-            <option value="christmas">クリスマス</option>
-          </select>
-        </div>
-      </section>
-
-      <!-- Cast Status -->
-      <section class="admin-section">
-        <h2>キャスト出勤</h2>
-        <div id="cast-container" class="cast-toggles">
-          <!-- Dynamically populated -->
-        </div>
-
-        <div class="add-cast-form">
-          <h3>キャスト追加</h3>
-          <input type="text" id="new-cast-name" placeholder="例: HANAKO (はなこ)" />
-          <button id="btn-add-cast">追加</button>
-        </div>
-      </section>
-
-      <div class="divider"></div>
-
-      <p>各エリアの状態を選択してください</p>
-      <section>
-        <h2>カウンター</h2>
-        <div class="btns" data-area="counter">
-          <button data-status="green">VACANT<br><small>空席</small></button>
-          <button data-status="yellow">LIMITED<br><small>残りわずか</small></button>
-          <button data-status="red">FULL<br><small>満席</small></button>
-        </div>
-      </section>
-      <section>
-        <h2>ボックス席</h2>
-        <div class="btns" data-area="box">
-          <button data-status="green">VACANT<br><small>空席</small></button>
-          <button data-status="yellow">LIMITED<br><small>残りわずか</small></button>
-          <button data-status="red">FULL<br><small>満席</small></button>
-        </div>
-      </section>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h1>NOA 管理画面</h1>
+      <a href="/" style="font-size:0.9rem;">公開ページへ戻る</a>
     </div>
-    <p id="msg"></p>
-    <p><a href="/">公開ページへ戻る</a></p>
-  </main>
-  <script>
-    const msg = document.getElementById('msg');
-    const castContainer = document.getElementById('cast-container');
 
-    // Generic API poster
-    async function apiPost(payload) {
-      const res = await fetch('/api/status-v2', {
+    <!-- Real-time Seat Controls (Always visible) -->
+    <section>
+      <h2>空席状況 (リアルタイム)</h2>
+      <div class="seat-controls">
+        <div class="seat-group">
+          <h3>COUNTER</h3>
+          <div class="btns" data-area="counter">
+            <button data-status="green">VACANT</button>
+            <button data-status="yellow">LIMITED</button>
+            <button data-status="red">FULL</button>
+          </div>
+        </div>
+        <div class="seat-group">
+          <h3>BOX</h3>
+          <div class="btns" data-area="box">
+            <button data-status="green">VACANT</button>
+            <button data-status="yellow">LIMITED</button>
+            <button data-status="red">FULL</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calendar Section -->
+    <section>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2>スケジュール管理</h2>
+        <div>
+          <button id="prev-month">&lt;</button>
+          <span id="current-month-label" style="margin:0 1rem; font-weight:bold;"></span>
+          <button id="next-month">&gt;</button>
+        </div>
+      </div>
+
+      <div class="calendar-header-row calendar-grid" style="margin-bottom:0; min-height:auto;">
+        <div>Sun</div>
+        <div>Mon</div>
+        <div>Tue</div>
+        <div>Wed</div>
+        <div>Thu</div>
+        <div>Fri</div>
+        <div>Sat</div>
+      </div>
+      <div id="calendar" class="calendar-grid"></div>
+    </section>
+
+    <!-- Global Settings -->
+    <section class="admin-section">
+      <h2>背景テーマ</h2>
+      <select id="theme-select" style="padding: 0.5rem; width:100%;">
+        <option value="normal">ノーマル</option>
+        <option value="new-year">お正月</option>
+        <option value="valentine">バレンタイン</option>
+        <option value="whiteday">ホワイトデー</option>
+        <option value="sakura">桜</option>
+        <option value="tanabata">七夕</option>
+        <option value="halloween">ハロウィン</option>
+        <option value="christmas">クリスマス</option>
+      </select>
+    </section>
+
+    <!-- Mama Message Settings -->
+    <section class="admin-section">
+      <h2>みりゅうママからの伝言</h2>
+      <p style="color:#aaa; font-size:0.9rem; margin-bottom:0.5rem;">※140文字以内。空欄にすると非表示になります。</p>
+      <textarea id="mama-message-input" maxlength="140" placeholder="ここに入力したメッセージがトップページに表示されます..."></textarea>
+      <div style="text-align:right; margin-top:0.5rem;">
+        <button id="btn-save-mama" style="background:#e94560;">メッセージを保存</button>
+      </div>
+    </section>
+
+    <!-- NEW: Cast Management -->
+    <section class="admin-section">
+      <h2>キャスト登録管理</h2>
+      <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+        <input type="text" id="new-cast-name" placeholder="例: HANAKO (はなこ)"
+          style="padding:0.5rem; flex:1; background:#16213e; color:white; border:1px solid #444;">
+        <button id="btn-add-cast" style="background:#e94560;">追加</button>
+      </div>
+      <div id="cast-master-list"
+        style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:0.5rem;">
+        <!-- Dynamic -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Edit Modal -->
+  <div id="edit-modal" class="modal">
+    <div class="modal-content">
+      <h2 id="modal-date-label">2026-01-08</h2>
+
+      <div class="form-group">
+        <label>営業状態</label>
+        <select id="edit-type">
+          <option value="normal">通常営業</option>
+          <option value="holiday">定休日</option>
+          <option value="reserved">貸切</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>営業時間</label>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <input type="time" id="edit-open">
+          <span>〜</span>
+          <input type="time" id="edit-close">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>出勤キャスト</label>
+        <div class="cast-checklist" id="modal-cast-list">
+          <!-- Dynamic Populated -->
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+        <button onclick="closeModal()" style="background:#555;">キャンセル</button>
+        <button onclick="saveSchedule()" id="save-btn" style="background:#e94560;">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let currentData = null;
+    let viewDate = new Date();
+
+    // Elements
+    const calendarEl = document.getElementById('calendar');
+    const monthLabel = document.getElementById('current-month-label');
+    const modal = document.getElementById('edit-modal');
+
+    // Init
+    async function init() {
+      await fetchData();
+      renderCalendar();
+      setupListeners();
+      renderMasterCast();
+    }
+
+    async function fetchData() {
+      // Add timestamp to prevent caching
+      const res = await fetch('/api/status-v2?t=' + Date.now());
+      currentData = await res.json();
+
+      // Update Seat Buttons styles
+      document.querySelectorAll('.btns').forEach(group => {
+        const area = group.dataset.area;
+        const currentStatus = currentData.seats ? currentData.seats[area] : 'green';
+      });
+
+      // Update Theme Select
+      if (currentData.theme) {
+        document.getElementById('theme-select').value = currentData.theme;
+      }
+
+      // Update Mama Message
+      document.getElementById('mama-message-input').value = currentData.mamaMessage || '';
+    }
+
+    function renderMasterCast() {
+      // Render Management List
+      const listEl = document.getElementById('cast-master-list');
+      listEl.innerHTML = '';
+      const master = currentData.castMaster || {};
+
+      Object.keys(master).forEach(id => {
+        const name = master[id];
+        const div = document.createElement('div');
+        div.style.background = '#222';
+        div.style.padding = '0.5rem';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.style.border = '1px solid #444';
+
+        div.innerHTML = `
+              <span>${name}</span>
+              <button class="small-btn" onclick="removeCast('${id}')" style="background:#666; font-size:0.8rem;">×</button>
+            `;
+        listEl.appendChild(div);
+      });
+    }
+
+    // Calendar
+    function renderCalendar() {
+      calendarEl.innerHTML = '';
+      const year = viewDate.getFullYear();
+      const month = viewDate.getMonth();
+
+      monthLabel.textContent = `${year}年 ${month + 1}月`;
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startDayOfWeek = firstDay.getDay(); // 0 = Sun
+
+      // Empty slots
+      for (let i = 0; i < startDayOfWeek; i++) {
+        const div = document.createElement('div');
+        calendarEl.appendChild(div);
+      }
+
+      // Days
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const schedule = (currentData.schedules && currentData.schedules[dateStr]) || {};
+
+        const div = document.createElement('div');
+        div.className = 'calendar-day';
+        if (dateStr === new Date().toISOString().split('T')[0]) div.classList.add('today');
+
+        // Add status class to container
+        if (schedule.type === 'holiday') div.classList.add('is-holiday');
+        if (schedule.type === 'reserved') div.classList.add('is-reserved');
+
+        // Debug
+        // if(schedule.type) log(`Render ${dateStr}: ${schedule.type}`);
+
+        div.innerHTML = `
+          <div class="day-number">${d}</div>
+          <div class="day-status ${getValidStatusClass(schedule.type)}">
+            ${getStatusLabel(schedule.type)}<br>
+            ${schedule.openTime || '18:00'}~
+          </div>
+        `;
+        div.onclick = () => openModal(dateStr, schedule);
+        calendarEl.appendChild(div);
+      }
+    }
+
+    function getValidStatusClass(type) {
+      if (type === 'holiday') return 'status-holiday';
+      if (type === 'reserved') return 'status-reserved';
+      return 'status-normal';
+    }
+
+    function getStatusLabel(type) {
+      if (type === 'holiday') return '定休日';
+      if (type === 'reserved') return '貸切';
+      return '通常';
+    }
+
+    // Modal Logic
+    let editingDate = null;
+    function openModal(dateStr, schedule) {
+      editingDate = dateStr;
+      document.getElementById('modal-date-label').textContent = dateStr;
+
+      document.getElementById('edit-type').value = schedule.type || 'normal';
+      document.getElementById('edit-open').value = schedule.openTime || '18:00';
+      document.getElementById('edit-close').value = schedule.closeTime || '23:30';
+
+      // Dynamic Checkboxes
+      const checklistEl = document.getElementById('modal-cast-list');
+      checklistEl.innerHTML = '';
+      const master = currentData.castMaster || {};
+      const scheduledCast = schedule.cast || [];
+
+      Object.keys(master).forEach(id => {
+        const name = master[id];
+        const label = document.createElement('label');
+        label.className = 'cast-check-item';
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.name = 'cast';
+        chk.value = id;
+        if (scheduledCast.includes(id)) chk.checked = true;
+
+        label.appendChild(chk);
+        label.appendChild(document.createTextNode(name));
+        checklistEl.appendChild(label);
+      });
+
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+    }
+
+    async function saveSchedule() {
+      const type = document.getElementById('edit-type').value;
+      const openTime = document.getElementById('edit-open').value || '18:00';
+      const closeTime = document.getElementById('edit-close').value || '23:30';
+
+      const cast = [];
+      document.querySelectorAll('input[name="cast"]:checked').forEach(cb => {
+        cast.push(cb.value);
+      });
+
+      const payload = {
+        openTime,
+        closeTime,
+        type,
+        cast
+      };
+
+      await fetch('/api/status-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          updateSchedule: {
+            date: editingDate,
+            schedule: payload
+          }
+        })
       });
-      if (res.ok) {
-        msg.textContent = '更新しました';
-        msg.style.color = 'green';
-        setTimeout(() => msg.textContent = '', 2000);
-        await init(); // Refresh UI
-      } else {
-        const txt = await res.text();
-        msg.textContent = `更新に失敗しました (${res.status}): ${txt}`;
-        msg.style.color = 'red';
-      }
-      return res;
+
+      closeModal();
+      await init(); // Refresh
     }
 
-    // Initialize
-    async function init() {
-      const res = await fetch('/api/status-v2');
-      const data = await res.json();
+    async function addCast() {
+      const input = document.getElementById('new-cast-name');
+      const name = input.value.trim();
+      if (!name) return;
 
-      // Shop Status
-      if (data.shopStatus) {
-        const radio = document.querySelector(`input[name="shopStatus"][value="${data.shopStatus}"]`);
-        if (radio) radio.checked = true;
-      }
+      // Generate ID
+      const id = 'cast_' + Date.now();
+
+      await fetch('/api/status-v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ addCast: { id, name } })
+      });
+
+      input.value = '';
+      await fetchData();
+      renderMasterCast();
+    }
+
+    window.removeCast = async function (id) { // explicit global
+      if (!confirm('削除しますか？')) return;
+      await fetch('/api/status-v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ removeCast: { id } })
+      });
+      await fetchData();
+      renderMasterCast();
+    }
+
+    // Handlers
+    function setupListeners() {
+      document.getElementById('prev-month').onclick = () => {
+        viewDate.setMonth(viewDate.getMonth() - 1);
+        renderCalendar();
+      };
+      document.getElementById('next-month').onclick = () => {
+        viewDate.setMonth(viewDate.getMonth() + 1);
+        renderCalendar();
+      };
+
+      document.getElementById('btn-add-cast').onclick = addCast;
+
+      // Seat Buttons
+      document.querySelectorAll('.btns').forEach(group => {
+        group.addEventListener('click', async (e) => {
+          if (!e.target.closest('button')) return;
+          const area = group.dataset.area;
+          const status = e.target.closest('button').dataset.status;
+
+          await fetch('/api/status-v2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              updateSeats: { area, status }
+            })
+          });
+        });
+      });
 
       // Theme
-      if (data.theme) {
-        document.getElementById('theme-select').value = data.theme;
-      }
-
-      // Cast Status
-      renderCast(data.cast || {});
-    }
-
-    function renderCast(castData) {
-      castContainer.innerHTML = '';
-      Object.values(castData).forEach(member => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'cast-control';
-
-        // Toggle Button
-        const btn = document.createElement('button');
-        btn.className = member.isPresent ? 'cast-btn active' : 'cast-btn';
-        btn.textContent = member.name;
-        btn.onclick = () => {
-          apiPost({ castUpdate: { id: member.id, isPresent: !member.isPresent } });
-        };
-
-        // Delete Button
-        const delBtn = document.createElement('button');
-        delBtn.textContent = '🗑️';
-        delBtn.className = 'delete-btn';
-        delBtn.onclick = () => {
-          if (confirm(`${member.name} を削除しますか？`)) {
-            apiPost({ removeCast: { id: member.id } });
-          }
-        };
-
-        wrapper.appendChild(btn);
-        wrapper.appendChild(delBtn);
-        castContainer.appendChild(wrapper);
+      document.getElementById('theme-select').addEventListener('change', async (e) => {
+        await fetch('/api/status-v2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ theme: e.target.value })
+        });
       });
+
+      // Mama Message Save
+      document.getElementById('btn-save-mama').onclick = async () => {
+        const msg = document.getElementById('mama-message-input').value;
+        await fetch('/api/status-v2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ updateMamaMessage: msg })
+        });
+        alert('伝言を保存しました');
+      };
     }
 
     init();
-
-    // Shop Status Listeners
-    document.querySelectorAll('input[name="shopStatus"]').forEach(radio => {
-      radio.addEventListener('change', (e) => {
-        apiPost({ shopStatus: e.target.value });
-      });
-    });
-
-    // Theme Listener
-    document.getElementById('theme-select').addEventListener('change', (e) => {
-      apiPost({ theme: e.target.value });
-    });
-
-    // Add Cast Listener
-    document.getElementById('btn-add-cast').addEventListener('click', () => {
-      const nameInput = document.getElementById('new-cast-name');
-      const name = nameInput.value.trim();
-      if (!name) return;
-
-      // Simple ID generation
-      const id = 'cast_' + Date.now();
-      apiPost({ addCast: { id, name } });
-      nameInput.value = '';
-    });
-
-    // Seat Buttons Listeners
-    document.querySelectorAll('.btns').forEach(group => {
-      group.addEventListener('click', async (e) => {
-        if (!e.target.closest('button')) return;
-        const btn = e.target.closest('button');
-        const area = group.dataset.area;
-        const status = btn.dataset.status;
-        await apiPost({ area, status });
-      });
-    });
   </script>
 </body>
 
