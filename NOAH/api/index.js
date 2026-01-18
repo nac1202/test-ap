@@ -30,7 +30,8 @@ let memoryData = {
         'IKUKO': 'IKUKO (いくこ)'
     },
     theme: 'normal',
-    mamaMessage: ''
+    mamaMessage: '',
+    mamaTitle: ''
 };
 
 // Helper: Get JST Date
@@ -70,7 +71,8 @@ async function readData() {
                     schedules: { ...memoryData.schedules, ...(data.schedules || {}) },
                     schedules: { ...memoryData.schedules, ...(data.schedules || {}) },
                     castMaster: { ...memoryData.castMaster, ...(data.castMaster || {}) },
-                    mamaMessage: data.mamaMessage || memoryData.mamaMessage
+                    mamaMessage: data.mamaMessage || memoryData.mamaMessage,
+                    mamaTitle: data.mamaTitle || memoryData.mamaTitle
                 };
             }
         } catch (e) {
@@ -153,9 +155,9 @@ app.get('/api/status-v2', async (req, res) => {
         schedules: data.schedules, // For admin calendar
         seats: data.seats,
         theme: data.theme,
-        theme: data.theme,
         castMaster: data.castMaster,
-        mamaMessage: data.mamaMessage
+        mamaMessage: data.mamaMessage,
+        mamaTitle: data.mamaTitle // Return title
     });
 });
 
@@ -207,6 +209,11 @@ app.post('/api/status-v2', authMiddleware, async (req, res) => {
         // Mama Message Update
         if (body.updateMamaMessage !== undefined) {
             data.mamaMessage = body.updateMamaMessage;
+        }
+
+        // Mama Title Update (NEW)
+        if (body.updateMamaTitle !== undefined) {
+            data.mamaTitle = body.updateMamaTitle;
         }
 
         await writeData(data);

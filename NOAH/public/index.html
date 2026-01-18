@@ -298,7 +298,7 @@
 
     <!-- 5. Mama Message Board -->
     <div id="mama-message-section" class="mama-message-board hidden">
-      <h3 class="mama-title">みりゅうママからの伝言</h3>
+      <h3 id="mama-title" class="mama-title">みりゅうママからの伝言</h3>
       <p id="mama-message-text" class="mama-text"></p>
     </div>
 
@@ -403,9 +403,12 @@
 
       // Mama Message
       const mamaMsg = data.mamaMessage;
+      const mamaTitle = data.mamaTitle;
+
       if (mamaMsg && mamaMsg.trim() !== "") {
         document.getElementById('mama-message-section').classList.remove('hidden');
         document.getElementById('mama-message-text').textContent = mamaMsg;
+        document.getElementById('mama-title').textContent = mamaTitle || 'みりゅうママからの伝言';
       } else {
         document.getElementById('mama-message-section').classList.add('hidden');
       }

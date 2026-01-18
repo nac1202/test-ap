@@ -280,6 +280,11 @@
     <section class="admin-section">
       <h2>みりゅうママからの伝言</h2>
       <p style="color:#aaa; font-size:0.9rem; margin-bottom:0.5rem;">※140文字以内。空欄にすると非表示になります。</p>
+      <div style="margin-bottom:0.5rem;">
+        <label style="color:#ccc; display:block; margin-bottom:0.2rem;">タイトル (未入力時は「みりゅうママからの伝言」)</label>
+        <input type="text" id="mama-title-input" placeholder="例: お知らせ"
+          style="width:100%; padding:0.5rem; background:#16213e; border:1px solid #444; color:white;">
+      </div>
       <textarea id="mama-message-input" maxlength="140" placeholder="ここに入力したメッセージがトップページに表示されます..."></textarea>
       <div style="text-align:right; margin-top:0.5rem;">
         <button id="btn-save-mama" style="background:#e94560;">メッセージを保存</button>
@@ -372,8 +377,9 @@
         document.getElementById('theme-select').value = currentData.theme;
       }
 
-      // Update Mama Message
+      // Update Mama Message & Title
       document.getElementById('mama-message-input').value = currentData.mamaMessage || '';
+      document.getElementById('mama-title-input').value = currentData.mamaTitle || '';
     }
 
     function renderMasterCast() {
@@ -602,10 +608,14 @@
       // Mama Message Save
       document.getElementById('btn-save-mama').onclick = async () => {
         const msg = document.getElementById('mama-message-input').value;
+        const title = document.getElementById('mama-title-input').value; // New title
         await fetch('/api/status-v2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ updateMamaMessage: msg })
+          body: JSON.stringify({
+            updateMamaMessage: msg,
+            updateMamaTitle: title
+          })
         });
         alert('伝言を保存しました');
       };
