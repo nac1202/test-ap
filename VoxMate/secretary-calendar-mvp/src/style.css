@@ -1,0 +1,817 @@
+/* Modern Indigo Theme & Dark Mode Support */
+:root {
+  /* Colors - Light Mode (Default) */
+  --primary-color: #4f46e5;
+  /* Indigo 600 */
+  --primary-light: #818cf8;
+  /* Indigo 400 */
+  --primary-dark: #3730a3;
+  /* Indigo 800 */
+
+  --bg-color: #f3f4f6;
+  /* Gray 100 */
+  --card-bg: #ffffff;
+  --text-main: #1f2937;
+  /* Gray 800 */
+  --text-sec: #6b7280;
+  /* Gray 500 */
+
+  --danger: #ef4444;
+  --warn: #f59e0b;
+  --warn-bg: #fffbeb;
+
+  --tentative-bg: #fff7ed;
+  /* Orange 50 */
+  --tentative-border: #f97316;
+  /* Orange 500 */
+  --tentative-text: #c2410c;
+  /* Orange 700 */
+
+  /* Shadows & Radius */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Borders */
+  --border-color: #e5e7eb;
+}
+
+/* Dark Mode Overrides */
+[data-theme="dark"] {
+  --primary-color: #6366f1;
+  /* Indigo 500 (Brighter for dark) */
+  --primary-light: #818cf8;
+  --primary-dark: #4338ca;
+  /* Indigo 700 */
+
+  --bg-color: #111827;
+  /* Gray 900 */
+  --card-bg: #1f2937;
+  /* Gray 800 */
+  --text-main: #f3f4f6;
+  /* Gray 100 */
+  --text-sec: #9ca3af;
+  /* Gray 400 */
+
+  --warn-bg: #451a03;
+  /* Dark Orange/Brown */
+
+  --tentative-bg: #431407;
+  /* Dark Orange */
+  --tentative-border: #fdba74;
+  /* Orange 300 */
+  --tentative-text: #ffedd5;
+  /* Orange 100 */
+
+  --border-color: #374151;
+  /* Gray 700 */
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  padding-bottom: 90px;
+  /* nav height + padding */
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+#app {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 10px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 20px;
+  padding-left: 10px;
+}
+
+/* Countdown Banner */
+.countdown-banner {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.countdown-banner h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.countdown-banner .target-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.countdown-banner .timer {
+  font-size: 2rem;
+  font-weight: 800;
+  font-feature-settings: "tnum";
+  line-height: 1;
+}
+
+.countdown-banner .timer-small {
+  font-size: 1rem;
+  opacity: 0.8;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* Add shimmer effect to banner */
+.countdown-banner::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: skewX(-20deg);
+  animation: shimmer 6s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+
+  10% {
+    left: 200%;
+  }
+
+  100% {
+    left: 200%;
+  }
+}
+
+/* Header */
+#app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 10px 0 10px;
+  /* Top padding */
+  margin-bottom: 10px;
+}
+
+.app-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  padding: 8px;
+  border-radius: 50%;
+  color: var(--text-sec);
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--primary-color);
+}
+
+/* Animations */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.slide-in {
+  opacity: 0;
+  animation: springSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  /* Spring effect */
+}
+
+/* Stagger delays handled in JS usually, but here are helpers */
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes springSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Special animation for fixed centered nav to preserve translateX(-50%) */
+@keyframes navSpringSlideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+nav#bottom-nav.slide-in {
+  animation-name: navSpringSlideUp;
+}
+
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Chip Active State */
+.chip.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* --- Components --- */
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.card.warn {
+  border-left: 5px solid var(--warn);
+  background: var(--warn-bg);
+}
+
+/* Event List Items */
+.event-card {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  /* Use var for dark mode */
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  border-left: 5px solid var(--primary-color);
+  border-right: 1px solid var(--border-color);
+  /* Add slight border */
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.event-card.tentative {
+  border-left-color: var(--tentative-border);
+  background-color: var(--tentative-bg);
+}
+
+.event-card .time {
+  font-weight: 700;
+  margin-right: 16px;
+  color: var(--primary-color);
+  font-feature-settings: "tnum";
+  min-width: 90px;
+  /* Expanded for Start - End */
+  font-size: 0.9rem;
+}
+
+.event-card .summary {
+  flex: 1;
+}
+
+/* Inputs & Forms */
+textarea {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-main);
+  border-radius: var(--radius-md);
+  resize: none;
+  font-size: 16px;
+  font-family: inherit;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  outline: none;
+}
+
+textarea:focus {
+  border-color: var(--primary-color);
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+button.primary,
+#btn-analyze,
+#force-save {
+  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 50px;
+  width: 100%;
+  font-size: 16px;
+  box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+}
+
+button.primary:active,
+#btn-analyze:active {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+.actions {
+  margin-top: 15px;
+}
+
+/* Solutions */
+.solution-btn {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 16px;
+  text-align: left;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+}
+
+.solution-btn:hover {
+  border-color: var(--primary-color);
+  background: var(--bg-color);
+  /* Slightly different in dark mode */
+  color: var(--primary-color);
+}
+
+/* Badges */
+.badge.tentative {
+  display: inline-block;
+  font-size: 0.75em;
+  font-weight: bold;
+  color: var(--tentative-text);
+  background: rgba(249, 115, 22, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* People */
+.person-card {
+  border-left: 5px solid var(--primary-light);
+  background-color: var(--card-bg);
+}
+
+.person-card h3 {
+  margin-top: 0;
+  color: var(--primary-light);
+  /* Adjustable */
+  font-size: 1.1em;
+}
+
+.person-card ul {
+  padding-left: 20px;
+}
+
+.person-card li {
+  margin-bottom: 5px;
+}
+
+/* Week View */
+.day-group {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.day-header {
+  background: var(--bg-color);
+  /* Slightly contrast */
+  padding: 10px 16px;
+  font-weight: bold;
+  color: var(--text-sec);
+  border-bottom: 1px solid var(--border-color);
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+}
+
+.day-group.today {
+  border: 2px solid var(--primary-color);
+}
+
+.day-group.today .day-header {
+  background: var(--primary-color);
+  color: white;
+  border-bottom: none;
+}
+
+.day-events {
+  padding: 10px 0;
+}
+
+.mini-event {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.95em;
+}
+
+.mini-event:last-child {
+  border-bottom: none;
+}
+
+.mini-event .time {
+  color: var(--text-sec);
+  margin-right: 8px;
+  font-size: 0.9em;
+  display: inline-block;
+  width: auto;
+  /* Let it expand */
+  min-width: 85px;
+  /* Enough for range */
+}
+
+.mini-event.tentative .time {
+  color: var(--tentative-border);
+}
+
+/* Notifications */
+#notification-center {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.notification {
+  background: rgba(31, 41, 55, 0.95);
+  color: #fff;
+  padding: 12px 20px;
+  margin-bottom: 10px;
+  border-radius: 50px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  font-size: 0.9rem;
+  backdrop-filter: blur(4px);
+  animation: slideDown 0.3s ease-out;
+}
+
+.notification.error {
+  background: rgba(239, 68, 68, 0.95);
+}
+
+.notification.warning {
+  background: rgba(245, 158, 11, 0.95);
+  color: white;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Navigation */
+nav#bottom-nav {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  height: 65px;
+  background: rgba(255, 255, 255, 0.9);
+  /* Default light even in dark mode for contrast? Or make it adaptive? */
+  background: var(--card-bg);
+  /* Adaptive */
+  backdrop-filter: blur(10px);
+  border-radius: 35px;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  opacity: 0.95;
+}
+
+nav button {
+  background: none;
+  border: none;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--text-sec);
+  transition: all 0.2s;
+}
+
+nav button:hover,
+nav button.active {
+  color: var(--primary-color);
+  background: rgba(79, 70, 229, 0.1);
+  /* Keep this as is for now */
+}
+
+nav button.fab {
+  background: var(--primary-color);
+  color: white;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  transform: translateY(-20px);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4);
+  border: 4px solid var(--bg-color);
+  /* fake knockout */
+}
+
+nav button.fab:hover {
+  transform: translateY(-22px) scale(1.05);
+  background: var(--primary-dark);
+}
+
+/* Voice & Chips */
+.input-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+#btn-mic {
+  background: var(--card-bg);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  color: var(--text-sec);
+  bottom: 25px;
+  /* Adjust for textarea padding/margin */
+  right: 15px;
+}
+
+#btn-mic:hover {
+  color: var(--primary-color);
+  transform: scale(1.1);
+}
+
+#btn-mic.recording {
+  background: #fee2e2;
+  color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  border: none;
+}
+
+.suggestion-chips {
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.chip {
+  background: var(--card-bg);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-light);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+}
+
+.chip:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Templates */
+.template-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  overflow-x: auto;
+  padding-bottom: 5px;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+}
+
+.template-row::-webkit-scrollbar {
+  display: none;
+}
+
+.template-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-sec);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.template-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.template-btn span {
+  font-size: 1.1em;
+}
+
+/* Settings View */
+.template-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.template-item-row:last-child {
+  border-bottom: none;
+}
+
+.btn-delete-template {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--text-sec);
+}
+
+.btn-delete-template:hover {
+  color: var(--danger);
+}
+
+.template-add-form {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Refined Action Buttons */
+.actions button {
+  padding: 12px 20px;
+  border-radius: 30px;
+  /* Fully rounded pill shape */
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  /* Reserve space for border */
+}
+
+/* Primary: Confirm */
+.actions button.primary {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.actions button.primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+}
+
+/* Secondary: Tentative */
+.actions button.secondary {
+  background: transparent;
+  border-color: var(--text-sec);
+  /* Visible border */
+  color: var(--text-sec);
+}
+
+.actions button.secondary:hover {
+  border-color: var(--text-main);
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Make them look distinct but related */
+.actions button.secondary {
+  opacity: 0.8;
+}
+
+.actions button.secondary:hover {
+  opacity: 1;
+}
