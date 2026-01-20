@@ -959,9 +959,15 @@ async function renderWeek(container) {
                         const colorClass = colorId ? `g-color-${colorId}` : '';
                         const colorAttr = colorId ? 'data-color="true"' : '';
 
-                        return `<div class="mini-event ${isTentative ? 'tentative' : ''} ${colorClass}" ${colorAttr}>
+                        return `
+                        <div class="swipe-wrapper">
+                            <div class="swipe-bg" id="week-delete-bg-${ev.id}" data-id="${ev.id}">
+                                <span class="icon">🗑️</span>
+                            </div>
+                            <div class="mini-event ${isTentative ? 'tentative' : ''} ${colorClass}" ${colorAttr} id="week-card-${ev.id}" style="background:var(--card-bg); border-bottom:none;">
                                   <span class="time">${time}</span> ${badge}${summary}
-                                </div>`;
+                            </div>
+                        </div>`;
                     }).join('')
                 }
                     </div>
@@ -970,6 +976,40 @@ async function renderWeek(container) {
         }).join('');
 
         document.getElementById('week-list').innerHTML = html;
+
+        // Attach listeners
+        events.forEach(ev => {
+            const card = document.getElementById(`week-card-${ev.id}`);
+            const bg = document.getElementById(`week-delete-bg-${ev.id}`);
+            const wrapper = card ? card.parentElement : null;
+
+            if (card && bg && wrapper) {
+                enableSwipe(card, wrapper);
+
+                // Delete
+                bg.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm(`「${ev.summary}」を削除しますか？`)) {
+                        try {
+                            await deleteEvent(ev.id);
+                            notify("削除しました");
+                            renderWeek(container);
+                        } catch (err) {
+                            notify("削除失敗: " + err.message, "error");
+                        }
+                    } else {
+                        card.style.transform = 'translateX(0)';
+                        wrapper.classList.remove('swiped-open');
+                    }
+                });
+
+                // Edit
+                card.addEventListener('click', () => {
+                    if (wrapper.classList.contains('swiped-open')) return;
+                    showView('add', ev);
+                });
+            }
+        });
 
     } catch (e) {
         console.error(e);
