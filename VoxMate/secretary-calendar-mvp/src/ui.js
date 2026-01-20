@@ -1,4 +1,5 @@
 import { listEvents, createEvent, updateEvent, deleteEvent, handleAuthClick } from './calendar.js';
+import { enableSwipe } from './swipe.js';
 import { parseInput } from './parser.js';
 import { injectMeta, extractMeta, getTemplates, saveTemplates, getVoiceMode, saveVoiceMode } from './storage.js';
 import { detectConflicts, generateSolutions, findFreeSlots, lastDebugLog } from './conflict.js';
@@ -127,12 +128,46 @@ async function loadToday() {
                 const displaySummary = ev.summary.replace(/^\(仮\)\s*/, '');
 
                 return `
-                <div class="${cardClass} slide-in" style="animation-delay: ${index * 0.05}s">
-                    <div class="time">${timeStr}</div>
-                    <div class="summary">${statusLabel}${displaySummary}</div>
+                <div class="swipe-wrapper slide-in" style="animation-delay: ${index * 0.05}s">
+                    <div class="swipe-bg" id="delete-bg-${index}" data-id="${ev.id}">
+                        <span class="icon">🗑️</span>
+                    </div>
+                    <div class="${cardClass}" id="card-${index}">
+                        <div class="time">${timeStr}</div>
+                        <div class="summary">${statusLabel}${displaySummary}</div>
+                    </div>
                 </div>
             `;
             }).join('');
+
+            // Post-render: Attach Swipe Listeners
+            currentEvents.forEach((ev, index) => {
+                const card = document.getElementById(`card-${index}`);
+                const bg = document.getElementById(`delete-bg-${index}`);
+                const wrapper = card ? card.parentElement : null;
+
+                if (card && wrapper && bg) {
+                    enableSwipe(card, wrapper);
+
+                    // Click on background (delete button) to trigger delete
+                    bg.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        if (confirm(`「${ev.summary}」を削除しますか？`)) {
+                            try {
+                                await deleteEvent(ev.id);
+                                notify("削除しました");
+                                loadToday(); // Reload list
+                            } catch (err) {
+                                notify("削除失敗: " + err.message, "error");
+                            }
+                        } else {
+                            // User Cancelled: Close swipe
+                            card.style.transform = 'translateX(0)';
+                            wrapper.classList.remove('swiped-open');
+                        }
+                    });
+                }
+            });
 
             // Update countdown
             updateCountdown(currentEvents);

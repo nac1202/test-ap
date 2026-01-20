@@ -1,0 +1,45 @@
+/* Swipe to Delete Styles */
+.swipe-wrapper {
+    position: relative;
+    margin-bottom: 12px;
+    border-radius: 16px;
+    overflow: hidden;
+    /* Ensure background doesn't spill */
+}
+
+.swipe-bg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background-color: #ff3b30;
+    /* Red */
+    border-radius: 16px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-right: 24px;
+    color: white;
+    font-size: 1.5rem;
+    z-index: 0;
+}
+
+.swipe-bg .icon {
+    transform: scale(1.2);
+}
+
+.event-card {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: var(--card-bg);
+    /* Ensure opaque background */
+    margin-bottom: 0;
+    /* Wrapper handles margin */
+}
+
+.event-card.swiping {
+    transition: none;
+    /* Instant follow finger */
+}
