@@ -415,24 +415,36 @@ function renderAdd(container, editEvent = null) {
 
     // Pre-fill if editing
     if (isEdit) {
-        // Construct a rough sentence or just use title?
-        // Let's rely on user editing the title primarily for MVP, or better, re-parse the title?
-        // Actually, easiest is to fill the input with the summary and let them tweak.
-        // But date change might be tricky via text if they don't type it.
-        // Parser logic defaults to "tomorrow" if no date.
-        // Let's just set the summary as initial text.
-        input.value = editEvent.summary;
+        let datePfx = '';
+        if (editEvent.start.dateTime) {
+            const start = new Date(editEvent.start.dateTime);
+            const end = new Date(editEvent.end.dateTime);
+            // Format: "M/D H:mm-H:mm"
+            const dateStr = `${start.getMonth() + 1}/${start.getDate()}`;
+            const startStr = `${start.getHours()}:${String(start.getMinutes()).padStart(2, '0')}`;
+            const endStr = `${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}`;
+            datePfx = `${dateStr} ${startStr}-${endStr} `;
+        } else if (editEvent.start.date) {
+            // All day
+            const start = new Date(editEvent.start.date);
+            datePfx = `${start.getMonth() + 1}/${start.getDate()} 終日 `;
+        }
+
+        // Clean summary (remove (仮) if it exists, as parser might re-add it or users edit it)
+        const cleanSummary = editEvent.summary.replace(/^\(仮\)\s*/, '');
+
+        input.value = datePfx + cleanSummary;
 
         // Also we need to store the event ID to know we are updating
         currentDraft = {
             id: editEvent.id, // Marker for update
-            ...editEvent // Keep original fields
+            ...editEvent
         };
-        // We probably need to re-parse immediately to show preview?
-        // But parseInput might overwrite date to 'tomorrow'.
-        // Simple Edit: Just edit Title?
-        // User asked "edit later".
-        // Let's assume full text edit.
+
+        // Auto-analyze to show preview immediately? 
+        // Maybe better to wait for user to touch it, or force analysis so they see what it is.
+        // Let's force analysis so the preview matches standard parsing immediately.
+        setTimeout(() => document.getElementById('btn-analyze').click(), 100);
     }
 
     // Template click handler
