@@ -29,7 +29,8 @@
     transform: scale(1.2);
 }
 
-.event-card {
+.event-card,
+.mini-event {
     position: relative;
     z-index: 1;
     transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -39,7 +40,8 @@
     /* Wrapper handles margin */
 }
 
-.event-card.swiping {
+.event-card.swiping,
+.mini-event.swiping {
     transition: none;
     /* Instant follow finger */
 }
