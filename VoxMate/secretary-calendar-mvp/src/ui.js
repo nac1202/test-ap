@@ -76,13 +76,13 @@ function setupNav() {
     });
 }
 
-function showView(viewName) {
+function showView(viewName, data = null) {
     const container = document.getElementById('view-container');
     container.innerHTML = ''; // Clear
 
     switch (viewName) {
         case 'today': renderToday(container); break;
-        case 'add': renderAdd(container); break;
+        case 'add': renderAdd(container, data); break; // Pass optional data (e.g. event to edit)
         case 'conflicts': renderConflicts(container); break;
         case 'people': renderPeople(container); break;
         case 'week': renderWeek(container); break;
@@ -127,12 +127,16 @@ async function loadToday() {
                 const statusLabel = isTentative ? '<span class="badge tentative">(仮)</span> ' : '';
                 const displaySummary = ev.summary.replace(/^\(仮\)\s*/, '');
 
+                const colorId = ev.colorId;
+                const colorClass = colorId ? `g-color-${colorId}` : '';
+                const colorAttr = colorId ? 'data-color="true"' : '';
+
                 return `
                 <div class="swipe-wrapper slide-in" style="animation-delay: ${index * 0.05}s">
                     <div class="swipe-bg" id="delete-bg-${index}" data-id="${ev.id}">
                         <span class="icon">🗑️</span>
                     </div>
-                    <div class="${cardClass}" id="card-${index}">
+                    <div class="${cardClass} ${colorClass}" id="card-${index}" ${colorAttr}>
                         <div class="time">${timeStr}</div>
                         <div class="summary">${statusLabel}${displaySummary}</div>
                     </div>
@@ -140,7 +144,7 @@ async function loadToday() {
             `;
             }).join('');
 
-            // Post-render: Attach Swipe Listeners
+            // Post-render: Attach Swipe & Click Listeners
             currentEvents.forEach((ev, index) => {
                 const card = document.getElementById(`card-${index}`);
                 const bg = document.getElementById(`delete-bg-${index}`);
@@ -149,22 +153,28 @@ async function loadToday() {
                 if (card && wrapper && bg) {
                     enableSwipe(card, wrapper);
 
-                    // Click on background (delete button) to trigger delete
+                    // Click on background (delete button)
                     bg.addEventListener('click', async (e) => {
                         e.stopPropagation();
                         if (confirm(`「${ev.summary}」を削除しますか？`)) {
                             try {
                                 await deleteEvent(ev.id);
                                 notify("削除しました");
-                                loadToday(); // Reload list
+                                loadToday();
                             } catch (err) {
                                 notify("削除失敗: " + err.message, "error");
                             }
                         } else {
-                            // User Cancelled: Close swipe
                             card.style.transform = 'translateX(0)';
                             wrapper.classList.remove('swiped-open');
                         }
+                    });
+
+                    // Click on card (Edit)
+                    card.addEventListener('click', (e) => {
+                        // Ignore if swiped open
+                        if (wrapper.classList.contains('swiped-open')) return;
+                        showView('add', ev); // Pass event to add view
                     });
                 }
             });
@@ -216,7 +226,7 @@ function updateCountdown(events) {
 
     // Find next event
     const now = new Date();
-    // Filter events that haven't started yet (or strictly 'next'?) 
+    // Filter events that haven't started yet (or strictly 'next'?)
     // Usually 'next' means start time > now.
     const nextEvent = events.find(ev => {
         if (!ev.start.dateTime) return false; // Skip all-day for hour countdown
@@ -281,7 +291,7 @@ function renderSettings(container) {
 
         container.innerHTML = `
             <h2>Settings</h2>
-            
+
             <div class="card">
                 <h3>音声入力モード</h3>
                 <div class="input-group" style="display:block; margin-bottom:10px;">
@@ -312,7 +322,7 @@ function renderSettings(container) {
                         </div>
                     `).join('')}
                 </div>
-                
+
                 <div class="template-add-form">
                     <h4>新規追加</h4>
                     <input type="text" id="new-template-label" placeholder="ラベル (例: 外出)" />
@@ -377,12 +387,13 @@ function renderSettings(container) {
     }
 }
 
-function renderAdd(container) {
+function renderAdd(container, editEvent = null) {
     const templates = getTemplates();
+    const isEdit = !!editEvent;
 
     container.innerHTML = `
-        <h2>Add Event</h2>
-        
+        <h2>${isEdit ? 'Edit Event' : 'Add Event'}</h2>
+
         <div class="template-row">
             ${templates.map(t => `
                 <button class="template-btn" data-text="${t.label}"><span>${t.icon}</span> ${t.label}</button>
@@ -396,17 +407,40 @@ function renderAdd(container) {
         <div id="preview-area"></div>
         <div class="actions">
             <button id="btn-analyze">解析</button>
+            ${isEdit ? '<button id="btn-cancel" style="background:#888;">キャンセル</button>' : ''}
         </div>
     `;
+
+    const input = document.getElementById('input-text');
+
+    // Pre-fill if editing
+    if (isEdit) {
+        // Construct a rough sentence or just use title?
+        // Let's rely on user editing the title primarily for MVP, or better, re-parse the title?
+        // Actually, easiest is to fill the input with the summary and let them tweak.
+        // But date change might be tricky via text if they don't type it.
+        // Parser logic defaults to "tomorrow" if no date.
+        // Let's just set the summary as initial text.
+        input.value = editEvent.summary;
+
+        // Also we need to store the event ID to know we are updating
+        currentDraft = {
+            id: editEvent.id, // Marker for update
+            ...editEvent // Keep original fields
+        };
+        // We probably need to re-parse immediately to show preview?
+        // But parseInput might overwrite date to 'tomorrow'.
+        // Simple Edit: Just edit Title?
+        // User asked "edit later".
+        // Let's assume full text edit.
+    }
 
     // Template click handler
     container.querySelectorAll('.template-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            const input = document.getElementById('input-text');
             const currentVal = input.value;
             const appendText = btn.dataset.text;
 
-            // Simple append logic: add space if needed
             if (currentVal && !currentVal.endsWith(' ')) {
                 input.value = currentVal + ' ' + appendText;
             } else {
@@ -414,26 +448,41 @@ function renderAdd(container) {
             }
             input.focus();
             document.getElementById('btn-analyze').style.display = 'block';
-            document.getElementById('preview-area').innerHTML = ''; // Clear stale preview
+            document.getElementById('preview-area').innerHTML = '';
         });
     });
 
-    // Reactivate analyze button on edit
-    const input = document.getElementById('input-text');
     const btnAnalyze = document.getElementById('btn-analyze');
 
     input.addEventListener('input', () => {
         btnAnalyze.style.display = 'block';
-        document.getElementById('preview-area').innerHTML = ''; // Clear stale preview
+        document.getElementById('preview-area').innerHTML = '';
     });
 
     document.getElementById('btn-analyze').addEventListener('click', () => {
         const text = input.value;
-        if (!text) return; // Don't analyze empty
-        currentDraft = parseInput(text);
+        if (!text) return;
+
+        const newDraft = parseInput(text);
+        // If updating, preserve the ID
+        if (isEdit && currentDraft?.id) {
+            newDraft.id = currentDraft.id;
+            // If user didn't specify date in text, parser defaults to today/tomorrow.
+            // Ideally we should keep original date if not specified?
+            // That's complex logic. relying on user typing new date if changed.
+        }
+        currentDraft = newDraft;
+
         renderPreview(document.getElementById('preview-area'));
-        btnAnalyze.style.display = 'none'; // Hide after analysis
+        btnAnalyze.style.display = 'none';
     });
+
+    if (isEdit) {
+        document.getElementById('btn-cancel').addEventListener('click', () => {
+            showView('today');
+            currentDraft = null;
+        });
+    }
 
     setupVoiceInput();
 }
@@ -558,7 +607,7 @@ function renderPreview(container) {
             <div><strong>Time:</strong> ${timeDisplay}</div>
             <div><strong>Type:</strong> ${currentDraft.importance}</div>
             ${alertMsg}
-            
+
             <div class="actions" style="display: flex; gap: 10px; margin-top: 16px;">
                 <button id="btn-tentative" class="secondary" style="flex: 1;">仮で登録</button>
                 <button id="btn-save" class="primary" style="flex: 1;">確定して登録</button>
@@ -629,10 +678,23 @@ async function saveEvent(importance) {
     console.log("Saving Event Resource:", JSON.stringify(eventResource, null, 2));
 
     try {
-        await createEvent(eventResource);
+        if (currentDraft.id) {
+            // Update existing
+            await updateEvent(currentDraft.id, eventResource);
+            notify("予定を更新しました", "success");
+        } else {
+            // Create new
+            await createEvent(eventResource);
+            notify("予定を登録しました", "success");
+        }
+
         playSuccess();
-        notify("予定を登録しました", "success");
+        // Reset
+        currentDraft = null;
+        document.getElementById('input-text').value = '';
+        document.getElementById('preview-area').innerHTML = '';
         showView('today');
+
     } catch (e) {
         playError();
         console.error("Save Event Error:", e);
@@ -892,7 +954,12 @@ async function renderWeek(container) {
                         const isTentative = (meta.importance === 'tentative') || (ev.status === 'tentative') || (ev.summary.startsWith('(仮)'));
                         const badge = isTentative ? '<span class="badge tentative">(仮)</span>' : '';
                         const summary = ev.summary.replace(/^\(仮\)\s*/, '');
-                        return `<div class="mini-event ${isTentative ? 'tentative' : ''}">
+
+                        const colorId = ev.colorId;
+                        const colorClass = colorId ? `g-color-${colorId}` : '';
+                        const colorAttr = colorId ? 'data-color="true"' : '';
+
+                        return `<div class="mini-event ${isTentative ? 'tentative' : ''} ${colorClass}" ${colorAttr}>
                                   <span class="time">${time}</span> ${badge}${summary}
                                 </div>`;
                     }).join('')

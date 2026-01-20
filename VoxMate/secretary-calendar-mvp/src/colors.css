@@ -1,0 +1,68 @@
+/* Google Calendar Colors */
+.g-color-1 {
+    --event-color: #7986cb;
+}
+
+/* Lavender */
+.g-color-2 {
+    --event-color: #33b679;
+}
+
+/* Sage */
+.g-color-3 {
+    --event-color: #8e24aa;
+}
+
+/* Grape */
+.g-color-4 {
+    --event-color: #e67c73;
+}
+
+/* Flamingo */
+.g-color-5 {
+    --event-color: #f6c026;
+}
+
+/* Banana */
+.g-color-6 {
+    --event-color: #f5511d;
+}
+
+/* Tangerine */
+.g-color-7 {
+    --event-color: #039be5;
+}
+
+/* Peacock */
+.g-color-8 {
+    --event-color: #616161;
+}
+
+/* Graphite */
+.g-color-9 {
+    --event-color: #3f51b5;
+}
+
+/* Blueberry */
+.g-color-10 {
+    --event-color: #0b8043;
+}
+
+/* Basil */
+.g-color-11 {
+    --event-color: #d50000;
+}
+
+/* Tomato */
+
+/* Event Card Override */
+.event-card[data-color="true"] {
+    border-left-color: var(--event-color) !important;
+}
+
+/* Mini Event (Week View) Override */
+.mini-event[data-color="true"] {
+    border-left: 4px solid var(--event-color);
+    padding-left: 12px;
+    /* Adjust purely for colored ones */
+}
