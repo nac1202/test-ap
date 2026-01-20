@@ -1,6 +1,7 @@
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-const SCOPES = import.meta.env.VITE_GOOGLE_SCOPES;
+const CLIENT_ID = '267334877108-tj9cm551im3pd3069jor5jl2h0r8hhqg.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyDGA5tiaCb1vHltFJm0w4QmBapI_kxlLYQ';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
 let tokenClient;
 let gapiInited = false;
