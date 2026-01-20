@@ -743,8 +743,29 @@ function renderConflicts(container) {
                     </button>
                 `).join('') : `<p>解決案なし</p><div style="font-size:10px; color:#999; max-height:100px; overflow:auto; background:#eee; padding:5px;">${lastDebugLog ? lastDebugLog.join('<br>') : 'No logs'}</div>`}
             </div>
+            
             <button id="force-save">構わず登録</button>
+            <button id="btn-conflict-cancel" style="background-color: #777; margin-top: 10px;">キャンセル</button>
             `;
+
+        // Cancel Listener
+        document.getElementById('btn-conflict-cancel').addEventListener('click', () => {
+            window.tempConflictContext = null;
+            // Go back to Add view to let user fix it manually? Or Today?
+            // Usually cancel means "stop this whole thing". 
+            // But maybe they want to edit the input?
+            // Let's go back to 'add' with the current draft? 
+            // "Cancel" usually implies aborting the resolution. 
+            // If we go to Add, we should restore state. 
+            // Simple cancel: Go to Add with current input preserved if possible?
+            // Actually, the `renderAdd` inputs are gone when we switched view.
+            // But `currentDraft` (or tempConflictContext.draft) exists.
+            // Let's rerender 'add' with the draft pre-filled? 
+            // YES.
+            const draftToRestore = window.tempConflictContext?.draft || currentDraft;
+            showView('add', draftToRestore);
+            window.tempConflictContext = null;
+        });
 
         // Add logic for solution buttons
         document.querySelectorAll('.solution-btn').forEach(btn => {
