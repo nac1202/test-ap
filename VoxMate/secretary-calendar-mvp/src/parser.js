@@ -58,7 +58,9 @@ export function parseInput(text) {
 
     // 2. Time Parsing (Find ALL matches and take the LAST one to support appended corrections)
     // 2. Time Parsing
-    const timeMatches = [...text.matchAll(/(\d{1,2})[:時](\d{2})?/g)];
+    // Enhance regex to optionally consume "分" so it's not left for duration parser if possible, 
+    // but main fix is range logic.
+    const timeMatches = [...text.matchAll(/(\d{1,2})[:時](\d{1,2})?/g)];
     const isUndecided = text.match(/時間.*未定|未定/);
 
     if (isUndecided) {
@@ -70,30 +72,89 @@ export function parseInput(text) {
         draft.start = { date: `${y}-${m}-${d}` };
         draft.end = { date: `${y}-${m}-${d}` };
     } else if (timeMatches.length > 0) {
-        // Use the last match found in the string (assumed to be the correction)
-        const lastMatch = timeMatches[timeMatches.length - 1];
-        const hour = parseInt(lastMatch[1]);
-        const min = lastMatch[2] ? parseInt(lastMatch[2]) : 0;
-        targetDate.setHours(hour, min, 0, 0);
+        let startTime = null;
+        let endTime = null;
+        let isRange = false;
 
-        // Default duration 1h
-        draft.start = targetDate.toISOString();
-        const endDate = new Date(targetDate);
+        // Check for Range Pattern (A...B)
+        // Find a pair where the text between them implies a range (e.g. "から", "〜", "-")
+        // Loop backwards to prefer later ranges if corrections exist? No, usually "10-12 time"
+        for (let i = 0; i < timeMatches.length - 1; i++) {
+            const m1 = timeMatches[i];
+            const m2 = timeMatches[i + 1];
 
-        const durationMatch = text.match(/(\d+)(分|時間)/);
-        if (durationMatch) {
-            let durationMin = parseInt(durationMatch[1]);
-            if (durationMatch[2] === "時間") durationMin *= 60;
-            endDate.setMinutes(endDate.getMinutes() + durationMin);
-        } else {
-            endDate.setMinutes(endDate.getMinutes() + 60);
+            // Text between matches
+            const startIdx = m1.index + m1[0].length;
+            const endIdx = m2.index;
+            const between = text.substring(startIdx, endIdx);
+
+            // Check if 'between' contains range indicators (allowing for spacing or "分")
+            // Also need to allow "分" if the previous regex didn't check it? 
+            // Our regex `(\d{1,2})[:時](\d{1,2})?` matches "23時15". "分" is in `between` if present?
+            // "23時15分まで24時" -> between="分まで"
+            // "22時から23時" -> between="から"
+            if (between.match(/(から|〜|~|-|まで)/)) {
+
+                // Helper to parse match
+                const parseMatch = (m) => {
+                    const h = parseInt(m[1]);
+                    const n = m[2] ? parseInt(m[2]) : 0;
+                    const d = new Date(targetDate);
+                    d.setHours(h, n, 0, 0);
+                    return d;
+                };
+
+                startTime = parseMatch(m1);
+                endTime = parseMatch(m2);
+                isRange = true;
+
+                // If the end time is smaller than start time (e.g. 23:00 - 01:00), add 1 day to end
+                if (endTime < startTime) {
+                    endTime.setDate(endTime.getDate() + 1);
+                }
+                break; // Stop at first valid range? Or find last? 
+                // Usually only one range per input. Let's take the first distinct range.
+            }
         }
-        draft.end = endDate.toISOString();
+
+        if (isRange) {
+            draft.start = startTime.toISOString();
+            draft.end = endTime.toISOString();
+        } else {
+            // Single Time (Last Match Wins)
+            const lastMatch = timeMatches[timeMatches.length - 1];
+            const hour = parseInt(lastMatch[1]);
+            const min = lastMatch[2] ? parseInt(lastMatch[2]) : 0;
+            targetDate.setHours(hour, min, 0, 0);
+            draft.start = targetDate.toISOString();
+
+            // Duration Logic (Only if NOT a range)
+            const endDate = new Date(targetDate);
+            // Check for explicit duration "X時間" or "X分"
+            // Be careful not to match the "15分" that was part of "23時15分"
+            // Simple heuristic used previously: match anywhere.
+            // Problem: "23時15分" matches "15分".
+            // Fix: Check if the duration match overlaps with the time match? 
+            // Or remove the time match from string first?
+
+            // Strategy: Create a temporary string with the time removed
+            const tempText = text.replace(lastMatch[0], '');
+            // Note: lastMatch[0] only covers "23時15". If "分" follows, it remains.
+            // If Text was "23時15分", temp is "分". "分" does not match `(\d+)分`.
+            // Perfect! "15" is gone.
+
+            const durationMatch = tempText.match(/(\d+)(分|時間)/);
+            if (durationMatch) {
+                let durationMin = parseInt(durationMatch[1]);
+                if (durationMatch[2] === "時間") durationMin *= 60;
+                endDate.setMinutes(endDate.getMinutes() + durationMin);
+            } else {
+                endDate.setMinutes(endDate.getMinutes() + 60); // Default 1h
+            }
+            draft.end = endDate.toISOString();
+        }
     } else {
-        // No time specified -> All Day (Date Only)
-        // Ensure we actually found a date intent or it's implicitly "today/tomorrow" from context?
-        // Current logic defaults targetDate to 'now' if no date match.
-        // We should treat this as All Day.
+        // All Day
         const y = targetDate.getFullYear();
         const m = String(targetDate.getMonth() + 1).padStart(2, '0');
         const d = String(targetDate.getDate()).padStart(2, '0');
