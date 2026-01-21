@@ -38,42 +38,77 @@ function updateThemeIcon(theme) {
 
 function setupNav() {
     const app = document.getElementById('app');
-    // Basic Layout
+    // Basic Layout with Bottom Sheet
     app.innerHTML = `
       <header id="app-header">
         <h1 class="app-title">Secretary</h1>
-        <div class="header-actions">
-           <button id="btn-settings-toggle" class="icon-btn">⚙</button>
-           <button id="btn-theme-toggle" class="icon-btn">🌙</button>
-        </div>
+        <div class="header-actions"></div> <!-- Empty now -->
       </header>
       <div id="notification-center"></div>
       <div id="view-container"></div>
+      
+      <!-- Bottom Sheet for Calendar Views -->
+      <div id="view-selector-sheet" class="bottom-sheet">
+        <button data-view="today">日 (Today)</button>
+        <button data-view="week">週 (Week)</button>
+        <button data-view="month">月 (Month)</button>
+      </div>
+      <div id="sheet-overlay" class="sheet-overlay"></div>
+
       <nav id="bottom-nav" class="slide-in">
-        <button data-view="today">日</button>
-        <button data-view="week">週</button>
+        <button id="btn-view-menu" class="nav-btn">📅</button>
+        <button data-view="people" class="nav-btn">人</button>
         <button data-view="add" class="fab">+</button>
-        <button data-view="month">月</button>
-        <button data-view="people">人</button>
-        <button data-view="conflicts">⚠</button>
+        <button id="btn-settings-nav" class="nav-btn">⚙</button>
+        <button id="btn-theme-nav" class="nav-btn">🌙</button>
+        <button data-view="conflicts" style="display:none;" id="btn-conflicts-nav">⚠</button>
       </nav>
     `;
 
-    document.getElementById('btn-theme-toggle').addEventListener('click', () => {
-        playClick();
-        toggleTheme();
-    });
+    // Menu Sheet Toggle
+    const sheet = document.getElementById('view-selector-sheet');
+    const overlay = document.getElementById('sheet-overlay');
+    const toggleSheet = () => {
+        sheet.classList.toggle('active');
+        overlay.classList.toggle('active');
+    };
 
-    document.getElementById('btn-settings-toggle').addEventListener('click', () => {
+    document.getElementById('btn-view-menu').addEventListener('click', () => {
         playNav();
-        showView('settings');
+        toggleSheet();
     });
 
-    document.querySelectorAll('#bottom-nav button').forEach(btn => {
+    overlay.addEventListener('click', toggleSheet);
+
+    // Sheet Selection
+    sheet.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            playNav();
+            showView(btn.dataset.view);
+            toggleSheet();
+        });
+    });
+
+    // Main Nav Data-Buttons (People, Add, Conflicts)
+    document.querySelectorAll('#bottom-nav button[data-view]').forEach(btn => {
         btn.addEventListener('click', () => {
             playNav();
             showView(btn.dataset.view);
         });
+    });
+
+    // Settings
+    document.getElementById('btn-settings-nav').addEventListener('click', () => {
+        playNav();
+        showView('settings');
+    });
+
+    // Theme
+    document.getElementById('btn-theme-nav').addEventListener('click', () => {
+        playClick();
+        toggleTheme();
+        const icon = document.body.getAttribute('data-theme') === 'dark' ? '🌙' : '☀';
+        document.getElementById('btn-theme-nav').textContent = icon;
     });
 }
 

@@ -1017,4 +1017,68 @@ nav button.fab:hover {
   .calendar-header h2 {
     font-size: 1rem;
   }
+
+}
+
+/* Bottom Sheet */
+.bottom-sheet {
+  position: fixed;
+  bottom: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+  z-index: 3000;
+  transition: bottom 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* Ensure text color is correct in sheet */
+  color: var(--text-main);
+  box-sizing: border-box;
+}
+
+.bottom-sheet.active {
+  bottom: 100px;
+  /* Above nav */
+}
+
+.bottom-sheet button {
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  text-align: left;
+  color: var(--text-main);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.bottom-sheet button:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.sheet-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.sheet-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
 }
