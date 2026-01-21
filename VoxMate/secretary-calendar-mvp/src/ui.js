@@ -1079,7 +1079,11 @@ function renderPeople(container) {
         return;
     }
 
-    container.innerHTML = `<h2>People Interactions</h2>` + sortedPeople.map(person => `
+    // Update Header
+    const headerSub = document.getElementById('header-subtitle');
+    if (headerSub) headerSub.textContent = "本日のゲスト";
+
+    container.innerHTML = sortedPeople.map(person => `
         <div class="card person-card">
             <h3>${person} さん</h3>
             <ul>
