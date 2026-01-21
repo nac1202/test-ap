@@ -1131,3 +1131,62 @@ nav button.fab:hover {
   opacity: 1;
   pointer-events: auto;
 }
+
+/* Interactive Swipe Slider */
+#view-container {
+  /* Now acts as viewport */
+  width: 100%;
+  /* height: calc(100vh - 150px); */
+  /* Dynamic height might be better, or fixed to strict layout */
+  height: 100%;
+  /* Assume parent flex or layout handles it */
+  overflow: hidden;
+  position: relative;
+  padding-bottom: 0;
+  /* Clear padding as slides have it */
+}
+
+#view-slider {
+  display: flex;
+  width: 300%;
+  /* 3 views: Month, Week, Today */
+  height: 100%;
+  will-change: transform;
+  /* Transition set via JS for snap, removed for drag */
+}
+
+.view-slide {
+  width: 33.333%;
+  height: 100%;
+  overflow-y: auto;
+  /* Internal scrolling */
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+  padding-bottom: 90px;
+  /* Nav space */
+  position: relative;
+}
+
+/* Ensure individual views fill their slide */
+.view-slide>div {
+  min-height: 100%;
+}
+
+/* Overlay view container for Add/Settings/People which are not in the main slider loop */
+#overlay-view-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-color);
+  z-index: 10;
+  display: none;
+  overflow-y: auto;
+  padding-bottom: 90px;
+}
+
+#overlay-view-container.active {
+  display: block;
+  animation: fadeIn 0.2s;
+}

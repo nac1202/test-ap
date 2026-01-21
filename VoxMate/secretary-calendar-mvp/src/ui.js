@@ -46,7 +46,14 @@ function setupNav() {
         <div class="header-actions"></div> <!-- Empty now -->
       </header>
       <div id="notification-center"></div>
-      <div id="view-container"></div>
+      <div id="view-container">
+          <div id="view-slider">
+              <div class="view-slide" id="slide-month" data-view="month"></div>
+              <div class="view-slide" id="slide-week" data-view="week"></div>
+              <div class="view-slide" id="slide-today" data-view="today"></div>
+          </div>
+          <div id="overlay-view-container"></div>
+      </div>
       
       <!-- Bottom Sheet for Calendar Views -->
       <div id="view-selector-sheet" class="bottom-sheet">
@@ -125,19 +132,50 @@ function setupNav() {
     setupViewSwipe(); // Init swipe nav
 }
 
+// View Indices for Slider (Month -> Week -> Today)
+const VIEW_INDICES = { 'month': 0, 'week': 1, 'today': 2 };
+
 function showView(viewName, data = null) {
     activeView = viewName; // Update state
-    const container = document.getElementById('view-container');
-    container.innerHTML = ''; // Clear
 
-    switch (viewName) {
-        case 'today': renderToday(container, data); break; // data can be a target Date object
-        case 'add': renderAdd(container, data); break;
-        case 'conflicts': renderConflicts(container); break;
-        case 'people': renderPeople(container); break;
-        case 'week': renderWeek(container); break;
-        case 'month': renderMonth(container); break;
-        case 'settings': renderSettings(container); break;
+    const slider = document.getElementById('view-slider');
+    const overlay = document.getElementById('overlay-view-container');
+
+    // Safety check if DOM isn't ready (shouldn't happen)
+    if (!slider || !overlay) {
+        console.warn("View containers not found");
+        return;
+    }
+
+    if (viewName in VIEW_INDICES) {
+        // Slide Mode
+        overlay.style.display = 'none';
+
+        const index = VIEW_INDICES[viewName];
+        // Ensure transition is enabled (might be disabled by drag)
+        slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+        slider.style.transform = `translateX(-${index * 33.3333}%)`;
+
+        // Render content into the specific slide
+        const container = document.getElementById(`slide-${viewName}`);
+
+        // NOTE: For 'today', we might want to avoid full re-render if just switching back?
+        // But renderToday handles timer cleanup.
+        if (viewName === 'today') renderToday(container, data);
+        else if (viewName === 'week') renderWeek(container);
+        else if (viewName === 'month') renderMonth(container);
+
+    } else {
+        // Overlay Mode
+        overlay.style.display = 'block';
+        overlay.innerHTML = ''; // Clear previous
+
+        switch (viewName) {
+            case 'add': renderAdd(overlay, data); break;
+            case 'conflicts': renderConflicts(overlay); break;
+            case 'people': renderPeople(overlay); break;
+            case 'settings': renderSettings(overlay); break;
+        }
     }
 }
 
@@ -1260,63 +1298,109 @@ function notify(msg, type = 'info') {
 
 function setupViewSwipe() {
     const container = document.getElementById('view-container');
+    const slider = document.getElementById('view-slider');
+
     let startX = 0;
     let startY = 0;
-    let isCardStart = false;
+    let isDragging = false;
+    let isCardInteraction = false;
+    let slideWidth = 0;
+    let currentTrans = 0;
+
+    // View Order Array
+    const VIEWS_ORDER = ['month', 'week', 'today'];
 
     container.addEventListener('touchstart', (e) => {
+        // Only active if in slide mode
+        if (overlayViewActive()) return;
+        if (!VIEWS_ORDER.includes(activeView)) return;
+
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
-        // Check if touching a card
-        const wrapper = e.target.closest('.swipe-wrapper');
-        isCardStart = !!wrapper;
 
-        // However, if the card is already swiped open, specific behaviors exist. 
-        // We'll trust the card's native listeners for open state interactions?
-        // Actually, if we are swiping right to close, we shouldn't switch views.
+        // Check if interacting with a card
+        const wrapper = e.target.closest('.swipe-wrapper');
+        isCardInteraction = !!wrapper;
+
+        // If card interaction, disable view swipe for now to prevent conflict.
+        if (isCardInteraction) return;
+
+        isDragging = true;
+        slideWidth = slider.offsetWidth / 3;
+
+        // Get current index
+        const currentIndex = VIEWS_ORDER.indexOf(activeView);
+        currentTrans = -1 * currentIndex * slideWidth;
+
+        // Disable transition for 1:1 drag
+        slider.style.transition = 'none';
+
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+
+        const x = e.touches[0].clientX;
+        const y = e.touches[0].clientY;
+        const diffX = x - startX;
+        const diffY = y - startY;
+
+        // If vertical scroll dominates, cancel horizontal drag
+        if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
+            isDragging = false;
+            // Restore snap
+            restoreSnap();
+            return;
+        }
+
+        // Apply transform
+        const newTrans = currentTrans + diffX;
+        slider.style.transform = `translateX(${newTrans}px)`;
+
     }, { passive: true });
 
     container.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+
         const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
         const diffX = endX - startX;
-        const diffY = endY - startY;
 
-        // Thresholds
-        if (Math.abs(diffX) < 60) return; // Too short
-        if (Math.abs(diffY) > Math.abs(diffX)) return; // Vertical scroll
+        // Determine Threshold
+        const threshold = slideWidth * 0.25; // 25% width to switch
 
-        // Determine Direction
-        const isSwipeLeft = diffX < 0; // -> Moving Left, Content goes Left, View goes Right (Next)
-        const isSwipeRight = diffX > 0; // -> Moving Right, Content goes Right, View goes Left (Prev)
+        const currentIndex = VIEWS_ORDER.indexOf(activeView);
+        let targetIndex = currentIndex;
 
-        // Conflict Resolution with Card Swipe
-        if (isCardStart) {
-            // If swiping Left on a card, that's "Delete Reveal". Don't switch view.
-            if (isSwipeLeft) return;
-
-            // If swiping Right on a card:
-            // If it was open, card closes. View shouldn't switch.
-            // If it was closed, card resists. View CAN switch?
-            const wrapper = e.target.closest('.swipe-wrapper');
-            if (wrapper && wrapper.classList.contains('swiped-open')) {
-                return; // Closing card
-            }
-            // Else allow swipe right
+        if (diffX > threshold) {
+            // Swiped Right -> Go Left (Prev Index in DOM? No, Index --)
+            // Month(0) | Week(1) | Today(2)
+            // If on Today(2), Swipe Right -> Week(1). Logic: index--
+            targetIndex = Math.max(0, currentIndex - 1);
+        } else if (diffX < -threshold) {
+            // Swiped Left -> Go Right (Next Index)
+            targetIndex = Math.min(2, currentIndex + 1);
         }
 
-        // View Transition Logic
-        // Order: Today <-> Week <-> Month
-        // Today (Left) | Week (Center) | Month (Right)
-
-        if (activeView === 'today') {
-            if (isSwipeLeft) { playNav(); showView('week'); } // Today -> Week
-        } else if (activeView === 'week') {
-            if (isSwipeRight) { playNav(); showView('today'); } // Week -> Today
-            else if (isSwipeLeft) { playNav(); showView('month'); } // Week -> Month
-        } else if (activeView === 'month') {
-            if (isSwipeRight) { playNav(); showView('week'); } // Month -> Week
+        // Switch View (this handles transition and render)
+        const targetView = VIEWS_ORDER[targetIndex];
+        if (targetView !== activeView) {
+            playNav();
+            showView(targetView);
+        } else {
+            // Snap back
+            restoreSnap();
         }
+    });
 
-    }, { passive: true });
+    function restoreSnap() {
+        const index = VIEWS_ORDER.indexOf(activeView);
+        slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+        slider.style.transform = `translateX(-${index * 33.3333}%)`;
+    }
+
+    function overlayViewActive() {
+        const overlay = document.getElementById('overlay-view-container');
+        return overlay && overlay.style.display !== 'none';
+    }
 }
