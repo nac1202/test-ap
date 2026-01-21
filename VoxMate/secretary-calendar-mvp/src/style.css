@@ -77,8 +77,8 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-main);
-  padding-bottom: 90px;
-  /* nav height + padding */
+  padding-bottom: 150px;
+  /* nav height + safe area */
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s, color 0.3s;
 }
