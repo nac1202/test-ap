@@ -205,6 +205,30 @@ async function renderMonth(container) {
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
 
+    // Check if we already have the correct month rendered
+    const existingGrid = container.querySelector('#calendar-grid');
+    const renderedKey = container.dataset.renderedMonth;
+    const currentKey = `${year}-${month}`;
+
+    if (existingGrid && renderedKey === currentKey) {
+        // Already rendered for this month. 
+        // Just update header subtitle and header text in case? 
+        // Header subtitle might be overwritten by other views.
+        const headerSub = document.getElementById('header-subtitle');
+        if (headerSub) headerSub.textContent = "今月の予定";
+
+        // We can silently update events if needed, but for now preserve view
+        // To be safe, we could call listEvents in background and update DOM.
+        // But preventing the flash is priority.
+
+        // Ensure nav listeners are attached? 
+        // innerHTML wasn't cleared, so listeners on buttons (prev/next) inside container are still valid?
+        // YES.
+        return;
+    }
+
+    container.dataset.renderedMonth = currentKey;
+
     // Update Header
     const headerSub = document.getElementById('header-subtitle');
     if (headerSub) headerSub.textContent = "今月の予定";
@@ -441,6 +465,12 @@ function renderToday(container) {
     // Update Header
     const headerSub = document.getElementById('header-subtitle');
     if (headerSub) headerSub.textContent = "今日の予定";
+
+    if (container.querySelector('#today-list')) {
+        // Already initialized, just load data (which updates #today-list innerHTML)
+        loadToday();
+        return;
+    }
 
     container.innerHTML = `
         <div id="countdown-area"></div>
@@ -1184,6 +1214,15 @@ async function renderWeek(container) {
     const headerSub = document.getElementById('header-subtitle');
     if (headerSub) headerSub.textContent = "今週の予定";
 
+    const currentKey = `${startOfWeek.toDateString()}-${endOfWeek.toDateString()}`;
+    const existingList = container.querySelector('#week-list');
+
+    if (existingList && container.dataset.renderedWeek === currentKey) {
+        // Already rendered for this week.
+        return;
+    }
+    container.dataset.renderedWeek = currentKey;
+
     container.innerHTML = `<div id="week-list">Loading...</div>`;
 
     try {
@@ -1323,30 +1362,30 @@ function setupViewSwipe() {
     let currentTrans = 0;
 
     container.addEventListener('touchstart', (e) => {
-        if (overlayViewActive()) return; 
+        if (overlayViewActive()) return;
         if (!VIEW_CYCLE.includes(activeView)) return;
 
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
-        
+
         const wrapper = e.target.closest('.swipe-wrapper');
         isCardInteraction = !!wrapper;
-        
+
         if (isCardInteraction) return;
 
         isDragging = true;
         slideWidth = slider.offsetWidth / 3;
-        
+
         // Infinite Loop: -33.333% (Center)
         currentTrans = -slideWidth;
-        
+
         slider.style.transition = 'none';
-        
+
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
-        
+
         const x = e.touches[0].clientX;
         const y = e.touches[0].clientY;
         const diffX = x - startX;
@@ -1354,11 +1393,11 @@ function setupViewSwipe() {
 
         // Scroll Lock
         if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 5) {
-             isDragging = false;
-             restoreSnap();
-             return; 
+            isDragging = false;
+            restoreSnap();
+            return;
         }
-        
+
         if (Math.abs(diffX) > 5) {
             if (e.cancelable) e.preventDefault();
         }
@@ -1371,11 +1410,11 @@ function setupViewSwipe() {
     container.addEventListener('touchend', (e) => {
         if (!isDragging) return;
         isDragging = false;
-        
+
         const endX = e.changedTouches[0].clientX;
         const diffX = endX - startX;
         const threshold = slideWidth * 0.25;
-        
+
         const centerIdx = VIEW_CYCLE.indexOf(activeView);
         let targetView = activeView;
         let targetTrans = -33.3333;
@@ -1385,14 +1424,14 @@ function setupViewSwipe() {
             targetView = VIEW_CYCLE[(centerIdx - 1 + 3) % 3];
             targetTrans = 0;
         } else if (diffX < -threshold) {
-             // Left Swipe -> Next
+            // Left Swipe -> Next
             targetView = VIEW_CYCLE[(centerIdx + 1) % 3];
             targetTrans = -66.6666;
         }
-        
+
         slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
         slider.style.transform = `translateX(${targetTrans}%)`;
-        
+
         if (targetView !== activeView) {
             playNav();
             const onEnd = () => {
@@ -1406,10 +1445,10 @@ function setupViewSwipe() {
     });
 
     function restoreSnap() {
-         slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
-         slider.style.transform = 'translateX(-33.3333%)';
+        slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+        slider.style.transform = 'translateX(-33.3333%)';
     }
-    
+
     function overlayViewActive() {
         const overlay = document.getElementById('overlay-view-container');
         return overlay && overlay.style.display !== 'none';
