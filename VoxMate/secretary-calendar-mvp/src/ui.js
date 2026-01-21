@@ -11,6 +11,7 @@ let countdownInterval = null;
 
 // Views
 const VIEWS = ['today', 'add', 'conflicts', 'people', 'week', 'settings'];
+let activeView = 'today'; // Track current view
 
 export function renderUI() {
     setupNav();
@@ -120,9 +121,12 @@ function setupNav() {
         const icon = document.body.getAttribute('data-theme') === 'dark' ? '🌙' : '☀';
         document.getElementById('btn-theme-nav').textContent = icon;
     });
+
+    setupViewSwipe(); // Init swipe nav
 }
 
 function showView(viewName, data = null) {
+    activeView = viewName; // Update state
     const container = document.getElementById('view-container');
     container.innerHTML = ''; // Clear
 
@@ -1252,4 +1256,67 @@ function notify(msg, type = 'info') {
     if (type === 'error') playError();
 
     setTimeout(() => note.remove(), 3000);
+}
+
+function setupViewSwipe() {
+    const container = document.getElementById('view-container');
+    let startX = 0;
+    let startY = 0;
+    let isCardStart = false;
+
+    container.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        // Check if touching a card
+        const wrapper = e.target.closest('.swipe-wrapper');
+        isCardStart = !!wrapper;
+
+        // However, if the card is already swiped open, specific behaviors exist. 
+        // We'll trust the card's native listeners for open state interactions?
+        // Actually, if we are swiping right to close, we shouldn't switch views.
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const diffX = endX - startX;
+        const diffY = endY - startY;
+
+        // Thresholds
+        if (Math.abs(diffX) < 60) return; // Too short
+        if (Math.abs(diffY) > Math.abs(diffX)) return; // Vertical scroll
+
+        // Determine Direction
+        const isSwipeLeft = diffX < 0; // -> Moving Left, Content goes Left, View goes Right (Next)
+        const isSwipeRight = diffX > 0; // -> Moving Right, Content goes Right, View goes Left (Prev)
+
+        // Conflict Resolution with Card Swipe
+        if (isCardStart) {
+            // If swiping Left on a card, that's "Delete Reveal". Don't switch view.
+            if (isSwipeLeft) return;
+
+            // If swiping Right on a card:
+            // If it was open, card closes. View shouldn't switch.
+            // If it was closed, card resists. View CAN switch?
+            const wrapper = e.target.closest('.swipe-wrapper');
+            if (wrapper && wrapper.classList.contains('swiped-open')) {
+                return; // Closing card
+            }
+            // Else allow swipe right
+        }
+
+        // View Transition Logic
+        // Order: Today <-> Week <-> Month
+        // Today (Left) | Week (Center) | Month (Right)
+
+        if (activeView === 'today') {
+            if (isSwipeLeft) { playNav(); showView('week'); } // Today -> Week
+        } else if (activeView === 'week') {
+            if (isSwipeRight) { playNav(); showView('today'); } // Week -> Today
+            else if (isSwipeLeft) { playNav(); showView('month'); } // Week -> Month
+        } else if (activeView === 'month') {
+            if (isSwipeRight) { playNav(); showView('week'); } // Month -> Week
+        }
+
+    }, { passive: true });
 }
