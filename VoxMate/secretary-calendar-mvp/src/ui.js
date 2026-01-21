@@ -41,7 +41,7 @@ function setupNav() {
     // Basic Layout with Bottom Sheet
     app.innerHTML = `
       <header id="app-header">
-        <h1 class="app-title">Secretary</h1>
+        <h1 class="app-title">よていまもり<span id="header-subtitle" style="font-size: 0.7em; margin-left: 10px; opacity: 0.8; font-weight: normal;"></span></h1>
         <div class="header-actions"></div> <!-- Empty now -->
       </header>
       <div id="notification-center"></div>
@@ -137,6 +137,10 @@ async function renderMonth(container) {
     // Calculate Grid Range
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
+
+    // Update Header
+    const headerSub = document.getElementById('header-subtitle');
+    if (headerSub) headerSub.textContent = "今月の予定";
 
     // Start from the previous Sunday
     const startDate = new Date(firstDayOfMonth);
@@ -367,8 +371,11 @@ function renderToday(container) {
     // Clear previous timer if any
     if (countdownInterval) clearInterval(countdownInterval);
 
+    // Update Header
+    const headerSub = document.getElementById('header-subtitle');
+    if (headerSub) headerSub.textContent = "今日の予定";
+
     container.innerHTML = `
-        <h2>Today's Secretary</h2>
         <div id="countdown-area"></div>
         <div id="today-list">Loading...</div>
     `;
@@ -1090,7 +1097,11 @@ async function renderWeek(container) {
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(endOfWeek.getDate() + 7);
 
-    container.innerHTML = `<h2>Week Schedule (${startOfWeek.toLocaleDateString()} - ${endOfWeek.toLocaleDateString()})</h2><div id="week-list">Loading...</div>`;
+    // Update Header
+    const headerSub = document.getElementById('header-subtitle');
+    if (headerSub) headerSub.textContent = "今週の予定";
+
+    container.innerHTML = `<div id="week-list">Loading...</div>`;
 
     try {
         const events = await listEvents(startOfWeek.toISOString(), endOfWeek.toISOString());
