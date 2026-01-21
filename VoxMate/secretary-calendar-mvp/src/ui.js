@@ -452,7 +452,7 @@ function renderSettings(container) {
         }
 
         container.innerHTML = `
-            <h2>Settings</h2>
+            <h2>設定</h2>
 
             <div class="card">
                 <h3>音声入力モード</h3>
@@ -554,7 +554,7 @@ function renderAdd(container, editEvent = null) {
     const isEdit = !!editEvent;
 
     container.innerHTML = `
-        <h2>${isEdit ? 'Edit Event' : 'Add Event'}</h2>
+        <h2>${isEdit ? '予定を編集' : '予定を入力'}</h2>
 
         <div class="template-row">
             ${templates.map(t => `
