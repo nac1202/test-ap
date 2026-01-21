@@ -293,7 +293,7 @@ async function loadToday(targetDate = null) {
                 return `
                 <div class="swipe-wrapper slide-in" style="animation-delay: ${index * 0.05}s">
                     <div class="swipe-bg" id="delete-bg-${index}" data-id="${ev.id}">
-                        <span class="icon">🗑️</span>
+                        <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></span>
                     </div>
                     <div class="${cardClass} ${colorClass}" id="card-${index}" ${colorAttr}>
                         <div class="time">${timeStr}</div>
@@ -480,7 +480,7 @@ function renderSettings(container) {
                     ${templates.map((t, i) => `
                         <div class="template-item-row">
                             <span>${t.icon} ${t.label}</span>
-                            <button class="btn-delete-template" data-index="${i}">🗑</button>
+                            <button class="btn-delete-template" data-index="${i}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                         </div>
                     `).join('')}
                 </div>
@@ -1165,7 +1165,7 @@ async function renderWeek(container) {
                         return `
                         <div class="swipe-wrapper">
                             <div class="swipe-bg" id="week-delete-bg-${ev.id}" data-id="${ev.id}">
-                                <span class="icon">🗑️</span>
+                                <span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></span>
                             </div>
                             <div class="mini-event ${isTentative ? 'tentative' : ''} ${colorClass}" ${colorAttr} id="week-card-${ev.id}" style="background:var(--card-bg); border-bottom:none;">
                                   <span class="time">${time}</span> ${badge}${summary}
