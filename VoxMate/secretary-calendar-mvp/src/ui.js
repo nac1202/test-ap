@@ -163,16 +163,21 @@ async function renderMonth(container) {
             const isCurrentMonth = (currentDay.getMonth() === month);
             const dayEvents = eventsMap[dateKey] || [];
 
-            // Dots logic
-            const dotsHtml = dayEvents.slice(0, 4).map(ev => {
+            // Event Bars Logic
+            const eventsHtml = dayEvents.slice(0, 5).map(ev => {
                 const colorClass = ev.colorId ? `g-color-${ev.colorId}` : '';
-                return `<span class="dot ${colorClass}"></span>`;
+                const displaySummary = ev.summary.replace(/^\(仮\)\s*/, '');
+                const isTentative = (ev.status === 'tentative') || (ev.summary.startsWith('(仮)'));
+
+                return `<div class="month-event-bar ${colorClass} ${isTentative ? 'tentative' : ''}">
+                    ${displaySummary}
+                </div>`;
             }).join('');
 
             html += `
                 <div class="day-cell ${isCurrentMonth ? '' : 'outside'} ${isToday ? 'today' : ''}" data-date="${dateKey}">
                     <span class="day-number">${currentDay.getDate()}</span>
-                    <div class="dots-container">${dotsHtml}</div>
+                    <div class="month-events-container">${eventsHtml}</div>
                 </div>
             `;
 

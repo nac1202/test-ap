@@ -899,18 +899,37 @@ nav button.fab:hover {
   color: white;
 }
 
-.dots-container {
+.month-events-container {
   display: flex;
+  flex-direction: column;
   gap: 2px;
-  flex-wrap: wrap;
-  justify-content: center;
   width: 100%;
+  overflow: hidden;
 }
 
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  display: inline-block;
+.month-event-bar {
+  width: 100%;
+  font-size: 0.7em;
+  /* Compact text */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 1px 4px;
+  border-radius: 2px;
+  color: white;
+  /* Text is white on colored bg */
   background-color: var(--event-color, var(--primary-color));
+  box-sizing: border-box;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.month-event-bar.tentative {
+  background-color: transparent !important;
+  color: var(--event-color, var(--text-main));
+  border: 1px solid var(--event-color, var(--text-main));
+}
+
+[data-theme="dark"] .month-event-bar {
+  opacity: 0.9;
 }
