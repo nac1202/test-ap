@@ -893,7 +893,7 @@ function renderConflicts(container) {
 
 
         container.innerHTML = `
-                < h2 > Conflicts Resolution</h2 >
+            <h2>Conflicts Resolution</h2>
             <div class="card warn">
                 <p>新規予定「${draft ? draft.summary : '???'}」が ${conflicts ? conflicts.length : 0} 件の予定と競合しています。</p>
             </div>

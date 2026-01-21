@@ -166,17 +166,25 @@ export function parseInput(text) {
     // Clean up summary: remove matched date/time patterns
     // We construct a regex to remove date/time related parts specifically
     let cleanText = text;
-    // Remove date patterns
-    cleanText = cleanText.replace(/(\d{1,2})[\/月](\d{1,2})日?/, '');
-    cleanText = cleanText.replace(/明日|明後日/, '');
-    // Remove time patterns
-    cleanText = cleanText.replace(/(\d{1,2})[:時](\d{2})?/, '');
-    // Remove "duration" patterns if we parsed them?
-    // Maybe too aggressive, users might want "会議30分" to stay "会議".
-    // But "15時に" -> "に" might remain.
+    // Remove date patterns (Global)
+    cleanText = cleanText.replace(/(\d{1,2})[\/月](\d{1,2})日?/g, '');
+    cleanText = cleanText.replace(/来週|今週|再来週|明日|明後日|今日/g, '');
+    cleanText = cleanText.replace(/[月火水木金土日]曜日?/g, '');
+
+    // Remove time patterns (Global) includes "分" optionally to catch "22分"
+    cleanText = cleanText.replace(/(\d{1,2})[:時](\d{1,2})?分?/g, '');
+
+    // Remove "duration" patterns (Global) e.g. "30分"
+    // Be careful, this might remove "30分" from "会議30分" (Meeting 30 min) which might be desired or not.
+    // For now, let's strictly remove "X時間" but maybe keep "X分" if it wasn't part of a time?
+    // Actually, "15時から15時22分" -> "22分" was part of time.
+    // The previous regex `(\d{1,2})[:時](\d{1,2})?分?` handles "15時22分".
+
+    // Clean up separators/particles
+    cleanText = cleanText.replace(/から|まで|〜|~/g, ' ');
     cleanText = cleanText.replace(/\s+/g, ' ').trim();
-    // Remove trailing "に" or "から" often left behind
-    cleanText = cleanText.replace(/^(に|から|まで)/, '').replace(/(に|から|まで)$/, '').trim();
+    // Remove leading/trailing particles often left behind
+    cleanText = cleanText.replace(/^(に|の|は)/, '').replace(/(に|の|は)$/, '').trim();
 
     draft.summary = cleanText || text; // Fallback if we stripped everything
 

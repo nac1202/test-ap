@@ -6,6 +6,23 @@ const cases = [
     { input: "今日の15時の予定をキャンセル", expected: { intent: "delete" } },
     { input: "15時からずらして", expected: { intent: "update" } },
     { input: "来週空いてる？", expected: { intent: "query_free" } },
+    {
+        input: '来週火曜日、15時から15時22分までランチ',
+        expected: {
+            summary: 'ランチ',
+            // Date logic is relative, so we check mainly time and duration if possible
+            descriptionContains: '15:00',
+            durationMinutes: 22
+        }
+    },
+    {
+        input: '明日の10時から11時まで会議',
+        expected: {
+            summary: '会議',
+            startHour: 10,
+            durationMinutes: 60
+        }
+    },
     // Bug Report Case
     {
         input: "明日22時から23時15分まで会議",

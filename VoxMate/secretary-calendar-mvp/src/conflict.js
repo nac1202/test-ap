@@ -1,6 +1,6 @@
 import { extractMeta } from './storage.js';
 
-export function detectConflicts(newEvent, existingEvents, bufferMin = 15) {
+export function detectConflicts(newEvent, existingEvents, bufferMin = 0) {
     const conflicts = [];
     const newStart = new Date(newEvent.start).getTime();
     const newEnd = new Date(newEvent.end).getTime();
