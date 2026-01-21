@@ -4,7 +4,10 @@ const CACHE_NAME = 'secretary-app-v2';
 const ASSETS = [
     '/index.html',
     '/manifest.json',
-    '/icon.png'
+    '/icon.png',
+    '/src/style.css',
+    '/src/colors.css',
+    '/src/swipe.css'
 ];
 
 self.addEventListener('install', (e) => {

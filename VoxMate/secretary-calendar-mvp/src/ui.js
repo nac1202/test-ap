@@ -53,6 +53,7 @@ function setupNav() {
         <button data-view="today">Today</button>
         <button data-view="week">Week</button>
         <button data-view="add" class="fab">+</button>
+        <button data-view="month">Month</button>
         <button data-view="people">People</button>
         <button data-view="conflicts">⚠</button>
       </nav>
@@ -81,17 +82,131 @@ function showView(viewName, data = null) {
     container.innerHTML = ''; // Clear
 
     switch (viewName) {
-        case 'today': renderToday(container); break;
-        case 'add': renderAdd(container, data); break; // Pass optional data (e.g. event to edit)
+        case 'today': renderToday(container, data); break; // data can be a target Date object
+        case 'add': renderAdd(container, data); break;
         case 'conflicts': renderConflicts(container); break;
         case 'people': renderPeople(container); break;
         case 'week': renderWeek(container); break;
+        case 'month': renderMonth(container); break;
         case 'settings': renderSettings(container); break;
     }
 }
 
-async function loadToday() {
-    const now = new Date();
+// Module-level state for calendar navigation
+let calendarViewDate = new Date();
+
+async function renderMonth(container) {
+    const year = calendarViewDate.getFullYear();
+    const month = calendarViewDate.getMonth(); // 0-indexed
+
+    // Calculate Grid Range
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+
+    // Start from the previous Sunday
+    const startDate = new Date(firstDayOfMonth);
+    startDate.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay());
+
+    // End at the next Saturday (allow for 6 rows max = 42 days)
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 41);
+    // Wait, let's just do standard 6 weeks to be safe, or calculated?
+    // 6*7 = 42 days cover any month.
+
+    container.innerHTML = `
+        <div class="calendar-header">
+            <button id="btn-prev-month" class="icon-btn">◀</button>
+            <h2>${year}年 ${month + 1}月</h2>
+            <button id="btn-next-month" class="icon-btn">▶</button>
+        </div>
+        <div class="calendar-grid-header">
+            <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+        </div>
+        <div id="calendar-grid" class="calendar-grid">Loading...</div>
+    `;
+
+    // Bind Nav Buttons
+    document.getElementById('btn-prev-month').addEventListener('click', () => {
+        calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+        renderMonth(container);
+    });
+    document.getElementById('btn-next-month').addEventListener('click', () => {
+        calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+        renderMonth(container);
+    });
+
+    try {
+        const events = await listEvents(startDate.toISOString(), endDate.toISOString());
+
+        // Map events to date strings "YYYY-MM-DD"
+        const eventsMap = {};
+        events.forEach(ev => {
+            const startStr = ev.start.dateTime || ev.start.date;
+            const d = new Date(startStr);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            if (!eventsMap[key]) eventsMap[key] = [];
+            eventsMap[key].push(ev);
+        });
+
+        // Generate Grid HTML
+        let html = '';
+        let currentDay = new Date(startDate);
+        const todayStr = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
+
+        for (let i = 0; i < 42; i++) {
+            const y = currentDay.getFullYear();
+            const m = String(currentDay.getMonth() + 1).padStart(2, '0');
+            const d = String(currentDay.getDate()).padStart(2, '0');
+            const dateKey = `${y}-${m}-${d}`;
+
+            const isToday = (dateKey === todayStr);
+            const isCurrentMonth = (currentDay.getMonth() === month);
+            const dayEvents = eventsMap[dateKey] || [];
+
+            // Dots logic
+            const dotsHtml = dayEvents.slice(0, 4).map(ev => {
+                const colorClass = ev.colorId ? `g-color-${ev.colorId}` : '';
+                return `<span class="dot ${colorClass}"></span>`;
+            }).join('');
+
+            html += `
+                <div class="day-cell ${isCurrentMonth ? '' : 'outside'} ${isToday ? 'today' : ''}" data-date="${dateKey}">
+                    <span class="day-number">${currentDay.getDate()}</span>
+                    <div class="dots-container">${dotsHtml}</div>
+                </div>
+            `;
+
+            currentDay.setDate(currentDay.getDate() + 1);
+        }
+
+        const gridEl = document.getElementById('calendar-grid');
+        if (gridEl) {
+            gridEl.innerHTML = html;
+
+            // Click -> Go to Today view for that date
+            gridEl.querySelectorAll('.day-cell').forEach(cell => {
+                cell.addEventListener('click', () => {
+                    const dateStr = cell.dataset.date; // "YYYY-MM-DD"
+                    // We need to support 'renderToday' taking a date.
+                    // For now, let's just navigate to Today view.
+                    // Ideally pass the date.
+                    const target = new Date(dateStr);
+                    showView('today', target);
+                });
+            });
+        }
+
+    } catch (e) {
+        console.error(e);
+        const gridEl = document.getElementById('calendar-grid');
+        if (gridEl) gridEl.innerHTML = `<div style="padding:20px; color:red;">読み込み失敗</div>`;
+        notify("カレンダー読み込み失敗: " + e.message, "error");
+    }
+}
+async function loadToday(targetDate = null) {
+    const now = targetDate instanceof Date ? targetDate : new Date();
+    // Update Header if we have a container for it (optional tweak)
+    // For now just valid date logic
     const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString();
     const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString();
 
