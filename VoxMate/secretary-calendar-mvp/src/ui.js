@@ -1322,98 +1322,94 @@ function setupViewSwipe() {
     let slideWidth = 0;
     let currentTrans = 0;
 
-    // View Order Array
-    const VIEWS_ORDER = ['month', 'week', 'today'];
-
     container.addEventListener('touchstart', (e) => {
-        // Only active if in slide mode
-        if (overlayViewActive()) return;
-        if (!VIEWS_ORDER.includes(activeView)) return;
+        if (overlayViewActive()) return; 
+        if (!VIEW_CYCLE.includes(activeView)) return;
 
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
-
-        // Check if interacting with a card
+        
         const wrapper = e.target.closest('.swipe-wrapper');
         isCardInteraction = !!wrapper;
-
-        // If card interaction, disable view swipe for now to prevent conflict.
+        
         if (isCardInteraction) return;
 
         isDragging = true;
         slideWidth = slider.offsetWidth / 3;
-
-        // Get current index
-        const currentIndex = VIEWS_ORDER.indexOf(activeView);
-        currentTrans = -1 * currentIndex * slideWidth;
-
-        // Disable transition for 1:1 drag
+        
+        // Infinite Loop: -33.333% (Center)
+        currentTrans = -slideWidth;
+        
         slider.style.transition = 'none';
-
+        
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
-
+        
         const x = e.touches[0].clientX;
         const y = e.touches[0].clientY;
         const diffX = x - startX;
         const diffY = y - startY;
 
-        // If vertical scroll dominates, cancel horizontal drag
-        if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
-            isDragging = false;
-            // Restore snap
-            restoreSnap();
-            return;
+        // Scroll Lock
+        if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 5) {
+             isDragging = false;
+             restoreSnap();
+             return; 
+        }
+        
+        if (Math.abs(diffX) > 5) {
+            if (e.cancelable) e.preventDefault();
         }
 
-        // Apply transform
         const newTrans = currentTrans + diffX;
         slider.style.transform = `translateX(${newTrans}px)`;
 
-    }, { passive: true });
+    }, { passive: false });
 
     container.addEventListener('touchend', (e) => {
         if (!isDragging) return;
         isDragging = false;
-
+        
         const endX = e.changedTouches[0].clientX;
         const diffX = endX - startX;
-
-        // Determine Threshold
-        const threshold = slideWidth * 0.25; // 25% width to switch
-
-        const currentIndex = VIEWS_ORDER.indexOf(activeView);
-        let targetIndex = currentIndex;
+        const threshold = slideWidth * 0.25;
+        
+        const centerIdx = VIEW_CYCLE.indexOf(activeView);
+        let targetView = activeView;
+        let targetTrans = -33.3333;
 
         if (diffX > threshold) {
-            // Swiped Right -> Go Left (Prev Index in DOM? No, Index --)
-            // Month(0) | Week(1) | Today(2)
-            // If on Today(2), Swipe Right -> Week(1). Logic: index--
-            targetIndex = Math.max(0, currentIndex - 1);
+            // Right Swipe -> Prev
+            targetView = VIEW_CYCLE[(centerIdx - 1 + 3) % 3];
+            targetTrans = 0;
         } else if (diffX < -threshold) {
-            // Swiped Left -> Go Right (Next Index)
-            targetIndex = Math.min(2, currentIndex + 1);
+             // Left Swipe -> Next
+            targetView = VIEW_CYCLE[(centerIdx + 1) % 3];
+            targetTrans = -66.6666;
         }
-
-        // Switch View (this handles transition and render)
-        const targetView = VIEWS_ORDER[targetIndex];
+        
+        slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+        slider.style.transform = `translateX(${targetTrans}%)`;
+        
         if (targetView !== activeView) {
             playNav();
-            showView(targetView);
+            const onEnd = () => {
+                slider.removeEventListener('transitionend', onEnd);
+                showView(targetView);
+            };
+            slider.addEventListener('transitionend', onEnd);
         } else {
-            // Snap back
             restoreSnap();
         }
     });
 
     function restoreSnap() {
-        const index = VIEWS_ORDER.indexOf(activeView);
-        slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
-        slider.style.transform = `translateX(-${index * 33.3333}%)`;
+         slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+         slider.style.transform = 'translateX(-33.3333%)';
     }
-
+    
     function overlayViewActive() {
         const overlay = document.getElementById('overlay-view-container');
         return overlay && overlay.style.display !== 'none';
