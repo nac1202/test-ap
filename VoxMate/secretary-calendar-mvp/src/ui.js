@@ -56,7 +56,17 @@ function setupNav() {
       <div id="sheet-overlay" class="sheet-overlay"></div>
 
       <nav id="bottom-nav" class="slide-in">
-        <button id="btn-view-menu" class="nav-btn">📅</button>
+        <button id="btn-view-menu" class="nav-btn" style="padding: 5px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+                <text x="50%" y="20" font-size="10" text-anchor="middle" fill="currentColor" stroke="none" id="calendar-icon-text" style="font-family: sans-serif; font-weight: bold;">
+                    ${new Date().getDate()}
+                </text>
+            </svg>
+        </button>
         <button data-view="people" class="nav-btn">人</button>
         <button data-view="add" class="fab">+</button>
         <button id="btn-settings-nav" class="nav-btn">⚙</button>
