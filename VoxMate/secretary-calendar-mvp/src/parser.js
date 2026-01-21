@@ -54,13 +54,35 @@ export function parseInput(text) {
         targetDate.setDate(targetDate.getDate() + 1);
     } else if (text.match(/明後日/)) {
         targetDate.setDate(targetDate.getDate() + 2);
+    } else {
+        // Day only match: "23日"
+        const dayMatch = text.match(/(\d{1,2})日/);
+        if (dayMatch) {
+            const day = parseInt(dayMatch[1]);
+            // Assume current month, but if day is clearly passed, maybe next month?
+            // For MVP, assume current month unless user specifies.
+            const today = now.getDate();
+            let targetMonth = now.getMonth();
+            let targetYear = now.getFullYear();
+
+            // If user says "5th" and today is "21st", usually means Next Month's 5th.
+            if (day < today) {
+                targetMonth++;
+                if (targetMonth > 11) {
+                    targetMonth = 0;
+                    targetYear++;
+                }
+            }
+            targetDate.setFullYear(targetYear, targetMonth, day);
+        }
     }
 
     // 2. Time Parsing (Find ALL matches and take the LAST one to support appended corrections)
     // 2. Time Parsing
     // Enhance regex to optionally consume "分" so it's not left for duration parser if possible, 
     // but main fix is range logic.
-    const timeMatches = [...text.matchAll(/(\d{1,2})[:時](\d{1,2})?/g)];
+    // FIX: Lookahead to prevent matching "1時間" as "1時"
+    const timeMatches = [...text.matchAll(/(\d{1,2})[:時](?![間])(\d{1,2})?/g)];
     const isUndecided = text.match(/時間.*未定|未定/);
 
     if (isUndecided) {

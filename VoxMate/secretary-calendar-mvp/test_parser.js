@@ -23,13 +23,24 @@ const cases = [
             durationMinutes: 60
         }
     },
-    // Bug Report Case
     {
-        input: "明日22時から23時15分まで会議",
+        input: '明日22時から23時15分まで会議',
         expected: {
-            hasTime: true,
-            checkStartHour: 22,
-            checkDurationMin: 75 // 1h 15m
+            summary: '会議', // Summary check
+            startHour: 22,
+            durationMinutes: 75
+        }
+    },
+    // Bug Report Case: Day only + Duration confusion
+    {
+        input: '23日1時間休憩',
+        expected: {
+            summary: '休憩',
+            // Expect date to be 23rd (of current month ideally)
+            // We can't easily check exact date obj in this simple test runner without mocking 'now', 
+            // but we can check if it parsed '1時間' as duration (60min) NOT '1時' (starts at 1)
+            durationMinutes: 60,
+            notStartHour: 1 // Custom check we'll handle or just verify manual inspection
         }
     }
 ];
@@ -58,6 +69,15 @@ cases.forEach((c, i) => {
         const diffMin = (e - s) / 60000;
         if (Math.abs(diffMin - c.expected.checkDurationMin) > 1) {
             console.error(`  Could not match duration. Expected ${c.expected.checkDurationMin}, Got ${diffMin}`);
+            failReason = `Duration mismatch. Expected ${c.expected.checkDurationMin}, Got ${diffMin}`;
+            ok = false;
+        }
+    }
+
+    if (ok && c.expected.notStartHour !== undefined) {
+        const startHour = result.start ? new Date(result.start).getHours() : -1;
+        if (startHour === c.expected.notStartHour) {
+            failReason = `Start Hour should NOT be ${c.expected.notStartHour}, but it is`;
             ok = false;
         }
     }
@@ -66,8 +86,11 @@ cases.forEach((c, i) => {
         console.log(`Case ${i + 1}: OK (${c.input})`);
     } else {
         console.error(`Case ${i + 1}: FAIL (${c.input})`);
-        console.error("Expected:", c.expected);
-        console.error("Actual:", result.start ? { start: result.start, end: result.end } : "No Time");
+        if (failReason) {
+            console.error(`  Reason: ${failReason}`);
+        }
+        console.error("  Expected:", c.expected);
+        console.error("  Actual:", result.start ? { start: result.start, end: result.end, intent: result.intent, importance: result.importance } : { intent: result.intent, importance: result.importance });
         failed++;
     }
 });
