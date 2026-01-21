@@ -1047,6 +1047,55 @@ nav button.fab:hover {
   /* Above nav */
 }
 
+/* Large Microphone Button */
+.mic-btn-large {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-size: 1.1em;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  width: 90%;
+  margin: 0 auto;
+  letter-spacing: 0.05em;
+}
+
+.mic-btn-large:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.mic-btn-large.recording {
+  background: #ff4444;
+  animation: mic-pulse 1.5s infinite;
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+}
+
+@keyframes mic-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+  }
+
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
+  }
+}
+
 .bottom-sheet button {
   padding: 15px;
   border: 1px solid var(--border-color);

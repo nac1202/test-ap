@@ -574,12 +574,18 @@ function renderAdd(container, editEvent = null) {
 
         <div class="input-group">
             <textarea id="input-text" placeholder="例: 明日15時に田中さんと会議（仮）" rows="3"></textarea>
-            <button id="btn-mic" class="icon-btn" title="音声入力">🎤</button>
+            <!-- Mic button moved -->
         </div>
         <div id="preview-area"></div>
         <div class="actions">
             <button id="btn-analyze">解析</button>
             ${isEdit ? '<button id="btn-cancel" style="background:#888;">キャンセル</button>' : ''}
+        </div>
+        
+        <div style="margin-top: 30px; display: flex; justify-content: center;">
+            <button id="btn-mic" class="mic-btn-large">
+                <span style="font-size: 1.5em; margin-right: 10px;">🎙️</span> 音声で入力
+            </button>
         </div>
     `;
 
