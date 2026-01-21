@@ -132,35 +132,50 @@ function setupNav() {
     setupViewSwipe(); // Init swipe nav
 }
 
-// View Indices for Slider (Month -> Week -> Today)
-const VIEW_INDICES = { 'month': 0, 'week': 1, 'today': 2 };
+// View Cycle for Infinite Slider (Month <-> Week <-> Today)
+const VIEW_CYCLE = ['month', 'week', 'today'];
+
+function reorderSlides(centerView) {
+    const slider = document.getElementById('view-slider');
+    if (!slider) return;
+
+    const centerIdx = VIEW_CYCLE.indexOf(centerView);
+    if (centerIdx === -1) return;
+
+    const prevView = VIEW_CYCLE[(centerIdx - 1 + 3) % 3];
+    const nextView = VIEW_CYCLE[(centerIdx + 1) % 3];
+
+    document.getElementById(`slide-${prevView}`).style.order = 1;
+    document.getElementById(`slide-${centerView}`).style.order = 2;
+    document.getElementById(`slide-${nextView}`).style.order = 3;
+
+    // Reset transform to center (Index 1) without animation
+    slider.style.transition = 'none';
+    slider.style.transform = 'translateX(-33.3333%)';
+    // Force reflow
+    void slider.offsetWidth;
+}
 
 function showView(viewName, data = null) {
-    activeView = viewName; // Update state
+    activeView = viewName;
 
     const slider = document.getElementById('view-slider');
     const overlay = document.getElementById('overlay-view-container');
 
-    // Safety check if DOM isn't ready (shouldn't happen)
-    if (!slider || !overlay) {
-        console.warn("View containers not found");
-        return;
-    }
+    if (!slider || !overlay) return;
 
-    if (viewName in VIEW_INDICES) {
+    if (VIEW_CYCLE.includes(viewName)) {
         // Slide Mode
         overlay.style.display = 'none';
 
-        const index = VIEW_INDICES[viewName];
-        // Ensure transition is enabled (might be disabled by drag)
+        // Reorder slides so active is in center
+        reorderSlides(viewName);
+
+        // Ensure transition is ready for NEXT interaction (but currently we are static at center)
         slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
-        slider.style.transform = `translateX(-${index * 33.3333}%)`;
 
-        // Render content into the specific slide
+        // Render content
         const container = document.getElementById(`slide-${viewName}`);
-
-        // NOTE: For 'today', we might want to avoid full re-render if just switching back?
-        // But renderToday handles timer cleanup.
         if (viewName === 'today') renderToday(container, data);
         else if (viewName === 'week') renderWeek(container);
         else if (viewName === 'month') renderMonth(container);
@@ -168,7 +183,7 @@ function showView(viewName, data = null) {
     } else {
         // Overlay Mode
         overlay.style.display = 'block';
-        overlay.innerHTML = ''; // Clear previous
+        overlay.innerHTML = '';
 
         switch (viewName) {
             case 'add': renderAdd(overlay, data); break;
