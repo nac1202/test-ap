@@ -50,11 +50,11 @@ function setupNav() {
       <div id="notification-center"></div>
       <div id="view-container"></div>
       <nav id="bottom-nav" class="slide-in">
-        <button data-view="today">Today</button>
-        <button data-view="week">Week</button>
+        <button data-view="today">日</button>
+        <button data-view="week">週</button>
         <button data-view="add" class="fab">+</button>
-        <button data-view="month">Month</button>
-        <button data-view="people">People</button>
+        <button data-view="month">月</button>
+        <button data-view="people">人</button>
         <button data-view="conflicts">⚠</button>
       </nav>
     `;
