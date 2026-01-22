@@ -132,3 +132,31 @@ export async function deleteEvent(eventId) {
         'eventId': eventId
     });
 }
+
+export async function fetchAllEvents(timeMin, timeMax) {
+    let events = [];
+    let pageToken = null;
+    do {
+        try {
+            const response = await gapi.client.calendar.events.list({
+                'calendarId': 'primary',
+                'timeMin': timeMin,
+                'timeMax': timeMax,
+                'showDeleted': false,
+                'singleEvents': true,
+                'orderBy': 'startTime',
+                'maxResults': 2500,
+                'pageToken': pageToken
+            });
+            const items = response.result.items;
+            if (items && items.length > 0) {
+                events = events.concat(items);
+            }
+            pageToken = response.result.nextPageToken;
+        } catch (e) {
+            console.error("Error fetching events page", e);
+            throw e;
+        }
+    } while (pageToken);
+    return events;
+}

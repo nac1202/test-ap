@@ -1,4 +1,4 @@
-const CACHE_NAME = 'secretary-app-v2';
+const CACHE_NAME = 'secretary-app-v4';
 // Only cache critical assets that we generate or static files. 
 // Avoid caching JS modules aggressively in dev mode if possible, but for PWA 'fetch' handler is required.
 const ASSETS = [

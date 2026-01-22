@@ -1,4 +1,5 @@
 import { listEvents, createEvent, updateEvent, deleteEvent, handleAuthClick } from './calendar.js';
+import { exportCalendarData } from './export.js';
 import { enableSwipe } from './swipe.js';
 import { parseInput } from './parser.js';
 import { injectMeta, extractMeta, getTemplates, saveTemplates, getVoiceMode, saveVoiceMode } from './storage.js';
@@ -590,6 +591,17 @@ function renderSettings(container) {
                 </div>
             </div>
 
+            <div class="card">
+                <h3>データ管理</h3>
+                <button id="btn-export-data" class="primary" style="width:100%; margin-top:10px;">
+                    📅 全期間の予定をエクスポート
+                </button>
+                <div style="font-size:0.8em; color:var(--text-sec); margin-top:5px; line-height:1.4;">
+                    過去（2010年以降）のGoogleカレンダーの全予定をテキスト形式でダウンロードします。<br>
+                    NotebookLM等での分析にご利用ください。
+                </div>
+            </div>
+
 
         `;
 
@@ -634,6 +646,29 @@ function renderSettings(container) {
                 saveTemplates(templates);
                 renderSettings(container);
                 notify("追加しました");
+            });
+        }
+
+        // Export Handler
+        const btnExport = document.getElementById('btn-export-data');
+        if (btnExport) {
+            btnExport.addEventListener('click', async () => {
+                if (!confirm('過去の全データを取得してダウンロードしますか？\n（データ量によっては時間がかかる場合があります）')) return;
+
+                btnExport.disabled = true;
+                btnExport.textContent = '取得中...';
+
+                try {
+                    notify("データ取得を開始しました...", "info");
+                    const count = await exportCalendarData();
+                    notify(`${count} 件の予定をエクスポートしました`, "success");
+                } catch (e) {
+                    console.error(e);
+                    notify("エクスポート失敗: " + (e.message || "Unknown Error"), "error");
+                } finally {
+                    btnExport.disabled = false;
+                    btnExport.textContent = '📅 全期間の予定をエクスポート';
+                }
             });
         }
     } catch (e) {
