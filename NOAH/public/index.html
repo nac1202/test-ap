@@ -114,6 +114,16 @@
       font-weight: bold;
     }
 
+    .status-cls-full {
+      color: var(--status-red);
+      font-weight: bold;
+    }
+
+    .status-cls-limited {
+      color: var(--status-yellow);
+      font-weight: bold;
+    }
+
     /* Fallback blue */
 
     .weekly-cast-row {
@@ -504,6 +514,12 @@
         } else if (sched.type === 'reserved') {
           statusText = '貸切';
           statusClass = 'status-cls-reserved';
+        } else if (sched.type === 'full') {
+          statusText = '満席';
+          statusClass = 'status-cls-full';
+        } else if (sched.type === 'limited') {
+          statusText = '残りわずか';
+          statusClass = 'status-cls-limited';
         } else {
           statusText = `${sched.openTime || '18:00'} OPEN`;
         }

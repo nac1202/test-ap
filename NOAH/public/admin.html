@@ -66,6 +66,16 @@
       color: #55ff55 !important;
     }
 
+    .status-full {
+      color: #ff4444 !important;
+      font-weight: bold;
+    }
+
+    .status-limited {
+      color: #ffaa00 !important;
+      font-weight: bold;
+    }
+
     /* Highlight the whole cell slightly for non-normal */
     .calendar-day.is-holiday {
       background: #331111;
@@ -317,6 +327,8 @@
           <option value="normal">通常営業</option>
           <option value="holiday">定休日</option>
           <option value="reserved">貸切</option>
+          <option value="full">満席</option>
+          <option value="limited">残りわずか</option>
         </select>
       </div>
 
@@ -456,12 +468,16 @@
     function getValidStatusClass(type) {
       if (type === 'holiday') return 'status-holiday';
       if (type === 'reserved') return 'status-reserved';
+      if (type === 'full') return 'status-full';
+      if (type === 'limited') return 'status-limited';
       return 'status-normal';
     }
 
     function getStatusLabel(type) {
       if (type === 'holiday') return '定休日';
       if (type === 'reserved') return '貸切';
+      if (type === 'full') return '満席';
+      if (type === 'limited') return '残りわずか';
       return '通常';
     }
 
