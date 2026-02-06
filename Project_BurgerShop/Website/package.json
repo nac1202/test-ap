@@ -1,0 +1,12 @@
+{
+    "name": "bun-bun-burger-website",
+    "version": "1.0.0",
+    "description": "BUN BUN BURGER Official Website with AI Concierge",
+    "scripts": {
+        "start": "serve public"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "serve": "^14.2.0"
+    }
+}
