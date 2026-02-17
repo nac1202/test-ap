@@ -113,6 +113,10 @@ const I18N = {
     }
 };
 
+const scriptTag = document.currentScript;
+const scriptSrc = scriptTag.src;
+const siteOrigin = new URL(scriptSrc).origin;
+
 let currentLang = 'ja';
 
 // Will be populated in initConciergeWidget
@@ -835,6 +839,7 @@ ${extraRole}
 ・ブランド／店舗名：${cfg.brandName}
 ・タイムゾーン：Asia/Tokyo
 ・現在時刻：{{CURRENT_TIME_PLACEHOLDER}}
+・WebサイトURL：${siteOrigin} （聞かれたら回答可）
 
 ■ 有人対応（人が対応する業務）
 ・有人対応時間：${cfg.hours.open}:00 〜 ${cfg.hours.close}:00
