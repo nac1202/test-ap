@@ -1,0 +1,24 @@
+/* Menu Categories */
+.category-section {
+    margin-bottom: 3rem;
+}
+
+.category-header {
+    font-size: 2rem;
+    color: var(--primary-color);
+    font-family: 'Outfit', sans-serif;
+    border-bottom: 3px solid var(--secondary-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+}
+
+/* Calorie Info */
+.menu-calories {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: auto;
+    /* Push to bottom if flex column */
+    padding-top: 0.5rem;
+    font-weight: 500;
+}
