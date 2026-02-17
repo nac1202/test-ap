@@ -113,9 +113,7 @@ const I18N = {
     }
 };
 
-const scriptTag = document.currentScript;
-const scriptSrc = scriptTag.src;
-const siteOrigin = new URL(scriptSrc).origin;
+const siteOrigin = window.location.origin;
 
 let currentLang = 'ja';
 
