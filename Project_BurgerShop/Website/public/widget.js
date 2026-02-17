@@ -5,6 +5,7 @@
     const scriptTag = document.currentScript;
     const scriptSrc = scriptTag.src;
     const baseUrl = scriptSrc.substring(0, scriptSrc.lastIndexOf('/')) + '/';
+    const siteOrigin = new URL(scriptSrc).origin; // Get the domain root
     console.log("AI Widget Base URL:", baseUrl);
 
     // 2. Inject CSS
@@ -872,7 +873,9 @@
         }
 
         async function callGeminiAPI(history) {
-            let systemPrompt = `You are a helpful AI assistant for ${WIDGET_CONFIG.brandName}. Business Type: ${WIDGET_CONFIG.businessType}. Hours: ${WIDGET_CONFIG.hours.open}-${WIDGET_CONFIG.hours.close}. Current Time: ${new Date().toLocaleString('ja-JP')}. Respond in ${currentLang === 'en' ? 'English' : 'Japanese'}.`;
+            let systemPrompt = `You are a helpful AI assistant for ${WIDGET_CONFIG.brandName}. Business Type: ${WIDGET_CONFIG.businessType}. Hours: ${WIDGET_CONFIG.hours.open}-${WIDGET_CONFIG.hours.close}. Current Time: ${new Date().toLocaleString('ja-JP')}. Respond in ${currentLang === 'en' ? 'English' : 'Japanese'}.
+Website URL: ${siteOrigin}
+(You are allowed to provide this URL when asked).`;
 
             if (WIDGET_CONFIG.instructions) {
                 systemPrompt += `\n\n[IMPORTANT INSTRUCTIONS FROM OWNER]\n${WIDGET_CONFIG.instructions}`;
