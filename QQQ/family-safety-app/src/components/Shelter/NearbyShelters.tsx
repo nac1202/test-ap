@@ -43,9 +43,11 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
     const [customQuery, setCustomQuery] = useState("");
 
     // Auto-search when location becomes available for the first time
-
-
-    // Timeout handling for location loading
+    useEffect(() => {
+        if (currentLocation.latitude && currentLocation.longitude && !nearbyPlaces.length && !isLoading && placesLib) {
+            handleSearch("");
+        }
+    }, [currentLocation, placesLib]);
     const [locationTimeout, setLocationTimeout] = useState(false);
 
     useEffect(() => {
