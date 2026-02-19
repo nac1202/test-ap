@@ -223,7 +223,7 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
                                     latitude: place.geometry?.location?.lat(),
                                     longitude: place.geometry?.location?.lng(),
                                 })}
-                                className="p-2.5 bg-teal-50 text-teal-600 rounded-full hover:bg-teal-100 hover:text-teal-700 shrink-0 transition-colors mt-0.5"
+                                className="p-2.5 bg-cyan-50 text-cyan-600 rounded-full hover:bg-cyan-100 hover:text-cyan-700 shrink-0 transition-colors mt-0.5"
                                 title="リストに追加"
                             >
                                 <Plus className="w-5 h-5" />
