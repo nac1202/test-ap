@@ -234,7 +234,7 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
     );
 }
 
-const LIBRARIES: ("places" | "drawing" | "geometry" | "localContext" | "visualization")[] = ['places'];
+const LIBRARIES: ("places" | "drawing" | "geometry" | "localContext" | "visualization")[] = ['places', 'geometry'];
 
 export function NearbyShelters({ onAdd }: NearbySheltersProps) {
     // ... (rest of the component) ...
