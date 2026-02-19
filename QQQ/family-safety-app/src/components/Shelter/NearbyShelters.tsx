@@ -59,7 +59,11 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
     }, [currentLocation, locationTimeout]);
 
     const handleSearch = (query: string) => {
-        if (!placesLib) return;
+        console.log("handleSearch called with:", query); // Debug
+        if (!placesLib) {
+            console.error("placesLib is not loaded!"); // Debug
+            return;
+        }
 
         setIsLoading(true);
         setSearchStatus("検索中...");
@@ -86,7 +90,12 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
             request.radius = 3000;
         }
 
+        console.log("Sending TextSearch request:", request); // Debug
+
         service.textSearch(request, (results, status) => {
+            console.log("TextSearch response status:", status); // Debug
+            console.log("TextSearch results:", results); // Debug
+
             setIsLoading(false);
             if (status === placesLib.PlacesServiceStatus.OK && results) {
                 // Sort by distance if current location is available
@@ -111,6 +120,7 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
                 }
                 setSearchStatus(`${results.length}件の候補が見つかりました`);
             } else {
+                console.error("TextSearch failed:", status); // Debug
                 if (query !== searchQuery) {
                     // もしキーワード付加で失敗した場合、元のクエリで再検索（念のため）
                     const originalRequest: google.maps.places.TextSearchRequest = { query: query };
@@ -119,6 +129,7 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
                         originalRequest.radius = 3000;
                     }
                     service.textSearch(originalRequest, (retryResults, retryStatus) => {
+                        console.log("Retry TextSearch status:", retryStatus); // Debug
                         if (retryStatus === placesLib.PlacesServiceStatus.OK && retryResults) {
                             setNearbyPlaces(retryResults);
                             setSearchStatus(`${retryResults.length}件の候補が見つかりました`);
