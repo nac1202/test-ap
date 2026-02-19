@@ -249,7 +249,7 @@ export function NearbyShelters({ onAdd }: NearbySheltersProps) {
     }
 
     return (
-        <APIProvider apiKey={API_KEY}>
+        <APIProvider apiKey={API_KEY} libraries={['places']}>
             <NearbySheltersContent onAdd={onAdd} />
         </APIProvider>
     );
