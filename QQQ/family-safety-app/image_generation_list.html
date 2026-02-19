@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像生成用プロンプト一覧 - Family Safety App</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            mx: auto;
+            padding: 20px;
+        }
+
+        h1 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .filename {
+            font-family: monospace;
+            color: #d63384;
+        }
+
+        .prompt {
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 8px;
+            border-radius: 4px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .note {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .copy-btn {
+            margin-top: 5px;
+            padding: 4px 8px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+
+        .status-done {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-todo {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>画像生成用プロンプト一覧</h1>
+    <p>以下のリストを使って、画像生成AI（Midjourney, DALL-E 3, Stable Diffusionなど）でイラストを作成してください。<br>
+        スタイルは統一感を出すため、全ての画像の末尾に
+        <code>flat vector illustration, simple minimalist style, white background, soft colors</code> を付与することを推奨します。
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">状態</th>
+                <th style="width: 15%;">カテゴリー</th>
+                <th style="width: 20%;">ファイル名 (保存名)</th>
+                <th style="width: 20%;">記事タイトル / 内容</th>
+                <th style="width: 35%;">生成プロンプト (英語)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 防災 -->
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (地震)</td>
+                <td class="filename">earthquake-drop.png</td>
+                <td>発生直後の行動<br><span class="note">ダンゴムシのポーズ</span></td>
+                <td>
+                    <span class="prompt">Educational illustration of a person hiding under a sturdy table in
+                        'dangomushi' pose (curled up like a pill bug) covering their head with arms or a cushion,
+                        earthquake safety guide, flat vector illustration, simple minimalist style, white background,
+                        soft orange and grey colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (火災)</td>
+                <td class="filename">fire-evacuation.png</td>
+                <td>初期消火と避難<br><span class="note">四つん這いで避難</span></td>
+                <td>
+                    <span class="prompt">Illustration of a person crawling on all fours (low posture) on the floor to
+                        avoid smoke, covering mouth and nose with a cloth, fire evacuation drill, smoke above, flat
+                        vector illustration, simple minimalist style, white background, soft red and grey colors --ar
+                        3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (熱中症)</td>
+                <td class="filename">heatstroke.png</td>
+                <td>熱中症対策<br><span class="note">体を冷やす</span></td>
+                <td>
+                    <span class="prompt">Medical illustration showing a person resting in a cool place, drinking water,
+                        applying ice packs to neck and armpits, heatstroke first aid, flat vector illustration, simple
+                        minimalist style, white background, soft blue and orange colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (台風)</td>
+                <td class="filename">typhoon-evacuation.png</td>
+                <td>台風対策<br><span class="note">窓の養生・備蓄</span></td>
+                <td>
+                    <span class="prompt">Illustration of a window taped with curing tape for typhoon protection, and
+                        emergency manufacturing supplies (water bottles, flashlight) on a table, typhoon preparation,
+                        flat vector illustration, simple minimalist style, white background, soft blue colors --ar
+                        3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (雪害)</td>
+                <td class="filename">heavy-snow.png</td>
+                <td>雪害・立ち往生<br><span class="note">マフラーの除雪</span></td>
+                <td>
+                    <span class="prompt">Illustration of a car stuck in heavy snow, a person clearing snow around the
+                        car's exhaust pipe with a shovel, winter safety guide, flat vector illustration, simple
+                        minimalist style, white background, soft blue and white colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (火山)</td>
+                <td class="filename">volcano.png</td>
+                <td>火山降灰対策<br><span class="note">マスク・ゴーグル装備</span></td>
+                <td>
+                    <span class="prompt">Illustration of a person wearing a dust mask, goggles, and a hat to protect
+                        from volcanic ash, carrying an umbrella, volcanic eruption safety, flat vector illustration,
+                        simple minimalist style, white background, soft grey colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (Jアラート)</td>
+                <td class="filename">missile.png</td>
+                <td>ミサイル避難<br><span class="note">物陰に伏せる</span></td>
+                <td>
+                    <span class="prompt">Illustration of a person lying flat on the ground with hands covering their
+                        head behind a concrete wall or sturdy cover, missile alert safety drill, flat vector
+                        illustration, simple minimalist style, white background, soft yellow and black colors --ar
+                        3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (避難所)</td>
+                <td class="filename">evacuation-life.png</td>
+                <td>避難所生活<br><span class="note">エコノミークラス症候群予防</span></td>
+                <td>
+                    <span class="prompt">Illustration of a person sitting and doing simple foot exercises (rotating
+                        ankles) to prevent economy class syndrome, group living setting, health care guide, flat vector
+                        illustration, simple minimalist style, white background, soft green colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (給水)</td>
+                <td class="filename">water-ration.png</td>
+                <td>給水・配給<br><span class="note">ポリタンクとリュック</span></td>
+                <td>
+                    <span class="prompt">Illustration of a water tank (poly tank) and a backpack for carrying water,
+                        emergency water supply station scene, flat vector illustration, simple minimalist style, white
+                        background, soft blue colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防災 (持ち出し袋)</td>
+                <td class="filename">emergency-bag.png</td>
+                <td>非常持ち出し袋<br><span class="note">リュックと中身</span></td>
+                <td>
+                    <span class="prompt">Illustration of an emergency backpack (bug-out bag) with essential items laid
+                        out: flashlight, water bottle, canned food, portable radio, first aid kit, flat vector
+                        illustration, simple minimalist style, white background, soft colors --ar 3:2</span>
+                </td>
+            </tr>
+
+            <!-- 防犯 -->
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防犯 (夜道)</td>
+                <td class="filename">night-walk.png</td>
+                <td>夜道の歩き方<br><span class="note">ながらスマホ禁止・振り返る</span></td>
+                <td>
+                    <span class="prompt">Illustration of a woman walking on a street at night, looking back over her
+                        shoulder to check for safety, holding a security buzzer, street light above, crime prevention
+                        guide, flat vector illustration, simple minimalist style, white background, soft purple colors
+                        --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防犯 (自宅)</td>
+                <td class="filename">security-home.png</td>
+                <td>自宅の防犯<br><span class="note">ツーロック・補助錠</span></td>
+                <td>
+                    <span class="prompt">Close-up illustration of a front door with two locks (one main, one auxiliary),
+                        and a window with a security film sticker, home security guide, flat vector illustration, simple
+                        minimalist style, white background, soft purple colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防犯 (詐欺)</td>
+                <td class="filename">fraud.png</td>
+                <td>特殊詐欺対策<br><span class="note">電話とNGワード</span></td>
+                <td>
+                    <span class="prompt">Illustration of an elderly person looking suspicious at a landline telephone,
+                        with a speech bubble showing a warning icon or 'ATM', fraud prevention guide, flat vector
+                        illustration, simple minimalist style, white background, soft purple and red colors --ar
+                        3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防犯 (SNS)</td>
+                <td class="filename">cyber.png</td>
+                <td>SNSトラブル<br><span class="note">個人情報流出</span></td>
+                <td>
+                    <span class="prompt">Illustration of a smartphone showing a social media photo with a location pin
+                        and a padlock icon representing privacy settings, digital safety, cyber security, flat vector
+                        illustration, simple minimalist style, white background, soft blue and purple colors --ar
+                        3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防犯 (子供)</td>
+                <td class="filename">defense.png</td>
+                <td>連れ去り防止<br><span class="note">いかのおすし・逃げる</span></td>
+                <td>
+                    <span class="prompt">Illustration of a child running away towards a 'Kids 110' safe house sign,
+                        shouting specifically for help, child safety education, prevention of abduction, flat vector
+                        illustration, simple minimalist style, white background, soft colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>防犯 (ストーカー)</td>
+                <td class="filename">stalker.png</td>
+                <td>ストーカー対策<br><span class="note">記録・拒絶・相談</span></td>
+                <td>
+                    <span class="prompt">Illustration of a person keeping a diary or log of incidents, with a smartphone
+                        showing a call history, evidence collection for police, anti-stalking guide, flat vector
+                        illustration, simple minimalist style, white background, soft grey colors --ar 3:2</span>
+                </td>
+            </tr>
+
+            <!-- 護身 (新規) -->
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>護身 (心構え)</td>
+                <td class="filename">run-away.png</td>
+                <td>逃走優先の原則<br><span class="note">全力で逃げる・大声を出す</span></td>
+                <td>
+                    <span class="prompt">Illustration of a person running away at full speed from a suspicious figure in
+                        the distance, shouting for help, self-defense mindset 'escape first', flat vector illustration,
+                        simple minimalist style, white background, soft colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>護身 (道具)</td>
+                <td class="filename">defense-tools.png</td>
+                <td>護身用具<br><span class="note">防犯ブザー・ライト・店舗防犯</span></td>
+                <td>
+                    <span class="prompt">Illustration of self-defense tools like a personal alarm (buzzer) and a
+                        flashlight, home security items, legal defense tools, flat vector illustration, simple
+                        minimalist style, white background, soft colors --ar 3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>護身 (技術)</td>
+                <td class="filename">defense-tech.png</td>
+                <td>離脱法<br><span class="note">手首を引いて逃げる</span></td>
+                <td>
+                    <span class="prompt">Illustration of a self-defense technique, a person sharply pulling their wrist
+                        away towards the attacker's thumb to escape a grab, martial arts for safety, flat vector
+                        illustration, simple minimalist style, white background, soft colors --ar 3:2</span>
+                </td>
+            </tr>
+
+            <!-- 救護 (新規) -->
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>救護 (CPR)</td>
+                <td class="filename">cpr.png</td>
+                <td>心肺蘇生法<br><span class="note">胸骨圧迫</span></td>
+                <td>
+                    <span class="prompt">Illustration of a person performing CPR (chest compressions) on a mannequin or
+                        person lying on the ground, hands interlocked on the center of the chest, first aid guide, flat
+                        vector illustration, simple minimalist style, white background, soft red and blue colors --ar
+                        3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>救護 (AED)</td>
+                <td class="filename">aed.png</td>
+                <td>AEDの使い方<br><span class="note">パッド装着</span></td>
+                <td>
+                    <span class="prompt">Illustration of an AED (Automated External Defibrillator) machine with pads
+                        being applied to a person's chest (right collarbone and left side), first aid equipment, flat
+                        vector illustration, simple minimalist style, white background, soft red and green colors --ar
+                        3:2</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span class="status-done">作成済</span></td>
+                <td>救護 (止血)</td>
+                <td class="filename">bleeding.png</td>
+                <td>直接圧迫止血法<br><span class="note">傷口を強く押さえる</span></td>
+                <td>
+                    <span class="prompt">Illustration of a person applying direct pressure to a wound on an arm with a
+                        clean cloth or gauze to stop bleeding, first aid technique, flat vector illustration, simple
+                        minimalist style, white background, soft red colors --ar 3:2</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <p><strong>使い方:</strong> 上記のプロンプトをAIに入力して画像を生成し、<code>public/images/guide/</code>
+        フォルダに記載のファイル名で保存してください。現在のSVGプレースホルダーを上書きするファイル名になっています。</p>
+</body>
+
+</html>

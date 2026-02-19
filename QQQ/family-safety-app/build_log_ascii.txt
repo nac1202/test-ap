@@ -1,0 +1,57 @@
+
+> family-safety-app@0.1.0 build
+> next build
+
+?? Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+node.exe : ?? ERROR: This build is 
+using Turbopack, with a `webpack` c
+onfig and no `turbopack` config.
+???? ?:1 ??:1
++ & "C:\Program Files\nodejs/node.e
+xe" "C:\Program Files\nodejs/node_m
+o ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~
+    + CategoryInfo          : NotS 
+   pecified: (?? ERROR: This ...b  
+  opack` config.:String) [], Rem   
+ oteException
+    + FullyQualifiedErrorId : Nati 
+   veCommandError
+ 
+   This may be a mistake.
+
+   As of Next.js 16 Turbopack is en
+abled by default and
+   custom webpack configurations ma
+y need to be migrated to Turbopack.
+
+   NOTE: your `webpack` config may 
+have been added by a configuration 
+plugin.
+
+   To configure Turbopack, see http
+s://nextjs.org/docs/app/api-referen
+ce/next-config-js/turbopack
+
+   TIP: Many applications work fine
+ under Turbopack with no configurat
+ion,
+   if that is the case for you, you
+ can silence this error by passing 
+the
+   `--turbopack` or `--webpack` fla
+g explicitly or simply setting an 
+   empty turbopack config in your N
+ext config file (e.g. `turbopack: {
+}`).
+
+> Build error occurred
+Error: Call retries were exceeded
+    at ignore-listed frames {
+  type: 'WorkerError'
+}

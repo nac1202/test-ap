@@ -1,0 +1,46 @@
+
+> family-safety-app@0.1.0 lint
+> eslint
+
+
+D:\Antigravity\data\QQQ\family-safety-app\next.config.ts
+  4:7  warning  'withPWA' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\Antigravity\data\QQQ\family-safety-app\src\hooks\useFamilyLocation.ts
+  25:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\Antigravity\data\QQQ\family-safety-app\src\hooks\useFamilyLocation.ts:25:13
+  23 |         // In a real app, fetch from backend
+  24 |         if (currentLocation.latitude && currentLocation.longitude) {
+> 25 |             setFamilyLocations([
+     |             ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |                 {
+  27 |                     id: 'self',
+  28 |                     name: '????,  react-hooks/set-state-in-effect
+
+D:\Antigravity\data\QQQ\family-safety-app\src\hooks\useShelterList.ts
+  15:17  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\Antigravity\data\QQQ\family-safety-app\src\hooks\useShelterList.ts:15:17
+  13 |         if (saved) {
+  14 |             try {
+> 15 |                 setShelters(JSON.parse(saved));
+     |                 ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  16 |             } catch (e) {
+  17 |                 console.error('Failed to parse shelter data', e);
+  18 |             }  react-hooks/set-state-in-effect
+
+??3 problems (2 errors, 1 warning)
+

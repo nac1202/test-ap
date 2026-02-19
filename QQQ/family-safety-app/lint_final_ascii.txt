@@ -1,0 +1,28 @@
+
+> family-safety-app@0.1.0 lint
+> eslint
+
+
+D:\Antigravity\data\QQQ\family-safety-app\generate_svgs.js
+  1:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+D:\Antigravity\data\QQQ\family-safety-app\next.config.ts
+  4:7  warning  'withPWA' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\Antigravity\data\QQQ\family-safety-app\src\app\guide\page.tsx
+  2:10  warning  'BookOpen' is defined but never used            @typescript-eslint/no-unused-vars
+  8:7   warning  'guideData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\Antigravity\data\QQQ\family-safety-app\src\components\Guide\GuideList.tsx
+  41:17  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+D:\Antigravity\data\QQQ\family-safety-app\src\hooks\useFamilyLocation.ts
+  25:13  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+D:\Antigravity\data\QQQ\family-safety-app\src\hooks\useShelterList.ts
+  15:17  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+??8 problems (3 errors, 5 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+

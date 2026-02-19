@@ -1,0 +1,7 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#F3E8FF"/>
+  <circle cx="200" cy="100" r="30" fill="#C084FC"/>
+  <path d="M200 130 L200 250" stroke="#C084FC" stroke-width="20" stroke-linecap="round"/>
+  <path d="M150 250 L250 250" stroke="#C084FC" stroke-width="10" stroke-linecap="round"/>
+  <text x="200" y="280" font-family="Arial" font-size="24" text-anchor="middle" fill="#6B21A8">WATCH OUT</text>
+</svg>
