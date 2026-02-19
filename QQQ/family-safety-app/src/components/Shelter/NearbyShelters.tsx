@@ -42,20 +42,25 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
     const [searchStatus, setSearchStatus] = useState<string>("");
     const [customQuery, setCustomQuery] = useState("");
 
-    // Auto-search when location becomes available for the first time
+    // Timeout handling for location loading
+    const [locationTimeout, setLocationTimeout] = useState(false);
+
+    // Auto-search when location becomes available (or fails)
     useEffect(() => {
-        if (currentLocation.latitude && currentLocation.longitude && !nearbyPlaces.length && !isLoading && placesLib) {
+        const hasLocation = currentLocation.latitude && currentLocation.longitude;
+        const hasError = currentLocation.error || locationTimeout;
+
+        if ((hasLocation || hasError) && !nearbyPlaces.length && !isLoading && placesLib) {
             handleSearch("");
         }
-    }, [currentLocation, placesLib]);
-    const [locationTimeout, setLocationTimeout] = useState(false);
+    }, [currentLocation, placesLib, locationTimeout]);
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (!currentLocation.latitude && !currentLocation.error && !locationTimeout) {
             timer = setTimeout(() => {
                 setLocationTimeout(true);
-            }, 10000); // 10 seconds timeout for UI feedback
+            }, 5000); // Reduce timeout to 5 seconds for better UX
         }
         return () => clearTimeout(timer);
     }, [currentLocation, locationTimeout]);
