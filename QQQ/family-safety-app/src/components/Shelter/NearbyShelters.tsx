@@ -247,20 +247,13 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
     );
 }
 
+const LIBRARIES: ("places" | "drawing" | "geometry" | "localContext" | "visualization")[] = ['places'];
+
 export function NearbyShelters({ onAdd }: NearbySheltersProps) {
-    if (!API_KEY) {
-        return (
-            <div className="p-4 bg-red-50 text-red-600 rounded-lg text-sm text-center border border-red-200">
-                <p className="font-bold">Google Maps APIキーが設定されていません</p>
-                <p className="text-xs mt-1 text-red-500">
-                    環境変数 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY を確認してください。
-                </p>
-            </div>
-        );
-    }
+    // ... (rest of the component) ...
 
     return (
-        <APIProvider apiKey={API_KEY} libraries={['places']}>
+        <APIProvider apiKey={API_KEY} libraries={LIBRARIES}>
             <NearbySheltersContent onAdd={onAdd} />
         </APIProvider>
     );
