@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { APIProvider, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { useFamilyLocation } from "@/hooks/useFamilyLocation";
 import { Shelter } from "@/types/shelter";
-import { MapPin, Plus, Loader2 } from "lucide-react";
+import { MapPin, Plus, Loader2, ShieldCheck } from "lucide-react";
+import { fetchGSIShelters } from "@/services/gsiShelterService";
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
@@ -65,14 +66,14 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
         return () => clearTimeout(timer);
     }, [currentLocation, locationTimeout]);
 
-    const handleSearch = async (query: string) => { // Make async
+    const handleSearch = async (query: string) => {
         setIsLoading(true);
         setSearchStatus("検索中...");
-        setNearbyPlaces([]); // Reset previous results
+        setNearbyPlaces([]);
 
-        // 1. Fetch from GSI (Official Data) - Execute in parallel with Google Maps search if possible, 
-        // bur for now let's just trigger it.
         let gsiShelters: Omit<Shelter, 'id' | 'createdAt'>[] = [];
+
+        // 1. Fetch from GSI (Official Data)
         if (currentLocation.latitude && currentLocation.longitude) {
             try {
                 gsiShelters = await fetchGSIShelters(currentLocation.latitude, currentLocation.longitude);
@@ -82,31 +83,30 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
             }
         }
 
-        // If Google Maps API is not loaded, at least show GSI data
-        if (!placesLib) {
-            if (gsiShelters.length > 0) {
-                // Convert GSI shelters to a format compatible with nearbyPlaces (google.maps.places.PlaceResult)
-                // This is a bit tricky since PlaceResult has a specific structure. 
-                // We might need to adjust how we display the list to handle both types, 
-                // or wrap GSI data into a PlaceResult-like object.
-                const mappedGSI = gsiShelters.map(s => ({
-                    name: s.name,
-                    vicinity: s.address,
-                    geometry: {
-                        location: new google.maps.LatLng(s.latitude!, s.longitude!)
-                    },
-                    place_id: `gsi-${s.name}`, // Fake ID
-                    icon: "https://maps.google.com/mapfiles/kml/pal2/icon13.png", // Icon for official shelter
-                    types: ["gsi_shelter"] // Custom type marker
-                })) as unknown as google.maps.places.PlaceResult[];
+        // Prepare GSI results as PlaceResult
+        const mappedGSI = gsiShelters.map(s => ({
+            name: s.name,
+            vicinity: s.address || "住所不明",
+            geometry: {
+                location: new google.maps.LatLng(s.latitude!, s.longitude!)
+            },
+            place_id: `gsi-${s.name}-${s.latitude}-${s.longitude}`,
+            rating: 5,
+            user_ratings_total: 0,
+            icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+            types: ["gsi_shelter"] // Mark as official
+        })) as unknown as google.maps.places.PlaceResult[];
 
+        // If Google Maps API is not loaded, show only GSI data
+        if (!placesLib) {
+            if (mappedGSI.length > 0) {
                 setNearbyPlaces(mappedGSI);
                 setIsLoading(false);
                 setSearchStatus(`国土地理院データ: ${gsiShelters.length}件が見つかりました`);
-                return;
+            } else {
+                setIsLoading(false);
+                setSearchStatus("Google Maps Placesライブラリが読み込まれていません。");
             }
-            setIsLoading(false);
-            setSearchStatus("Google Maps Placesライブラリが読み込まれていません。");
             return;
         }
 
@@ -114,16 +114,15 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
         const mapDiv = document.createElement('div');
         const service = new placesLib.PlacesService(mapDiv);
 
-        // キーワードが含まれていない場合、避難所関連のキーワードを付加して検索精度を高める
         let searchQuery = query;
         const keywords = ["避難所", "避難場所", "学校", "公民館", "公園", "広域避難場所", "センター", "会館"];
         const hasKeyword = keywords.some(k => query.includes(k));
 
         if (!hasKeyword) {
-            // 位置情報がない場合は、より広範囲にヒットしやすいキーワードにする
             if (!currentLocation.latitude) {
                 searchQuery = query ? `${query} 避難所` : "避難所";
             } else {
+                // Hybrid search query
                 searchQuery = `${query} 避難所 OR 避難場所 OR 学校 OR 公民館 OR "指定緊急避難場所"`;
             }
         }
@@ -132,10 +131,9 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
             query: searchQuery,
         };
 
-        // Add location bias ONLY if available
         if (currentLocation.latitude && currentLocation.longitude) {
             request.location = new google.maps.LatLng(currentLocation.latitude, currentLocation.longitude);
-            request.radius = 5000; // 半径を5kmに拡大
+            request.radius = 5000;
         }
 
         console.log("[Debug] request:", request);
@@ -146,42 +144,43 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
 
             setIsLoading(false);
 
-            let combinedResults: google.maps.places.PlaceResult[] = [];
-
-            // Convert GSI data to PlaceResult format
-            const mappedGSI = gsiShelters.map(s => ({
-                name: `【公認】${s.name}`, // Distinct name
-                vicinity: s.address || "住所不明",
-                geometry: {
-                    location: new google.maps.LatLng(s.latitude!, s.longitude!)
-                },
-                place_id: `gsi-${s.name}-${s.latitude}-${s.longitude}`,
-                rating: 5, // Fake high rating for official spots
-                user_ratings_total: 0,
-                icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png", // Distinct icon if displayed on map
-                types: ["gsi_shelter"]
-            })) as unknown as google.maps.places.PlaceResult[];
-
-            combinedResults = [...mappedGSI];
+            let combinedResults: google.maps.places.PlaceResult[] = [...mappedGSI];
 
             if (status === placesLib.PlacesServiceStatus.OK && results) {
-                // Deduplicate: If GSI data exists, try to filter out Google duplicates based on name similarity or distance?
-                // For now, simple merge. Maybe put GSI first.
-                combinedResults = [...combinedResults, ...results];
+                // Merge strategies:
+                // We want to avoid duplicates. Simple name/distance dedupe?
+                // For now, let's just append Google results that are NOT roughly in the same spot as GSI results.
+
+                const gsiLocations = mappedGSI.map(g => ({
+                    lat: g.geometry?.location?.lat() || 0,
+                    lng: g.geometry?.location?.lng() || 0,
+                    name: g.name
+                }));
+
+                const uniqueGoogleResults = results.filter(g => {
+                    const gLat = g.geometry?.location?.lat() || 0;
+                    const gLng = g.geometry?.location?.lng() || 0;
+
+                    // Check if close to any GSI result (within ~50m)
+                    const isDuplicate = gsiLocations.some(official => {
+                        const d = Math.sqrt(Math.pow(official.lat - gLat, 2) + Math.pow(official.lng - gLng, 2));
+                        return d < 0.0005; // Roughly 50m
+                    });
+                    return !isDuplicate;
+                });
+
+                combinedResults = [...combinedResults, ...uniqueGoogleResults];
             } else {
                 console.warn("[Debug] Google Search failed or empty:", status);
             }
 
-            // Sort everything by distance
+            // Sort by distance
             if (combinedResults.length > 0 && currentLocation.latitude && currentLocation.longitude) {
                 try {
                     const userPos = new google.maps.LatLng(currentLocation.latitude, currentLocation.longitude);
                     combinedResults.sort((a, b) => {
                         if (!a.geometry?.location || !b.geometry?.location) return 0;
-                        if (!google.maps.geometry) {
-                            console.error("[Debug] google.maps.geometry is missing!");
-                            return 0;
-                        }
+                        if (!google.maps.geometry) return 0; // Should be checked earlier
                         const distA = google.maps.geometry.spherical.computeDistanceBetween(userPos, a.geometry.location);
                         const distB = google.maps.geometry.spherical.computeDistanceBetween(userPos, b.geometry.location);
                         return distA - distB;
@@ -190,15 +189,13 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
                     console.error("[Debug] Sort error:", e);
                 }
                 setNearbyPlaces(combinedResults);
-                setSearchStatus(`${combinedResults.length}件の候補が見つかりました（うち公認データ: ${mappedGSI.length}件）`);
+                const googleCount = combinedResults.length - mappedGSI.length;
+                setSearchStatus(`${combinedResults.length}件が見つかりました (公認: ${mappedGSI.length}件, その他: ${googleCount}件)`);
             } else if (mappedGSI.length > 0) {
                 setNearbyPlaces(mappedGSI);
                 setSearchStatus(`国土地理院データ: ${mappedGSI.length}件が見つかりました`);
             } else {
-                // ... Existing retry logic for mobile or empty results ...
                 if (request.location && status !== placesLib.PlacesServiceStatus.OK && status !== placesLib.PlacesServiceStatus.ZERO_RESULTS) {
-                    // Retry logic here if needed, but since we have GSI data now, maybe less critical?
-                    // Let's keep the retry for "Google-only" failure if GSI was also empty.
                     setSearchStatus(`検索エラー: ${status}`);
                 } else {
                     setSearchStatus("候補が見つかりませんでした");
@@ -209,7 +206,6 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
 
     const handleManualSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        // 空文字でも検索を許可する（現在地周辺の避難所を自動検索するため）
         handleSearch(customQuery);
     };
 
@@ -261,6 +257,7 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
 
             <div className="space-y-3 max-h-96 overflow-y-auto pr-1 safe-scrollbar">
                 {nearbyPlaces.map((place) => {
+                    const isOfficial = place.types?.includes("gsi_shelter");
                     let distanceStr = "";
                     if (currentLocation.latitude && currentLocation.longitude && place.geometry?.location) {
                         distanceStr = calculateDistance(
@@ -272,30 +269,38 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
                     }
 
                     return (
-                        <div key={place.place_id} className="border border-slate-100 p-4 rounded-xl flex justify-between items-start bg-white shadow-sm hover:shadow-md hover:border-cyan-200 transition-all">
+                        <div key={place.place_id} className={`border p-4 rounded-xl flex justify-between items-start shadow-sm hover:shadow-md transition-all ${isOfficial ? "bg-cyan-50/50 border-cyan-200" : "bg-white border-slate-100 hover:border-cyan-100"}`}>
                             <div className="flex-1 min-w-0 mr-3">
-                                <div className="flex justify-between items-start mb-1">
+                                <div className="flex flex-wrap gap-2 items-center mb-1">
+                                    {isOfficial && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-600 text-white shadow-sm shrink-0">
+                                            <ShieldCheck className="w-3 h-3 mr-0.5" />
+                                            指定避難所
+                                        </span>
+                                    )}
                                     <h3 className="font-bold text-slate-800 text-sm truncate flex-1">{place.name}</h3>
+                                </div>
+                                <div className="flex justify-between items-center mb-1">
                                     {distanceStr && (
-                                        <span className="text-[10px] font-bold text-cyan-700 bg-cyan-50 px-2 py-1 rounded-full ml-2 whitespace-nowrap border border-cyan-100">
+                                        <span className="text-[10px] font-bold text-cyan-700 bg-cyan-100/50 px-2 py-0.5 rounded-full whitespace-nowrap">
                                             {distanceStr}
                                         </span>
                                     )}
                                 </div>
                                 <p className="text-xs text-slate-500 flex items-start break-words leading-relaxed">
                                     <MapPin className="w-3.5 h-3.5 mt-0.5 mr-1.5 shrink-0 text-slate-400" />
-                                    <span className="line-clamp-2">{place.formatted_address}</span>
+                                    <span className="line-clamp-2">{place.formatted_address || place.vicinity}</span>
                                 </p>
                             </div>
                             <button
                                 onClick={() => onAdd({
                                     name: place.name || "",
-                                    address: place.formatted_address || "",
-                                    note: `周辺検索から追加${distanceStr ? ` (距離: ${distanceStr})` : ""}`,
+                                    address: place.formatted_address || place.vicinity || "",
+                                    note: isOfficial ? "【国土地理院公認】指定緊急避難場所/避難所" : `周辺検索から追加${distanceStr ? ` (距離: ${distanceStr})` : ""}`,
                                     latitude: place.geometry?.location?.lat(),
                                     longitude: place.geometry?.location?.lng(),
                                 })}
-                                className="p-2.5 bg-cyan-50 text-cyan-600 rounded-full hover:bg-cyan-100 hover:text-cyan-700 shrink-0 transition-colors mt-0.5"
+                                className={`p-2.5 rounded-full shrink-0 transition-colors mt-0.5 ${isOfficial ? "bg-cyan-600 text-white hover:bg-cyan-700 shadow-sm" : "bg-cyan-50 text-cyan-600 hover:bg-cyan-100"}`}
                                 title="リストに追加"
                             >
                                 <Plus className="w-5 h-5" />
@@ -311,8 +316,6 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
 const LIBRARIES: ("places" | "drawing" | "geometry" | "localContext" | "visualization")[] = ['places', 'geometry'];
 
 export function NearbyShelters({ onAdd }: NearbySheltersProps) {
-    // ... (rest of the component) ...
-
     return (
         <APIProvider apiKey={API_KEY} libraries={LIBRARIES}>
             <NearbySheltersContent onAdd={onAdd} />
