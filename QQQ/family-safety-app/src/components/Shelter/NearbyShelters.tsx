@@ -93,26 +93,33 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
             request.radius = 3000;
         }
 
+        console.log("[Debug] request:", request);
+
         service.textSearch(request, (results, status) => {
+            console.log("[Debug] status:", status);
+            console.log("[Debug] results:", results?.length);
+
             setIsLoading(false);
             if (status === placesLib.PlacesServiceStatus.OK && results) {
                 // Sort by distance if current location is available
                 if (currentLocation.latitude && currentLocation.longitude) {
-                    const sortedResults = [...results].sort((a, b) => {
-                        // Ensure geometry and location exist before computing distance
-                        if (!a.geometry?.location || !b.geometry?.location) return 0;
-
-                        const distA = google.maps.geometry.spherical.computeDistanceBetween(
-                            new google.maps.LatLng(currentLocation.latitude!, currentLocation.longitude!),
-                            a.geometry!.location!
-                        );
-                        const distB = google.maps.geometry.spherical.computeDistanceBetween(
-                            new google.maps.LatLng(currentLocation.latitude!, currentLocation.longitude!),
-                            b.geometry!.location!
-                        );
-                        return distA - distB;
-                    });
-                    setNearbyPlaces(sortedResults);
+                    try {
+                        const userPos = new google.maps.LatLng(currentLocation.latitude, currentLocation.longitude);
+                        setNearbyPlaces(results.sort((a, b) => {
+                            if (!a.geometry?.location || !b.geometry?.location) return 0;
+                            // Check if geometry library is loaded
+                            if (!google.maps.geometry) {
+                                console.error("[Debug] google.maps.geometry is missing!");
+                                return 0;
+                            }
+                            const distA = google.maps.geometry.spherical.computeDistanceBetween(userPos, a.geometry.location);
+                            const distB = google.maps.geometry.spherical.computeDistanceBetween(userPos, b.geometry.location);
+                            return distA - distB;
+                        }));
+                    } catch (e) {
+                        console.error("[Debug] Sort error:", e);
+                        setNearbyPlaces(results);
+                    }
                 } else {
                     setNearbyPlaces(results);
                 }
