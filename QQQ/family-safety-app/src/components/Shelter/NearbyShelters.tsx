@@ -80,14 +80,19 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
         const hasKeyword = keywords.some(k => query.includes(k));
 
         if (!hasKeyword) {
-            searchQuery = `${query} 避難所 学校 公民館`;
+            // 位置情報がない場合は、より広範囲にヒットしやすいキーワードにする
+            if (!currentLocation.latitude) {
+                searchQuery = query ? `${query} 避難所` : "避難所";
+            } else {
+                searchQuery = `${query} 避難所 学校 公民館`;
+            }
         }
 
         const request: google.maps.places.TextSearchRequest = {
             query: searchQuery,
         };
 
-        // Add location bias if available
+        // Add location bias ONLY if available
         if (currentLocation.latitude && currentLocation.longitude) {
             request.location = new google.maps.LatLng(currentLocation.latitude, currentLocation.longitude);
             request.radius = 3000;
@@ -121,131 +126,125 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
                         setNearbyPlaces(results);
                     }
                 } else {
+                    // 位置情報がない場合はソートせずにそのまま表示
                     setNearbyPlaces(results);
                 }
                 setSearchStatus(`${results.length}件の候補が見つかりました`);
             } else {
-                if (query !== searchQuery) {
-                    // もしキーワード付加で失敗した場合、元のクエリで再検索（念のため）
-                    const originalRequest: google.maps.places.TextSearchRequest = { query: query };
-                    if (currentLocation.latitude && currentLocation.longitude) {
-                        originalRequest.location = new google.maps.LatLng(currentLocation.latitude, currentLocation.longitude);
-                        originalRequest.radius = 3000;
+                service.textSearch(originalRequest, (retryResults, retryStatus) => {
+                    if (retryStatus === placesLib.PlacesServiceStatus.OK && retryResults) {
+                        setNearbyPlaces(retryResults);
+                        setSearchStatus(`${retryResults.length}件の候補が見つかりました`);
+                    } else {
+                        setSearchStatus("候補が見つかりませんでした");
                     }
-                    service.textSearch(originalRequest, (retryResults, retryStatus) => {
-                        if (retryStatus === placesLib.PlacesServiceStatus.OK && retryResults) {
-                            setNearbyPlaces(retryResults);
-                            setSearchStatus(`${retryResults.length}件の候補が見つかりました`);
-                        } else {
-                            setSearchStatus("候補が見つかりませんでした");
-                        }
-                    });
-                } else {
-                    setSearchStatus("候補が見つかりませんでした");
-                }
+                });
+            } else {
+                setSearchStatus("候補が見つかりませんでした");
             }
+        }
         });
-    };
+};
 
-    const handleManualSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        // 空文字でも検索を許可する（現在地周辺の避難所を自動検索するため）
-        handleSearch(customQuery);
-    };
+const handleManualSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // 空文字でも検索を許可する（現在地周辺の避難所を自動検索するため）
+    handleSearch(customQuery);
+};
 
-    return (
-        <div className="space-y-4">
-            {/* Search Input Area */}
-            <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-cyan-100 shadow-sm">
-                <form onSubmit={handleManualSearch} className="flex gap-2">
-                    <input
-                        type="text"
-                        value={customQuery}
-                        onChange={(e) => setCustomQuery(e.target.value)}
-                        placeholder="地名や施設名で検索 (例: 新宿区 避難所)"
-                        className="flex-1 p-3 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all placeholder:text-slate-400"
-                    />
-                    <button
-                        type="submit"
-                        disabled={isLoading || !placesLib}
-                        className="bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-sm transition-colors"
-                    >
-                        検索
-                    </button>
-                </form>
-                {!currentLocation.latitude && !currentLocation.error && !locationTimeout && (
-                    <p className="text-xs text-cyan-600 mt-2 flex items-center font-medium">
-                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                        現在地を取得中... (手動検索も可能です)
-                    </p>
-                )}
-                {!currentLocation.latitude && !currentLocation.error && locationTimeout && (
-                    <p className="text-xs text-slate-500 mt-2">
-                        位置情報を取得できませんでした (距離を表示するには位置情報が必要です)
-                    </p>
-                )}
-                {currentLocation.error && (
-                    <p className="text-xs text-red-500 mt-2">
-                        位置情報を取得できませんでした: {currentLocation.error.message || "ブラウザの設定を確認してください"}
-                    </p>
-                )}
-            </div>
-
-            <p className="text-sm text-slate-600 text-center min-h-[20px] font-medium">{searchStatus}</p>
-
-            {isLoading && (
-                <div className="flex justify-center p-8">
-                    <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
-                </div>
+return (
+    <div className="space-y-4">
+        {/* Search Input Area */}
+        <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-cyan-100 shadow-sm">
+            <form onSubmit={handleManualSearch} className="flex gap-2">
+                <input
+                    type="text"
+                    value={customQuery}
+                    onChange={(e) => setCustomQuery(e.target.value)}
+                    placeholder="地名や施設名で検索 (例: 新宿区 避難所)"
+                    className="flex-1 p-3 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all placeholder:text-slate-400"
+                />
+                <button
+                    type="submit"
+                    disabled={isLoading || !placesLib}
+                    className="bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-sm transition-colors"
+                >
+                    検索
+                </button>
+            </form>
+            {!currentLocation.latitude && !currentLocation.error && !locationTimeout && (
+                <p className="text-xs text-cyan-600 mt-2 flex items-center font-medium">
+                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                    現在地を取得中... (手動検索も可能です)
+                </p>
             )}
-
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-1 safe-scrollbar">
-                {nearbyPlaces.map((place) => {
-                    let distanceStr = "";
-                    if (currentLocation.latitude && currentLocation.longitude && place.geometry?.location) {
-                        distanceStr = calculateDistance(
-                            currentLocation.latitude,
-                            currentLocation.longitude,
-                            place.geometry.location.lat(),
-                            place.geometry.location.lng()
-                        );
-                    }
-
-                    return (
-                        <div key={place.place_id} className="border border-slate-100 p-4 rounded-xl flex justify-between items-start bg-white shadow-sm hover:shadow-md hover:border-cyan-200 transition-all">
-                            <div className="flex-1 min-w-0 mr-3">
-                                <div className="flex justify-between items-start mb-1">
-                                    <h3 className="font-bold text-slate-800 text-sm truncate flex-1">{place.name}</h3>
-                                    {distanceStr && (
-                                        <span className="text-[10px] font-bold text-cyan-700 bg-cyan-50 px-2 py-1 rounded-full ml-2 whitespace-nowrap border border-cyan-100">
-                                            {distanceStr}
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-xs text-slate-500 flex items-start break-words leading-relaxed">
-                                    <MapPin className="w-3.5 h-3.5 mt-0.5 mr-1.5 shrink-0 text-slate-400" />
-                                    <span className="line-clamp-2">{place.formatted_address}</span>
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => onAdd({
-                                    name: place.name || "",
-                                    address: place.formatted_address || "",
-                                    note: `周辺検索から追加${distanceStr ? ` (距離: ${distanceStr})` : ""}`,
-                                    latitude: place.geometry?.location?.lat(),
-                                    longitude: place.geometry?.location?.lng(),
-                                })}
-                                className="p-2.5 bg-cyan-50 text-cyan-600 rounded-full hover:bg-cyan-100 hover:text-cyan-700 shrink-0 transition-colors mt-0.5"
-                                title="リストに追加"
-                            >
-                                <Plus className="w-5 h-5" />
-                            </button>
-                        </div>
-                    );
-                })}
-            </div>
+            {!currentLocation.latitude && !currentLocation.error && locationTimeout && (
+                <p className="text-xs text-slate-500 mt-2">
+                    位置情報を取得できませんでした (距離を表示するには位置情報が必要です)
+                </p>
+            )}
+            {currentLocation.error && (
+                <p className="text-xs text-red-500 mt-2">
+                    位置情報を取得できませんでした: {currentLocation.error.message || "ブラウザの設定を確認してください"}
+                </p>
+            )}
         </div>
-    );
+
+        <p className="text-sm text-slate-600 text-center min-h-[20px] font-medium">{searchStatus}</p>
+
+        {isLoading && (
+            <div className="flex justify-center p-8">
+                <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+            </div>
+        )}
+
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-1 safe-scrollbar">
+            {nearbyPlaces.map((place) => {
+                let distanceStr = "";
+                if (currentLocation.latitude && currentLocation.longitude && place.geometry?.location) {
+                    distanceStr = calculateDistance(
+                        currentLocation.latitude,
+                        currentLocation.longitude,
+                        place.geometry.location.lat(),
+                        place.geometry.location.lng()
+                    );
+                }
+
+                return (
+                    <div key={place.place_id} className="border border-slate-100 p-4 rounded-xl flex justify-between items-start bg-white shadow-sm hover:shadow-md hover:border-cyan-200 transition-all">
+                        <div className="flex-1 min-w-0 mr-3">
+                            <div className="flex justify-between items-start mb-1">
+                                <h3 className="font-bold text-slate-800 text-sm truncate flex-1">{place.name}</h3>
+                                {distanceStr && (
+                                    <span className="text-[10px] font-bold text-cyan-700 bg-cyan-50 px-2 py-1 rounded-full ml-2 whitespace-nowrap border border-cyan-100">
+                                        {distanceStr}
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-xs text-slate-500 flex items-start break-words leading-relaxed">
+                                <MapPin className="w-3.5 h-3.5 mt-0.5 mr-1.5 shrink-0 text-slate-400" />
+                                <span className="line-clamp-2">{place.formatted_address}</span>
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => onAdd({
+                                name: place.name || "",
+                                address: place.formatted_address || "",
+                                note: `周辺検索から追加${distanceStr ? ` (距離: ${distanceStr})` : ""}`,
+                                latitude: place.geometry?.location?.lat(),
+                                longitude: place.geometry?.location?.lng(),
+                            })}
+                            className="p-2.5 bg-cyan-50 text-cyan-600 rounded-full hover:bg-cyan-100 hover:text-cyan-700 shrink-0 transition-colors mt-0.5"
+                            title="リストに追加"
+                        >
+                            <Plus className="w-5 h-5" />
+                        </button>
+                    </div>
+                );
+            })}
+        </div>
+    </div>
+);
 }
 
 const LIBRARIES: ("places" | "drawing" | "geometry" | "localContext" | "visualization")[] = ['places', 'geometry'];
