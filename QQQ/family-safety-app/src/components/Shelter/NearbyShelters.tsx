@@ -76,17 +76,17 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
 
         // キーワードが含まれていない場合、避難所関連のキーワードを付加して検索精度を高める
         let searchQuery = query;
-        // 「広域避難場所」「指定避難所」などの正式名称を優先的にヒットさせる
-        const keywords = ["避難所", "避難場所", "防災拠点", "救護所"];
+        const keywords = ["避難所", "避難場所", "学校", "公民館", "公園", "広域避難場所", "センター", "会館"];
         const hasKeyword = keywords.some(k => query.includes(k));
 
         if (!hasKeyword) {
             // 位置情報がない場合は、より広範囲にヒットしやすいキーワードにする
             if (!currentLocation.latitude) {
-                searchQuery = query ? `${query} 指定緊急避難場所` : "指定緊急避難場所";
+                searchQuery = query ? `${query} 避難所` : "避難所";
             } else {
-                // 雑なOR検索をやめ、Google Maps上で登録されている「指定緊急避難場所」や「指定避難所」を狙い撃ちする
-                searchQuery = `${query} 指定緊急避難場所 OR 指定避難所 OR 広域避難場所`;
+                // 【修正】「指定緊急避難場所」だけだとヒット件数が極端に減るため、学校や公民館も含める（ただし優先度は下がる）
+                // Google Mapsのデータ上は「〇〇小学校」としか登録されていないケースが多いため
+                searchQuery = `${query} 避難所 OR 避難場所 OR 学校 OR 公民館 OR "指定緊急避難場所"`;
             }
         }
 
