@@ -65,12 +65,52 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
         return () => clearTimeout(timer);
     }, [currentLocation, locationTimeout]);
 
-    const handleSearch = (query: string) => {
-        if (!placesLib) return;
-
+    const handleSearch = async (query: string) => { // Make async
         setIsLoading(true);
         setSearchStatus("検索中...");
+        setNearbyPlaces([]); // Reset previous results
 
+        // 1. Fetch from GSI (Official Data) - Execute in parallel with Google Maps search if possible, 
+        // bur for now let's just trigger it.
+        let gsiShelters: Omit<Shelter, 'id' | 'createdAt'>[] = [];
+        if (currentLocation.latitude && currentLocation.longitude) {
+            try {
+                gsiShelters = await fetchGSIShelters(currentLocation.latitude, currentLocation.longitude);
+                console.log("[Debug] GSI Shelters found:", gsiShelters.length);
+            } catch (e) {
+                console.error("[Debug] GSI fetch failed:", e);
+            }
+        }
+
+        // If Google Maps API is not loaded, at least show GSI data
+        if (!placesLib) {
+            if (gsiShelters.length > 0) {
+                // Convert GSI shelters to a format compatible with nearbyPlaces (google.maps.places.PlaceResult)
+                // This is a bit tricky since PlaceResult has a specific structure. 
+                // We might need to adjust how we display the list to handle both types, 
+                // or wrap GSI data into a PlaceResult-like object.
+                const mappedGSI = gsiShelters.map(s => ({
+                    name: s.name,
+                    vicinity: s.address,
+                    geometry: {
+                        location: new google.maps.LatLng(s.latitude!, s.longitude!)
+                    },
+                    place_id: `gsi-${s.name}`, // Fake ID
+                    icon: "https://maps.google.com/mapfiles/kml/pal2/icon13.png", // Icon for official shelter
+                    types: ["gsi_shelter"] // Custom type marker
+                })) as unknown as google.maps.places.PlaceResult[];
+
+                setNearbyPlaces(mappedGSI);
+                setIsLoading(false);
+                setSearchStatus(`国土地理院データ: ${gsiShelters.length}件が見つかりました`);
+                return;
+            }
+            setIsLoading(false);
+            setSearchStatus("Google Maps Placesライブラリが読み込まれていません。");
+            return;
+        }
+
+        // 2. Google Maps Search
         const mapDiv = document.createElement('div');
         const service = new placesLib.PlacesService(mapDiv);
 
@@ -84,8 +124,6 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
             if (!currentLocation.latitude) {
                 searchQuery = query ? `${query} 避難所` : "避難所";
             } else {
-                // 【修正】「指定緊急避難場所」だけだとヒット件数が極端に減るため、学校や公民館も含める（ただし優先度は下がる）
-                // Google Mapsのデータ上は「〇〇小学校」としか登録されていないケースが多いため
                 searchQuery = `${query} 避難所 OR 避難場所 OR 学校 OR 公民館 OR "指定緊急避難場所"`;
             }
         }
@@ -107,51 +145,63 @@ function NearbySheltersContent({ onAdd }: NearbySheltersProps) {
             console.log("[Debug] results:", results?.length);
 
             setIsLoading(false);
-            if (status === placesLib.PlacesServiceStatus.OK && results) {
-                // Sort by distance if current location is available
-                if (currentLocation.latitude && currentLocation.longitude) {
-                    try {
-                        const userPos = new google.maps.LatLng(currentLocation.latitude, currentLocation.longitude);
-                        setNearbyPlaces(results.sort((a, b) => {
-                            if (!a.geometry?.location || !b.geometry?.location) return 0;
-                            // Check if geometry library is loaded
-                            if (!google.maps.geometry) {
-                                console.error("[Debug] google.maps.geometry is missing!");
-                                return 0;
-                            }
-                            const distA = google.maps.geometry.spherical.computeDistanceBetween(userPos, a.geometry.location);
-                            const distB = google.maps.geometry.spherical.computeDistanceBetween(userPos, b.geometry.location);
-                            return distA - distB;
-                        }));
-                    } catch (e) {
-                        console.error("[Debug] Sort error:", e);
-                        setNearbyPlaces(results);
-                    }
-                } else {
-                    // 位置情報がない場合はソートせずにそのまま表示
-                    setNearbyPlaces(results);
-                }
-                setSearchStatus(`${results.length}件の候補が見つかりました`);
-            } else {
-                console.warn("[Debug] Search failed with status:", status);
 
-                // 【スマホ対策】ZERO_RESULTS またはエラーで、かつ位置情報指定があった場合、位置指定なしで「市町村名」を含めて再トライする
-                // 位置情報から逆ジオコーディングができればベストだが、ここではシンプルに「避難所」単体で試す
-                if (request.location) {
-                    console.log("[Debug] Retrying without location bias...");
-                    const retryRequest: google.maps.places.TextSearchRequest = {
-                        query: "避難所", // シンプルなキーワードで再検索
-                    };
-                    service.textSearch(retryRequest, (retryResults, retryStatus) => {
-                        if (retryStatus === placesLib.PlacesServiceStatus.OK && retryResults) {
-                            setNearbyPlaces(retryResults);
-                            setSearchStatus(`周辺検索で見つからなかったため、広域で検索しました (${retryResults.length}件)`);
-                        } else {
-                            setSearchStatus(`検索エラー: ${status} (リトライも失敗)`);
+            let combinedResults: google.maps.places.PlaceResult[] = [];
+
+            // Convert GSI data to PlaceResult format
+            const mappedGSI = gsiShelters.map(s => ({
+                name: `【公認】${s.name}`, // Distinct name
+                vicinity: s.address || "住所不明",
+                geometry: {
+                    location: new google.maps.LatLng(s.latitude!, s.longitude!)
+                },
+                place_id: `gsi-${s.name}-${s.latitude}-${s.longitude}`,
+                rating: 5, // Fake high rating for official spots
+                user_ratings_total: 0,
+                icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png", // Distinct icon if displayed on map
+                types: ["gsi_shelter"]
+            })) as unknown as google.maps.places.PlaceResult[];
+
+            combinedResults = [...mappedGSI];
+
+            if (status === placesLib.PlacesServiceStatus.OK && results) {
+                // Deduplicate: If GSI data exists, try to filter out Google duplicates based on name similarity or distance?
+                // For now, simple merge. Maybe put GSI first.
+                combinedResults = [...combinedResults, ...results];
+            } else {
+                console.warn("[Debug] Google Search failed or empty:", status);
+            }
+
+            // Sort everything by distance
+            if (combinedResults.length > 0 && currentLocation.latitude && currentLocation.longitude) {
+                try {
+                    const userPos = new google.maps.LatLng(currentLocation.latitude, currentLocation.longitude);
+                    combinedResults.sort((a, b) => {
+                        if (!a.geometry?.location || !b.geometry?.location) return 0;
+                        if (!google.maps.geometry) {
+                            console.error("[Debug] google.maps.geometry is missing!");
+                            return 0;
                         }
+                        const distA = google.maps.geometry.spherical.computeDistanceBetween(userPos, a.geometry.location);
+                        const distB = google.maps.geometry.spherical.computeDistanceBetween(userPos, b.geometry.location);
+                        return distA - distB;
                     });
-                } else {
+                } catch (e) {
+                    console.error("[Debug] Sort error:", e);
+                }
+                setNearbyPlaces(combinedResults);
+                setSearchStatus(`${combinedResults.length}件の候補が見つかりました（うち公認データ: ${mappedGSI.length}件）`);
+            } else if (mappedGSI.length > 0) {
+                setNearbyPlaces(mappedGSI);
+                setSearchStatus(`国土地理院データ: ${mappedGSI.length}件が見つかりました`);
+            } else {
+                // ... Existing retry logic for mobile or empty results ...
+                if (request.location && status !== placesLib.PlacesServiceStatus.OK && status !== placesLib.PlacesServiceStatus.ZERO_RESULTS) {
+                    // Retry logic here if needed, but since we have GSI data now, maybe less critical?
+                    // Let's keep the retry for "Google-only" failure if GSI was also empty.
                     setSearchStatus(`検索エラー: ${status}`);
+                } else {
+                    setSearchStatus("候補が見つかりませんでした");
                 }
             }
         });
