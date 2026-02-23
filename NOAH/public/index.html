@@ -916,18 +916,26 @@
         for (let i = 0; i < numSparkles; i++) {
           const span = document.createElement('span');
           span.classList.add('logo-sparkle');
-          span.textContent = sparkleChars[Math.floor(Math.random() * sparkleChars.length)];
 
-          // 位置、サイズ、アニメーションのタイミングをランダムに
-          const top = Math.random() * 120 - 10; // -10% 〜 110%
-          const left = Math.random() * 130 - 15; // -15% 〜 115%
-          const size = Math.random() * 1.0 + 0.6; // 0.6rem 〜 1.6rem
-          const delay = Math.random() * 3; // 0s 〜 3s の遅延
+          const randomizeSparkle = (el) => {
+            el.textContent = sparkleChars[Math.floor(Math.random() * sparkleChars.length)];
+            const top = Math.random() * 120 - 10; // -10% 〜 110%
+            const left = Math.random() * 130 - 15; // -15% 〜 115%
+            const size = Math.random() * 1.0 + 0.6; // 0.6rem 〜 1.6rem
+            el.style.top = `${top}%`;
+            el.style.left = `${left}%`;
+            el.style.fontSize = `${size}rem`;
+          };
 
-          span.style.top = `${top}%`;
-          span.style.left = `${left}%`;
-          span.style.fontSize = `${size}rem`;
-          span.style.animationDelay = `${delay}s`;
+          // 初回描画の設定
+          randomizeSparkle(span);
+          // 最初のアニメーション遅延のみランダムに（ずらすため）
+          span.style.animationDelay = `${Math.random() * 3}s`;
+
+          // 1回のアニメーション（浮かんで消える）が終わるたびに位置や形を再設定
+          span.addEventListener('animationiteration', () => {
+            randomizeSparkle(span);
+          });
 
           logoContainer.appendChild(span);
         }
