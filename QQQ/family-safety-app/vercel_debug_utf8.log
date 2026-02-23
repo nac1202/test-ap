@@ -1,0 +1,24 @@
+﻿node.exe : Vercel CLI 50.22.0
+発生場所 行:1 文字:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : Not    Specified: (Vercel CLI 50.22.    0:String) [], RemoteException
+    + FullyQualifiedErrorId : Nat    iveCommandError
+ 
+> [debug] [2026-02-22T11:50:18.103Z] Agent/TTY/nonInteractive: isAgent=false agentName=none stdin.isTTY=true --non-interactive=false => nonInteractive=false
+> [debug] [2026-02-22T11:50:18.104Z] user supplied known subcommand: "build"
+WARN! Build not running on Vercel. System environment variables will not be available.
+> [debug] [2026-02-22T11:50:18.676Z] Failed loading environment variables: Error: ENOENT: no such file or directory, open 'D:\Antigravity\data\QQQ\family-safety-app\.vercel\.env.preview.local'
+> [debug] [2026-02-22T11:50:18.693Z] Locating files D:\Antigravity\data\QQQ\family-safety-app
+> [debug] [2026-02-22T11:50:18.694Z] Ignoring D:\Antigravity\data\QQQ\family-safety-app\.env.local
+> [debug] [2026-02-22T11:50:18.694Z] Ignoring D:\Antigravity\data\QQQ\family-safety-app\.gitignore
+> [debug] [2026-02-22T11:50:18.694Z] Ignoring D:\Antigravity\data\QQQ\family-safety-app\.next
+> [debug] [2026-02-22T11:50:18.694Z] Ignoring D:\Antigravity\data\QQQ\family-safety-app\.vercel
+> [debug] [2026-02-22T11:50:18.695Z] Ignoring D:\Antigravity\data\QQQ\family-safety-app\node_modules
+> [debug] [2026-02-22T11:50:18.698Z] Locating files D:\Antigravity\data\QQQ\family-safety-app [5ms]
+> [debug] [2026-02-22T11:50:18.826Z] Imported Builder "@vercel/next" from "C:\Users\user\AppData\Roaming\npm\node_modules\vercel\node_modules\@vercel\next"
+> [debug] [2026-02-22T11:50:18.827Z] Resolved builders: "@vercel/next => 4.15.31"
+> [debug] [2026-02-22T11:50:18.908Z] Setting env VERCEL_PROJECT_SETTINGS_NODE_VERSION to "24.x"
+> [debug] [2026-02-22T11:50:18.908Z] Building entrypoint "package.json" with "@vercel/next"
+WARNING: You should not upload the `.next` directory.
+Installing dependencies...

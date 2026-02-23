@@ -27,8 +27,8 @@ export default function GuidePage() {
         <div className="p-4 pb-20 max-w-md mx-auto">
             <GuideTabs />
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-slate-800 mb-2">防災ガイド</h1>
-                <p className="text-sm text-slate-500">
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">防災ガイド</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                     災害時に役立つ情報をカテゴリ別にまとめています。
                     <br />
                     いざという時のために、事前の確認をおすすめします。
@@ -37,11 +37,11 @@ export default function GuidePage() {
 
             <div className="mb-6">
                 <div className="relative">
-                    <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                    <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400 dark:text-slate-500" />
                     <input
                         type="text"
                         placeholder="キーワードで検索 (例: 地震, 応急処置)"
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all shadow-sm"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all shadow-sm"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />

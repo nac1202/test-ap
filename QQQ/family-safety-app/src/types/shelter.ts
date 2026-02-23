@@ -5,5 +5,7 @@ export interface Shelter {
     note?: string;
     latitude?: number;
     longitude?: number;
+    supportedDisasters?: string[]; // E.g., ['earthquake', 'flood']
+    facilityType?: 'indoor' | 'outdoor';
     createdAt: number;
 }

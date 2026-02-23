@@ -1,5 +1,5 @@
 import { Shelter } from '@/types/shelter';
-import { MapPin, Map, Trash2, Home as HomeIcon } from 'lucide-react';
+import { MapPin, Map, Trash2, Home as HomeIcon, Circle, X, Building, Tent } from 'lucide-react';
 
 interface ShelterListProps {
     shelters: Shelter[];
@@ -26,7 +26,25 @@ export function ShelterList({ shelters, onRemove }: ShelterListProps) {
                         <div key={shelter.id} className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-cyan-200 transition-all group">
                             <div className="flex justify-between items-start mb-3">
                                 <div>
-                                    <h3 className="font-bold text-lg text-slate-800 group-hover:text-cyan-700 transition-colors">{shelter.name}</h3>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="font-bold text-lg text-slate-800 group-hover:text-cyan-700 transition-colors">{shelter.name}</h3>
+                                        {/* 
+                                        shelter.facilityType === 'indoor' && (
+                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0">
+                                                <Building className="w-3 h-3 mr-1" />
+                                                屋内
+                                            </span>
+                                        )
+                                        */}
+                                        {/* 
+                                        shelter.facilityType === 'outdoor' && (
+                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+                                                <Tent className="w-3 h-3 mr-1" />
+                                                屋外
+                                            </span>
+                                        )
+                                        */}
+                                    </div>
                                     <div className="flex items-center text-slate-500 text-sm mt-1">
                                         <MapPin className="w-4 h-4 mr-1 text-slate-400" />
                                         <span>{shelter.address}</span>
@@ -41,6 +59,39 @@ export function ShelterList({ shelters, onRemove }: ShelterListProps) {
                                 <div className="bg-amber-50 p-3 rounded-lg text-sm text-amber-700 mb-4 flex items-start">
                                     <span className="font-bold mr-2 text-xs uppercase tracking-wider bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Note</span>
                                     {shelter.note}
+                                </div>
+                            )}
+
+                            {shelter.supportedDisasters && shelter.supportedDisasters.length > 0 && (
+                                <div className="mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100/60">
+                                    <p className="text-xs text-slate-500 font-bold mb-2.5">目的: 指定緊急避難場所</p>
+                                    <div className="grid grid-cols-3 gap-y-2.5 gap-x-1">
+                                        {[
+                                            { id: 'earthquake', label: '地震' },
+                                            { id: 'flood', label: '洪水' },
+                                            { id: 'inland_flood', label: '内水氾濫' },
+                                            { id: 'tsunami', label: '津波' },
+                                            { id: 'landslide', label: '土砂災害' },
+                                            { id: 'volcano', label: '噴火' },
+                                            { id: 'storm_surge', label: '高潮' },
+                                            { id: 'fire', label: '火災' },
+                                            { id: 'other', label: 'その他' }
+                                        ].map(dt => {
+                                            const isSupported = shelter.supportedDisasters!.includes(dt.id);
+                                            return (
+                                                <div key={dt.id} className="flex items-center gap-1.5">
+                                                    {isSupported ? (
+                                                        <Circle className="w-4 h-4 text-teal-500 shrink-0 stroke-[2.5]" />
+                                                    ) : (
+                                                        <X className="w-4 h-4 text-slate-300 shrink-0 stroke-[2.5]" />
+                                                    )}
+                                                    <span className={`text-[11px] sm:text-xs font-bold leading-none ${isSupported ? 'text-slate-800' : 'text-slate-400'}`}>
+                                                        {dt.label}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             )}
 

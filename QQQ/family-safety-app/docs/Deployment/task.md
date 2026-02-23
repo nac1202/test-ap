@@ -8,8 +8,8 @@
 
 - [x] **設定確認**
   - [x] `next.config.ts` (または .js) の設定確認 (PWA設定など)。
-  - [ ] `package.json` のスクリプト確認。
-  - [ ] 環境変数の確認 (`.env.local` vs Vercel Environment Variables)。
+  - [x] `package.json` のスクリプト確認。
+  - [x] 環境変数の確認 (`.env.local` vs Vercel Environment Variables)。
 
 - [x] **デプロイ手順のドキュメント化**
   - [x] ユーザー向けのデプロイ手順書 (`docs/Deployment/deployment_guide.md`) を作成する。

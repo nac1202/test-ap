@@ -1,0 +1,93 @@
+D:\Antigravity\data\QQQ\family-safety-app\src\app\profile\page.tsx
+  Line 24: Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\Antigravity\data\QQQ\family-safety-app\src\app\profile\page.tsx:24:17
+  22 |             // --- DEV MODE BYPASS ---
+  23 |             if (user.id === 'dev-mock-uuid-1234-5678') {
+> 24 |                 setDisplayName('テストユーザー (DevMode)');
+     |                 ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |                 return;
+  26 |             }
+  27 |             // ------------------------
+D:\Antigravity\data\QQQ\family-safety-app\src\components\Auth\AuthProvider.tsx
+  Line 68: Error: Cannot access variable before it is declared
+
+`upsertUser` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+D:\Antigravity\data\QQQ\family-safety-app\src\components\Auth\AuthProvider.tsx:68:21
+  66 |                 // ログイン時に users テーブルにレコードがなければ作成 (または更新)
+  67 |                 if (session?.user) {
+> 68 |                     upsertUser(session.user);
+     |                     ^^^^^^^^^^ `upsertUser` accessed before it is declared
+  69 |                 }
+  70 |             }
+  71 |         );
+
+D:\Antigravity\data\QQQ\family-safety-app\src\components\Auth\AuthProvider.tsx:89:5
+   87 |     }, []);
+   88 |
+>  89 |     const upsertUser = async (authUser: User) => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  90 |         try {
+      | ^^^^^^^^^^^^^
+>  91 |             // ユーザーのプロファイルが作られているか確認、なければ作成
+      …
+      | ^^^^^^^^^^^^^
+> 100 |         }
+      | ^^^^^^^^^^^^^
+> 101 |     };
+      | ^^^^^^^ `upsertUser` is declared here
+  102 |
+  103 |     return (
+  104 |         <AuthContext.Provider value={{ user, session, loading }}>
+D:\Antigravity\data\QQQ\family-safety-app\src\components\Safety\StatusForm.tsx
+  Line 66: Unexpected any. Specify a different type.
+D:\Antigravity\data\QQQ\family-safety-app\src\components\Shelter\NearbyShelters.tsx
+  Line 55: Error: Cannot access variable before it is declared
+
+`handleSearch` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+D:\Antigravity\data\QQQ\family-safety-app\src\components\Shelter\NearbyShelters.tsx:55:13
+  53 |
+  54 |         if ((hasLocation || hasError) && !nearbyPlaces.length && !isLoading && placesLib) {
+> 55 |             handleSearch("");
+     |             ^^^^^^^^^^^^ `handleSearch` accessed before it is declared
+  56 |         }
+  57 |     }, [currentLocation, placesLib, locationTimeout]);
+  58 |
+
+D:\Antigravity\data\QQQ\family-safety-app\src\components\Shelter\NearbyShelters.tsx:69:5
+   67 |     }, [currentLocation, locationTimeout]);
+   68 |
+>  69 |     const handleSearch = async (query: string) => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  70 |         setIsLoading(true);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  71 |         setSearchStatus("検索中...");
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 204 |         });
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 205 |     };
+      | ^^^^^^^ `handleSearch` is declared here
+  206 |
+  207 |     const handleManualSearch = (e: React.FormEvent) => {
+  208 |         e.preventDefault();
+D:\Antigravity\data\QQQ\family-safety-app\src\hooks\useDisasterAlerts.ts
+  Line 182: Unexpected any. Specify a different type.
+  Line 240: Unexpected any. Specify a different type.
+D:\Antigravity\data\QQQ\family-safety-app\src\hooks\useFamilyGroup.ts
+  Line 108: Unexpected any. Specify a different type.
+  Line 162: Unexpected any. Specify a different type.
+  Line 228: Unexpected any. Specify a different type.
+  Line 268: Unexpected any. Specify a different type.
+D:\Antigravity\data\QQQ\family-safety-app\src\hooks\useFamilyLocation.ts
+  Line 120: Unexpected any. Specify a different type.
+D:\Antigravity\data\QQQ\family-safety-app\src\services\gsiShelterService.ts
+  Line 22: Unexpected any. Specify a different type.

@@ -26,12 +26,12 @@ export default function FirstAidPage() {
         <div className="p-4 pb-24 max-w-md mx-auto">
             <GuideTabs />
             <div className="flex items-center mb-6">
-                <div className="bg-red-100 p-2 rounded-full mr-3">
-                    <HeartPulse className="w-6 h-6 text-red-600" />
+                <div className="bg-red-100 dark:bg-red-900/40 p-2 rounded-full mr-3">
+                    <HeartPulse className="w-6 h-6 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">救護ガイド</h1>
-                    <p className="text-sm text-gray-500">命を救うための応急手当</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">救護ガイド</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">命を救うための応急手当</p>
                 </div>
             </div>
 

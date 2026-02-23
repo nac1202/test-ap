@@ -1,17 +1,75 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, AlertTriangle, HelpCircle, Send } from "lucide-react";
+import { CheckCircle, AlertTriangle, HelpCircle, Send, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/Auth/AuthProvider";
+import { useGeolocation } from "react-use";
 
 export function StatusForm() {
+    const { user } = useAuth();
     const [status, setStatus] = useState<"safe" | "danger" | "unknown">("safe");
     const [message, setMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // Get current location when submitting
+    const currentLocation = useGeolocation({ enableHighAccuracy: true });
+
+    // Handle DevMode
+    const isDevMode = typeof window !== 'undefined' && localStorage.getItem('dev_mock_session') === 'true';
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Send to backend
-        alert(`ステータス: ${status}\nメッセージ: ${message}\nを送信しました`);
-        setMessage("");
+        if (!user) {
+            setFeedback({ text: 'ログインが必要です', type: 'error' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        setFeedback(null);
+
+        // --- DEV MODE BYPASS ---
+        if (isDevMode) {
+            setTimeout(() => {
+                // Save mock data so useFamilyLocation can read it
+                localStorage.setItem('dev_mock_status', status);
+                localStorage.setItem('dev_mock_message', message);
+                localStorage.setItem('dev_mock_updated_at', Date.now().toString());
+
+                setFeedback({ text: `[DevMode] ステータスを更新しました！`, type: 'success' });
+                setMessage("");
+                setIsSubmitting(false);
+                // We will mock firing an event so other components know data "changed"
+                window.dispatchEvent(new Event('dev_mock_status_update'));
+            }, 800);
+            return;
+        }
+        // ------------------------
+
+        try {
+            const { error } = await supabase
+                .from('safety_status')
+                .upsert({
+                    user_id: user.id,
+                    status: status,
+                    message: message || null,
+                    latitude: currentLocation.latitude || null,
+                    longitude: currentLocation.longitude || null,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+
+            if (error) throw error;
+
+            setFeedback({ text: '安否状況を大切な人に共有しました！', type: 'success' });
+            setTimeout(() => setFeedback(null), 3000);
+            setMessage(""); // Clear message after success
+        } catch (err: unknown) {
+            console.error('Error saving status:', err);
+            setFeedback({ text: '送信に失敗しました。時間をおいて再試行してください。', type: 'error' });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -57,16 +115,23 @@ export function StatusForm() {
                 <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="今の状況や、これから向かう場所を入力..."
+                    placeholder="今の状況や、これから向かう場所を入力... (任意)"
                     className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm min-h-[100px]"
                 />
 
+                {feedback && (
+                    <div className={`p-3 rounded-lg text-sm ${feedback.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        {feedback.text}
+                    </div>
+                )}
+
                 <button
                     type="submit"
-                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
+                    disabled={isSubmitting || !user}
+                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50"
                 >
-                    <Send className="w-4 h-4" />
-                    状況を送信
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                    {isSubmitting ? '送信中...' : '状況を送信'}
                 </button>
             </form>
         </div>

@@ -35,6 +35,7 @@ export const metadata: Metadata = {
 import { Navbar } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { AuthProvider } from "@/components/Auth/AuthProvider";
 
 export default function RootLayout({
   children,
@@ -44,14 +45,16 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
-        <Navbar />
-        <ServiceWorkerRegister />
-        <main className="pt-16 pb-20 min-h-screen bg-slate-50/50">
-          {children}
-        </main>
-        <BottomNav />
+        <AuthProvider>
+          <Navbar />
+          <ServiceWorkerRegister />
+          <main className="pt-16 pb-20 min-h-screen bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+            {children}
+          </main>
+          <BottomNav />
+        </AuthProvider>
       </body>
     </html>
   );

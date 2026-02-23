@@ -43,7 +43,7 @@ export function GuideList({ guides, searchQuery = "" }: GuideListProps) {
                     <Link
                         key={guide.id}
                         href={`/guide/${guide.id}`}
-                        className="group block bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 overflow-hidden transform hover:-translate-y-0.5"
+                        className="group block bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 dark:border-slate-700 overflow-hidden transform hover:-translate-y-0.5"
                     >
                         {guide.imageUrl && (
                             <div className="relative w-full h-36 bg-slate-100">
@@ -85,8 +85,8 @@ export function GuideList({ guides, searchQuery = "" }: GuideListProps) {
                                     </span>
                                     <span className="text-[10px] text-slate-400 font-medium">{guide.updatedAt}</span>
                                 </div>
-                                <h3 className="font-bold text-slate-800 text-lg leading-tight mb-1 group-hover:text-cyan-700 transition-colors">{guide.title}</h3>
-                                <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
+                                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight mb-1 group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors">{guide.title}</h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                                     {guide.description}
                                 </p>
                             </div>
