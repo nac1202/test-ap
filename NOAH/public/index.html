@@ -23,6 +23,20 @@
   <meta name="apple-mobile-web-app-title" content="NOA">
   <link rel="apple-touch-icon" href="/images/logo.jpg">
 
+  <!-- テーマ適用時のちらつき防止用スクリプト -->
+  <script>
+    (function () {
+      try {
+        const storedTheme = localStorage.getItem('noa_current_theme');
+        if (storedTheme) {
+          document.documentElement.className = `theme-${storedTheme}`;
+        }
+      } catch (e) {
+        console.error('Failed to load theme early', e);
+      }
+    })();
+  </script>
+
   <link rel="stylesheet" href="/style.css">
   <style>
     /* Additional states styles */
@@ -571,7 +585,16 @@
       const castMaster = data.castMaster || {}; // Map ID -> Name
 
       // Theme
-      document.body.className = `theme-${data.theme || 'normal'}`;
+      const currentTheme = data.theme || 'normal';
+
+      // root (html) と body の両方にクラスをあてておく (CSSの書き出し方に依存しにくくするため)
+      document.documentElement.className = `theme-${currentTheme}`;
+      document.body.className = `theme-${currentTheme}`;
+
+      // 次回ロード時のちらつき防止用に LocalStorage へ保存
+      try {
+        localStorage.setItem('noa_current_theme', currentTheme);
+      } catch (e) { console.error('LocalStorage error', e); }
 
       // Hide all views first
       document.getElementById('view-ended').classList.add('hidden');
