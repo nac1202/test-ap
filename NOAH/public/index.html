@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap"
     rel="stylesheet">
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <!-- PWA Setup -->
   <link rel="manifest" href="/manifest.json">
@@ -207,6 +208,122 @@
     .close-area.active {
       display: block;
     }
+
+    /* Reservation Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #1a1a2e;
+      padding: 1.5rem;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      border: 1px solid #e94560;
+      text-align: center;
+      /* Center text for success modal mainly */
+    }
+
+    .modal-message {
+      white-space: pre-wrap;
+      /* Handle newlines */
+      text-align: center;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .modal-ok-btn {
+      background: #e94560;
+      color: white;
+      border: none;
+      padding: 0.5rem 2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      color: #ccc;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="time"],
+    .form-group select {
+      width: 100%;
+      padding: 0.5rem;
+      background: #16213e;
+      border: 1px solid #444;
+      color: white;
+      border-radius: 4px;
+    }
+
+    .reserve-btn {
+      background: #e94560;
+      border: none;
+      color: white;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-left: auto;
+    }
+
+    .reserve-btn-limited {
+      background: #ffaa00;
+      /* Yellow */
+      border: none;
+      color: #000;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-left: auto;
+      font-weight: bold;
+    }
+
+    .weekly-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      border-top: 1px dashed #444;
+      padding-top: 0.5rem;
+    }
+
+    .remain-tag {
+      font-size: 0.8rem;
+      color: #aaa;
+      background: #222;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      margin-right: 5px;
+    }
+
+    .remain-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.75rem;
+      color: #ccc;
+    }
   </style>
 </head>
 
@@ -214,6 +331,18 @@
   <main class="container">
     <header class="site-header">
       <img src="/images/logo_final.png" alt="NOA Logo" class="logo">
+      <div class="address-map-container">
+        <p class="address-text">中央区銀座8-2-10<br>銀座誠和シルバービル8F</p>
+        <a href="https://www.google.com/maps/search/?api=1&query=東京都中央区銀座8-2-10+銀座誠和シルバービル8F" target="_blank"
+          rel="noopener noreferrer" class="map-btn">
+          <span class="map-icon">📍</span>Google MAPで見る
+        </a>
+      </div>
+      <div class="tarot-promo">
+        <a href="/tarot.html" class="tarot-link-btn">
+          <span class="star-icon">★</span> 本日の運勢を占う <span class="star-icon">★</span>
+        </a>
+      </div>
       <div id="clock" class="clock"></div>
     </header>
 
@@ -230,6 +359,7 @@
       <a href="#view-open" class="nav-link" onclick="toggleMenu()">SEATS</a>
       <a href="#cast-section" class="nav-link" onclick="toggleMenu()">TODAY'S CAST</a>
       <a href="#weekly-section" class="nav-link" onclick="toggleMenu()">WEEKLY SCHEDULE</a>
+      <a href="/tarot.html" class="nav-link" onclick="toggleMenu()">TODAY'S TAROT</a>
       <a href="/install.html" class="nav-link" style="font-size:0.9rem;" onclick="toggleMenu()">アプリ設定</a>
     </div>
     <div id="close-area" class="close-area" onclick="toggleMenu()"></div>
@@ -322,7 +452,7 @@
 
     <!-- Weekly Schedule Section -->
     <section id="weekly-section" class="weekly-section">
-      <h3 class="weekly-title">WEEKLY SCHEDULE</h3>
+      <h3 class="weekly-title">キャストスケジュールと<br>お客様ご予約</h3>
       <div id="weekly-list" class="weekly-list">
         <!-- JS will populate -->
       </div>
@@ -332,6 +462,66 @@
       <p class="note">Auto-update: <span id="interval">10</span>s</p>
       <a href="/install.html" class="install-link">アプリとして保存する方法</a>
     </footer>
+
+    <!-- Reservation Modal -->
+    <div id="reservation-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="res-date-label">2024-01-01</h3>
+        <p style="font-size:0.9rem; color:#aaa; margin-bottom:1rem;">ご予約内容を入力してください</p>
+
+        <form id="res-form" onsubmit="return false;">
+          <div class="form-group">
+            <label>お名前 (ニックネーム可)</label>
+            <input type="text" id="res-name" required placeholder="例: みりゅう">
+          </div>
+
+          <div class="form-group">
+            <label>席タイプ</label>
+            <div style="display:flex; gap:1rem; margin-top:0.5rem;">
+              <label><input type="radio" name="res-type" value="counter" checked> カウンター (1~5名)</label>
+              <label><input type="radio" name="res-type" value="box"> ボックス (2~6名)</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>人数</label>
+            <select id="res-count">
+              <option value="1">1名</option>
+              <option value="2">2名</option>
+              <option value="3">3名</option>
+              <option value="4">4名</option>
+              <option value="5">5名</option>
+              <option value="6">6名</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>来店時間</label>
+            <input type="time" id="res-time" value="19:00" required>
+          </div>
+
+          <div class="form-group">
+            <label>連絡先 (任意/LINE ID等)</label>
+            <input type="text" id="res-contact" placeholder="電話番号またはLINE ID">
+          </div>
+
+          <div class="btn-group" style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:1rem;">
+            <button type="button" onclick="closeReservationModal()" style="background:#555;">キャンセル</button>
+            <button type="button" onclick="submitReservation()" style="background:#e94560;">予約する</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3 style="color:#e94560; margin-bottom:1rem;">予約完了</h3>
+        <p id="success-message" class="modal-message"></p>
+        <button class="modal-ok-btn" onclick="closeSuccessModal()">閉じる</button>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -424,7 +614,8 @@
       }
 
       // Always render weekly schedule regardless of state
-      renderWeeklySchedule(data.schedules, castMaster);
+      // Pass state to handle "ENDED" logic (skip today)
+      renderSchedule(data.schedules, castMaster, state);
     }
 
     function renderSeats(seats, isReserved) {
@@ -480,14 +671,17 @@
       });
     }
 
-    function renderWeeklySchedule(allSchedules, castMaster) {
+    function renderSchedule(allSchedules, castMaster, currentState) {
       const listEl = document.getElementById('weekly-list');
       listEl.innerHTML = '';
       allSchedules = allSchedules || {};
 
       const today = new Date();
-      // Loop 7 days starting today
-      for (let i = 0; i < 7; i++) {
+      // If ENDED, start from tomorrow (i=1), else today (i=0)
+      const startIndex = (currentState === 'ENDED') ? 1 : 0;
+
+      // Loop 30 days starting depending on state
+      for (let i = startIndex; i < 30; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
 
@@ -499,7 +693,7 @@
         const days = ['日', '月', '火', '水', '木', '金', '土'];
         const dayLabel = `${Number(m)}月${Number(d)}日(${days[date.getDay()]})`;
 
-        const sched = allSchedules[dateKey] || { type: 'normal', openTime: '18:00', closeTime: '23:30', cast: [] };
+        const sched = allSchedules[dateKey] || { type: 'normal', openTime: '18:00', closeTime: '23:30', cast: [], reservations: [] };
 
         // Build Card
         const card = document.createElement('div');
@@ -520,6 +714,9 @@
         } else if (sched.type === 'limited') {
           statusText = '残りわずか';
           statusClass = 'status-cls-limited';
+        } else if (sched.type === 'on_demand') {
+          statusText = '予約次第';
+          statusClass = 'status-cls-holiday'; // Use holiday style (red) or custom
         } else {
           statusText = `${sched.openTime || '18:00'} OPEN`;
         }
@@ -533,17 +730,147 @@
           castHtml = `<div class="weekly-cast-row"><span style="color:#666;">(キャスト未定)</span></div>`;
         }
 
+        // Calculate Remaining Seats
+        let remainHtml = '';
+        let canReserve = false;
+        if (sched.type !== 'holiday' && sched.type !== 'reserved' && sched.type !== 'full') {
+          canReserve = true;
+          const reservations = sched.reservations || [];
+
+          const counterUsed = reservations.filter(r => r.type === 'counter').reduce((sum, r) => sum + (r.count || 0), 0);
+          const boxUsed = reservations.filter(r => r.type === 'box').reduce((sum, r) => sum + (r.count || 0), 0);
+
+          const MAX_COUNTER = 5;
+          const MAX_BOX = 6;
+
+          const counterLeft = Math.max(0, MAX_COUNTER - counterUsed);
+          const boxLeft = Math.max(0, MAX_BOX - boxUsed);
+
+          let btnHtml = '';
+          if (counterLeft === 0 && boxLeft === 0) {
+            btnHtml = '<span style="color:red; font-size:0.8rem; font-weight:bold;">満席</span>';
+          } else if (counterLeft <= 2 || boxLeft <= 2) {
+            btnHtml = `<button class="reserve-btn-limited" onclick="openReservationModal('${dateKey}')">残りわずか</button>`;
+          } else {
+            btnHtml = `<button class="reserve-btn" onclick="openReservationModal('${dateKey}')">予約</button>`;
+          }
+
+          remainHtml = `
+                <div class="weekly-card-footer">
+                    <div class="remain-info">
+                        <div>カウンター空席数: ${counterLeft}</div>
+                        <div>ボックス空席数: ${boxLeft}</div>
+                    </div>
+                    ${btnHtml}
+                </div>
+            `;
+        }
+
         card.innerHTML = `
              <div class="weekly-header">
                <span class="weekly-date">${dayLabel}</span>
                <span class="weekly-status ${statusClass}">${statusText}</span>
              </div>
              ${castHtml}
+             ${remainHtml}
             `;
 
         listEl.appendChild(card);
       }
     }
+
+    // Reservation Logic
+    function openReservationModal(date) {
+      document.getElementById('res-date-label').textContent = date;
+      document.getElementById('res-form').reset();
+      document.getElementById('reservation-modal').classList.remove('hidden');
+
+      // Auto-fill Line User Name if available
+      if (liff.isLoggedIn()) {
+        liff.getProfile().then(profile => {
+          document.getElementById('res-name').value = profile.displayName;
+          document.getElementById('res-contact').value = 'LINE User';
+        }).catch(err => console.error(err));
+      }
+    }
+
+    function closeReservationModal() {
+      document.getElementById('reservation-modal').classList.add('hidden');
+    }
+
+    function openSuccessModal(msg) {
+      document.getElementById('success-message').textContent = msg;
+      document.getElementById('success-modal').classList.remove('hidden');
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('success-modal').classList.add('hidden');
+    }
+
+    async function submitReservation() {
+      const date = document.getElementById('res-date-label').textContent;
+      const name = document.getElementById('res-name').value;
+      const typeRaw = document.querySelector('input[name="res-type"]:checked');
+      const type = typeRaw ? typeRaw.value : 'counter';
+      const count = document.getElementById('res-count').value;
+      const time = document.getElementById('res-time').value;
+      const contact = document.getElementById('res-contact').value;
+
+      if (!name) { alert('お名前を入力してください'); return; }
+
+      // LIFF ID check
+      let lineUserId = '';
+      try {
+        // Check if LIFF is initialized (liff.id is set after init)
+        if (window.liff && liff.id && liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          lineUserId = profile.userId;
+        }
+      } catch (e) {
+        console.log('LIFF info skipped:', e);
+      }
+
+      try {
+        const res = await fetch('/api/reserve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date, name, type, count, time, contact, lineUserId
+          })
+        });
+        const json = await res.json();
+        if (json.error) {
+          alert('エラー: ' + json.error);
+        } else {
+          closeReservationModal();
+          openSuccessModal(`ご予約ありがとうございます。
+お席を確保いたしました。
+
+恐れ入りますが、予約完了メール等は送信されませんので、
+この画面のスクリーンショットを保存 していただくようお願いいたします。
+
+当日お会いできるのを楽しみにしております。
+※変更・キャンセルの際は店舗までご連絡ください。`);
+          fetchStatus(); // Refresh
+        }
+      } catch (e) {
+        alert('通信エラーが発生しました');
+      }
+    }
+
+    // LIFF Init
+    document.addEventListener('DOMContentLoaded', () => {
+      const MY_LIFF_ID = "YOUR_LIFF_ID"; // Placeholder
+      if (MY_LIFF_ID && MY_LIFF_ID !== "YOUR_LIFF_ID") {
+        liff.init({ liffId: MY_LIFF_ID })
+          .then(() => {
+            console.log("LIFF init success");
+          })
+          .catch((err) => {
+            console.error("LIFF init failed", err);
+          });
+      }
+    });
 
     fetchStatus();
     setInterval(fetchStatus, 10000); // 10s Poll
@@ -563,6 +890,27 @@
       }
     }
     document.getElementById('menu-btn').onclick = toggleMenu;
+    /* Tarot Button Update */
+    document.addEventListener('DOMContentLoaded', () => {
+      const tarotBtn = document.querySelector('.tarot-link-btn');
+      if (!tarotBtn) return;
+
+      const STORAGE_KEY = 'noa_tarot_v1';
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`; // YYYY-M-D
+
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          if (data.date === todayStr) {
+            tarotBtn.innerHTML = '<span class="star-icon">★</span> 本日の占い結果を見る <span class="star-icon">★</span>';
+          }
+        } catch (e) {
+          console.error('Tarot storage parse error', e);
+        }
+      }
+    });
   </script>
   <script src="/fireflies.js"></script>
 </body>

@@ -1,0 +1,476 @@
+/* Tarot Specific Styles */
+
+.tarot-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 2rem;
+    overflow-x: hidden;
+    text-align: center;
+    width: 100%;
+}
+
+.tarot-container .site-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.tarot-title {
+    font-family: var(--font-serif);
+    font-size: 2.5rem;
+    letter-spacing: 0.2em;
+    color: var(--text-primary);
+    margin-top: 1rem;
+    width: 100%;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
+    margin-right: -0.2em;
+    /* Adjust for letter-spacing */
+}
+
+.tarot-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    min-height: 400px;
+}
+
+/* Card Deck / Placeholder */
+.card-deck {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card-deck:hover {
+    transform: scale(1.05);
+}
+
+.deck-placeholder {
+    width: 200px;
+    height: 340px;
+    position: relative;
+    perspective: 1000px;
+}
+
+/* Card Styling - Image Based Design */
+.card-back {
+    width: 100%;
+    height: 100%;
+    /* background: radial-gradient(circle at center, #1e2a4a 0%, #0f1219 100%); */
+    /* border: 2px solid #c5a059; Remove border as image has one */
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Image for Card Back */
+.card-pattern {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border: none;
+    background-image: url('/images/taro-ura.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Removed CSS geometric patterns */
+.card-pattern::before,
+.card-pattern::after {
+    content: none;
+    display: none;
+}
+
+.card-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    height: 360px;
+    background: radial-gradient(circle, rgba(197, 160, 89, 0.2) 0%, transparent 70%);
+    z-index: -1;
+    animation: pulse 3s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+.instruction {
+    margin-top: 2rem;
+    color: var(--text-secondary);
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+    animation: fadeIn 2s ease-in-out infinite alternate;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0.4;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+
+/* Result Styling */
+.result-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    animation: slideUp 0.8s ease-out;
+    width: 100%;
+    max-width: 600px;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card-display {
+    width: 300px;
+    /* Card width */
+    height: 500px;
+    /* Card height */
+    perspective: 1000px;
+    position: relative;
+    /* Adjust for caption */
+    margin-bottom: 1rem;
+    animation: float 6s ease-in-out infinite;
+    /* Floating effect */
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.card-inner {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #232526 0%, #414345 100%);
+    /* Subtle metallic dark */
+    border: 4px double #c5a059;
+    border-radius: 12px;
+    /* Glow Pulse Animation */
+    box-shadow: 0 0 20px rgba(197, 160, 89, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.8);
+    animation: glowPulse 4s infinite alternate;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes glowPulse {
+    from {
+        box-shadow: 0 0 20px rgba(197, 160, 89, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.8);
+    }
+
+    to {
+        box-shadow: 0 0 40px rgba(197, 160, 89, 0.6), inset 0 0 30px rgba(0, 0, 0, 0.8);
+    }
+}
+
+/* Shine / Shimmer Effect */
+.card-inner::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(to right,
+            transparent 0%,
+            rgba(255, 255, 255, 0.1) 40%,
+            rgba(255, 255, 255, 0.2) 50%,
+            rgba(255, 255, 255, 0.1) 60%,
+            transparent 100%);
+    transform: skewX(-25deg) translateX(-150%);
+    animation: shimmer 6s infinite;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: skewX(-25deg) translateX(-150%);
+    }
+
+    20% {
+        transform: skewX(-25deg) translateX(150%);
+    }
+
+    100% {
+        transform: skewX(-25deg) translateX(150%);
+    }
+}
+
+.card-image-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    z-index: 1;
+    opacity: 0.9;
+    /* Increased opacity for better visibility */
+}
+
+/* Remove mask image to show full artwork */
+
+.card-front {
+    width: 92%;
+    height: 94%;
+    border: 1px solid rgba(197, 160, 89, 0.5);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1rem;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    background: transparent;
+    /* Removed darkening */
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+/* NOA Logo Overlay */
+.card-logo-overlay {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 35px;
+    height: auto;
+    opacity: 0.9;
+    z-index: 3;
+    filter: drop-shadow(0 0 5px rgba(197, 160, 89, 0.8));
+}
+
+.card-visual {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0;
+    background: transparent;
+    position: relative;
+}
+
+.card-number {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    color: #c5a059;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.card-symbol {
+    font-size: 5rem;
+    color: rgba(255, 255, 255, 0.1);
+    /* Subtle background symbol */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+}
+
+/* New Caption Style */
+.card-caption {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    color: #fff;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 0.2rem;
+    /* Reduced margin-top as JA is above */
+    text-shadow: 0 0 15px rgba(197, 160, 89, 0.8);
+    border-bottom: 1px solid rgba(197, 160, 89, 0.6);
+    padding-bottom: 0.5rem;
+    width: 100%;
+}
+
+.card-caption-ja {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.1em;
+    text-align: center;
+    margin-top: 1rem;
+    /* Move top margin here */
+    margin-bottom: 0;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+.result-content {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid rgba(197, 160, 89, 0.2);
+    width: 100%;
+    backdrop-filter: blur(5px);
+}
+
+.result-keyword {
+    font-family: var(--font-serif);
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.result-message {
+    font-family: var(--font-sans);
+    color: #ccc;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+}
+
+.lucky-section {
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+    padding-top: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.lucky-title {
+    font-family: var(--font-serif);
+    color: #FFD700;
+    font-size: 1.0rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.8rem;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 165, 0, 0.3);
+    animation: luckyPulse 2s infinite alternate;
+}
+
+.lucky-item {
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.retry-btn {
+    background: transparent;
+    border: 1px solid var(--text-primary);
+    color: var(--text-primary);
+    padding: 0.8rem 2rem;
+    font-family: var(--font-serif);
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-right: 1rem;
+}
+
+.retry-btn:hover {
+    background: rgba(197, 160, 89, 0.2);
+}
+
+.home-btn {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Animation Classes */
+.shuffling {
+    animation: shuffle 0.5s ease-in-out infinite;
+}
+
+@keyframes shuffle {
+    0% {
+        transform: translateX(0) rotate(0);
+    }
+
+    25% {
+        transform: translateX(5px) rotate(2deg);
+    }
+
+    75% {
+        transform: translateX(-5px) rotate(-2deg);
+    }
+
+    100% {
+        transform: translateX(0) rotate(0);
+    }
+}
+
+@keyframes luckyPulse {
+    from {
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 165, 0, 0.3);
+        transform: scale(1);
+    }
+
+    to {
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 165, 0, 0.6);
+        transform: scale(1.05);
+    }
+}

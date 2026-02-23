@@ -76,6 +76,11 @@
       font-weight: bold;
     }
 
+    .status-on-demand {
+      color: #cc44ff !important;
+      font-weight: bold;
+    }
+
     /* Highlight the whole cell slightly for non-normal */
     .calendar-day.is-holiday {
       background: #331111;
@@ -329,6 +334,7 @@
           <option value="reserved">貸切</option>
           <option value="full">満席</option>
           <option value="limited">残りわずか</option>
+          <option value="on_demand">予約次第で営業</option>
         </select>
       </div>
 
@@ -346,6 +352,13 @@
         <div class="cast-checklist" id="modal-cast-list">
           <!-- Dynamic Populated -->
         </div>
+      </div>
+
+      <div class="form-group">
+        <label>予約一覧</label>
+        <ul id="res-list" style="list-style:none; padding:0; margin:0;">
+          <!-- Dynamic -->
+        </ul>
       </div>
 
       <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
@@ -470,6 +483,7 @@
       if (type === 'reserved') return 'status-reserved';
       if (type === 'full') return 'status-full';
       if (type === 'limited') return 'status-limited';
+      if (type === 'on_demand') return 'status-on-demand';
       return 'status-normal';
     }
 
@@ -478,6 +492,7 @@
       if (type === 'reserved') return '貸切';
       if (type === 'full') return '満席';
       if (type === 'limited') return '残りわずか';
+      if (type === 'on_demand') return '予約次第';
       return '通常';
     }
 
@@ -512,6 +527,45 @@
         label.appendChild(document.createTextNode(name));
         checklistEl.appendChild(label);
       });
+
+      // Reservations List
+      const resListEl = document.getElementById('res-list');
+      resListEl.innerHTML = '';
+      const reservations = schedule.reservations || [];
+
+      if (reservations.length === 0) {
+        resListEl.innerHTML = '<li style="color:#666; font-size:0.9rem;">(予約なし)</li>';
+      } else {
+        reservations.forEach(r => {
+          const li = document.createElement('li');
+          li.style.background = '#222';
+          li.style.padding = '0.5rem';
+          li.style.marginBottom = '0.5rem';
+          li.style.border = '1px solid #444';
+          li.style.fontSize = '0.9rem';
+          li.style.display = 'flex';
+          li.style.justifyContent = 'space-between';
+          li.style.alignItems = 'center';
+
+          const info = document.createElement('div');
+          const typeLabel = (r.type === 'counter') ? 'C' : 'B';
+          info.innerHTML = `
+                <div style="font-weight:bold;">${r.time} ${r.name}様 (${typeLabel}:${r.count}名)</div>
+                <div style="font-size:0.8rem; color:#aaa;">${r.contact || ''}</div>
+              `;
+
+          const delBtn = document.createElement('button');
+          delBtn.textContent = '削除';
+          delBtn.style.background = '#666';
+          delBtn.style.fontSize = '0.8rem';
+          delBtn.style.marginLeft = '0.5rem';
+          delBtn.onclick = () => removeReservation(dateStr, r.id);
+
+          li.appendChild(info);
+          li.appendChild(delBtn);
+          resListEl.appendChild(li);
+        });
+      }
 
       modal.classList.add('active');
     }
@@ -569,6 +623,35 @@
       input.value = '';
       await fetchData();
       renderMasterCast();
+    }
+
+    async function removeReservation(date, resId) {
+      if (!confirm('この予約を削除しますか？')) return;
+
+      // Get current schedule
+      const schedule = currentData.schedules[date];
+      if (!schedule || !schedule.reservations) return;
+
+      const newReservations = schedule.reservations.filter(r => r.id !== resId);
+      schedule.reservations = newReservations;
+
+      // Save entire schedule (including updated reservations)
+      await fetch('/api/status-v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          updateSchedule: {
+            date: date,
+            schedule: schedule
+          }
+        })
+      });
+
+      // Refresh
+      await fetchData();
+      // Re-open modal with updated data
+      const updatedSchedule = currentData.schedules[date];
+      openModal(date, updatedSchedule);
     }
 
     window.removeCast = async function (id) { // explicit global

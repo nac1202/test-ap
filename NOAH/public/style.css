@@ -264,6 +264,138 @@ body {
   opacity: 0.9;
 }
 
+/* Address Map Link & Layout adjustments */
+.site-header {
+  margin-bottom: 1.5rem;
+  /* Reduced from 2rem */
+}
+
+.address-map-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.address-text {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+.map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.2rem;
+  background: rgba(197, 160, 89, 0.1);
+  /* Subtle gold background */
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  /* Subtle gold border */
+  border-radius: 20px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  letter-spacing: 0.05em;
+}
+
+.map-btn:hover {
+  background: rgba(197, 160, 89, 0.2);
+  border-color: rgba(197, 160, 89, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  color: #fff;
+}
+
+/* Tarot Promo Button */
+.tarot-promo {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.tarot-link-btn {
+  display: inline-block;
+  padding: 0.8rem 2rem;
+  background: linear-gradient(45deg, rgba(20, 20, 30, 0.9), rgba(40, 40, 60, 0.9));
+  border: 1px solid var(--text-primary);
+  border-radius: 30px;
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+  letter-spacing: 0.1em;
+  position: relative;
+  overflow: hidden;
+  animation: pulse-gold 2s infinite;
+}
+
+.tarot-link-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.5s;
+  animation: shine-sweep 3s infinite;
+}
+
+.tarot-link-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 25px rgba(197, 160, 89, 0.6);
+  background: rgba(197, 160, 89, 0.2);
+  border-color: #fff;
+  color: #fff;
+  border-bottom-style: solid;
+  /* Override default link style */
+}
+
+@keyframes shine-sweep {
+  0% {
+    left: -100%;
+  }
+
+  20% {
+    left: 100%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes pulse-gold {
+  0% {
+    box-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(197, 160, 89, 0.6);
+    border-color: #ffe0b3;
+  }
+
+  100% {
+    box-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
+  }
+}
+
+.star-icon {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+
 /* Holiday Message */
 .holiday-message {
   margin: 3rem 0;

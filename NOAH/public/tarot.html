@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOA - Daily Tarot</title>
+    <meta property="og:title" content="NOA - Daily Tarot">
+    <meta property="og:description" content="本日の運勢を占う">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/css/tarot.css">
+</head>
+
+<body>
+    <div class="stars-bg"></div>
+
+    <main class="container tarot-container">
+        <header class="site-header">
+            <a href="/">
+                <img src="/images/logo_final.png" alt="NOA Logo" class="logo">
+            </a>
+
+            <p class="subtitle">本日の運勢</p>
+        </header>
+
+        <div class="tarot-stage">
+            <div class="card-deck" id="card-deck">
+                <!-- Deck text or visual -->
+                <div class="deck-placeholder">
+                    <div class="card-back">
+                        <div class="card-pattern"></div>
+                    </div>
+                    <div class="card-glow"></div>
+                </div>
+                <p class="instruction">心を落ち着かせて<br>カードをタップしてください</p>
+            </div>
+
+            <!-- Result Card Container (Hidden initially) -->
+            <div id="result-container" class="result-container hidden">
+                <div class="card-display" id="result-card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-visual">
+                                <span class="card-number" id="card-number"></span>
+                                <span class="card-symbol"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="result-content">
+                    <h2 class="result-keyword" id="result-keyword"></h2>
+                    <p class="result-message" id="result-message"></p>
+
+                    <div class="lucky-section">
+                        <div class="lucky-title">NOAで更なる運気アップ！</div>
+                        <div class="lucky-item" id="result-lucky">Loading...</div>
+                    </div>
+
+                    <!-- Retry button removed -->
+                    <a href="/" class="home-btn">トップへ戻る</a>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="/fireflies.js"></script>
+    <script src="/js/tarot-data.js"></script>
+    <script src="/js/tarot.js"></script>
+</body>
+
+</html>

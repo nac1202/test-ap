@@ -180,6 +180,14 @@ app.post('/api/status-v2', authMiddleware, async (req, res) => {
             const { date, schedule } = body.updateSchedule;
             if (date && schedule) {
                 if (!data.schedules) data.schedules = {};
+
+                // Preserve existing reservations if not provided in update
+                if (data.schedules[date] && data.schedules[date].reservations) {
+                    if (!schedule.reservations) {
+                        schedule.reservations = data.schedules[date].reservations;
+                    }
+                }
+
                 data.schedules[date] = schedule;
             }
         }
@@ -220,6 +228,69 @@ app.post('/api/status-v2', authMiddleware, async (req, res) => {
         res.json({ success: true, data });
     } catch (e) {
         console.error('API Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Reservation API (Public/LIFF)
+app.post('/api/reserve', async (req, res) => {
+    try {
+        const { date, name, type, count, time, contact, lineUserId } = req.body;
+
+        // Basic Validation
+        if (!date || !name || !type || !count) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Logic Constraints
+        const seatCount = parseInt(count, 10);
+        if (type === 'box' && seatCount < 2) {
+            return res.status(400).json({ error: 'Box seats require at least 2 people.' });
+        }
+
+        // Capacity Limits
+        const MAX_COUNTER = 5;
+        const MAX_BOX = 6;
+        const maxCapacity = (type === 'counter') ? MAX_COUNTER : MAX_BOX;
+
+        const data = await readData();
+        if (!data.schedules) data.schedules = {};
+        if (!data.schedules[date]) {
+            data.schedules[date] = { type: 'normal', openTime: '18:00', closeTime: '23:30', cast: [], reservations: [] };
+        }
+        const schedule = data.schedules[date];
+        if (!schedule.reservations) schedule.reservations = [];
+
+        // Check availability
+        const currentUsage = schedule.reservations
+            .filter(r => r.type === type)
+            .reduce((sum, r) => sum + (r.count || 0), 0);
+
+        if (currentUsage + seatCount > maxCapacity) {
+            return res.status(400).json({ error: 'Not enough seats available.' });
+        }
+
+        // Add Reservation
+        const newReservation = {
+            id: 'res_' + Date.now(),
+            name,
+            type,
+            count: seatCount,
+            time: time || '18:00',
+            contact: contact || '',
+            lineUserId: lineUserId || '',
+            createdAt: new Date().toISOString()
+        };
+
+        schedule.reservations.push(newReservation);
+
+        // Auto-update seat status if full? (Optional, skipping for now to keep logic simple)
+
+        await writeData(data);
+        res.json({ success: true, reservation: newReservation });
+
+    } catch (e) {
+        console.error('Reservation Error:', e);
         res.status(500).json({ error: e.message });
     }
 });
