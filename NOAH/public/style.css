@@ -858,6 +858,8 @@ body.theme-christmas {
 .logo-svg path,
 .logo-svg polygon {
   fill: var(--logo-fill, #C5A059);
+  fill-rule: evenodd;
+  clip-rule: evenodd;
   /* 未指定時はデフォルトのゴールド色 */
   transition: fill 0.3s ease;
 }
