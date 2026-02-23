@@ -743,6 +743,8 @@ a:hover {
 /* Themes */
 body.theme-normal {
   background-color: var(--bg-color);
+  --logo-fill: #fff;
+  /* デフォルトのロゴ色（白） */
 }
 
 /* Common Theme Background Settings */
@@ -766,6 +768,7 @@ body.theme-new-year {
   --text-secondary: #d4af37;
   --card-bg: rgba(40, 10, 10, 0.85);
   --card-border: #d4af37;
+  --logo-fill: #f7e6b0;
 }
 
 body.theme-valentine {
@@ -779,6 +782,7 @@ body.theme-valentine {
   --text-secondary: #ff8fa3;
   --card-bg: rgba(40, 10, 20, 0.85);
   --card-border: #ff8fa3;
+  --logo-fill: #ffb7c5;
 }
 
 body.theme-whiteday {
@@ -792,6 +796,7 @@ body.theme-whiteday {
   --text-secondary: #8fcaff;
   --card-bg: rgba(10, 20, 40, 0.85);
   --card-border: #8fcaff;
+  --logo-fill: #b7e3ff;
 }
 
 body.theme-sakura {
@@ -805,6 +810,7 @@ body.theme-sakura {
   --text-secondary: #ff9ebb;
   --card-bg: rgba(40, 10, 20, 0.85);
   --card-border: #ff9ebb;
+  --logo-fill: #ffc2d1;
 }
 
 body.theme-tanabata {
@@ -818,6 +824,7 @@ body.theme-tanabata {
   --text-secondary: #d4e6f1;
   --card-bg: rgba(10, 10, 40, 0.85);
   --card-border: #d4e6f1;
+  --logo-fill: #fffacd;
 }
 
 body.theme-halloween {
@@ -831,6 +838,7 @@ body.theme-halloween {
   --text-secondary: #ff9900;
   --card-bg: rgba(30, 10, 40, 0.85);
   --card-border: #ff9900;
+  --logo-fill: #e0b0ff;
 }
 
 body.theme-christmas {
@@ -844,6 +852,14 @@ body.theme-christmas {
   --text-secondary: #ffd700;
   --card-bg: rgba(5, 30, 10, 0.85);
   --card-border: #ffd700;
+  --logo-fill: #ffcccc;
+}
+
+.logo-svg path,
+.logo-svg polygon {
+  fill: var(--logo-fill, #C5A059);
+  /* 未指定時はデフォルトのゴールド色 */
+  transition: fill 0.3s ease;
 }
 
 /* Mama Message Board */
