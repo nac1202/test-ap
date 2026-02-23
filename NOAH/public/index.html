@@ -23,20 +23,6 @@
   <meta name="apple-mobile-web-app-title" content="NOA">
   <link rel="apple-touch-icon" href="/images/logo.jpg">
 
-  <!-- テーマ適用時のちらつき防止用スクリプト -->
-  <script>
-    (function () {
-      try {
-        const storedTheme = localStorage.getItem('noa_current_theme');
-        if (storedTheme) {
-          document.documentElement.className = `theme-${storedTheme}`;
-        }
-      } catch (e) {
-        console.error('Failed to load theme early', e);
-      }
-    })();
-  </script>
-
   <link rel="stylesheet" href="/style.css">
   <style>
     /* Additional states styles */
@@ -343,6 +329,20 @@
 </head>
 
 <body>
+  <!-- テーマ適用時のちらつき防止用スクリプト -->
+  <script>
+    (function () {
+      try {
+        const storedTheme = localStorage.getItem('noa_current_theme');
+        if (storedTheme) {
+          document.documentElement.className = `theme-${storedTheme}`;
+          document.body.className = `theme-${storedTheme}`;
+        }
+      } catch (e) {
+        console.error('Failed to load theme early', e);
+      }
+    })();
+  </script>
   <main class="container">
     <header class="site-header">
       <div class="logo-container" id="logo-sparkles-container">
