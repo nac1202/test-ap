@@ -93,34 +93,7 @@ body {
   animation: logoSparkleAnim 3s infinite ease-in-out;
 }
 
-/* それぞれの星の配置とアニメーション遅延 */
-.s-1 {
-  top: -10px;
-  left: -15px;
-  font-size: 1.5rem;
-  animation-delay: 0s;
-}
-
-.s-2 {
-  top: 20%;
-  right: -25px;
-  font-size: 1rem;
-  animation-delay: 1.2s;
-}
-
-.s-3 {
-  bottom: 10px;
-  left: -10px;
-  font-size: 0.8rem;
-  animation-delay: 0.5s;
-}
-
-.s-4 {
-  bottom: -15px;
-  right: 0;
-  font-size: 1.2rem;
-  animation-delay: 2s;
-}
+/* 星の配置はJavaScriptで動的に行うように変更しました */
 
 @keyframes logoSparkleAnim {
   0% {
