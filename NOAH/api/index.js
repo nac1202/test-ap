@@ -116,33 +116,44 @@ app.get('/api/status-v2', async (req, res) => {
     const data = await readData();
     const nowJST = getJSTNow();
 
-    const currentHour = nowJST.getUTCHours();
-    const currentMin = nowJST.getUTCMinutes();
-
-    let targetDateStr = nowJST.toISOString().split('T')[0];
-    let displayState = 'PRE_OPEN';
+    // 翌日の早朝7時までは、前日の「営業日」として扱う
+    let logicalNow = new Date(nowJST.getTime());
+    let currentHour = logicalNow.getUTCHours();
+    let currentMin = logicalNow.getUTCMinutes();
 
     if (currentHour < 7) {
-        displayState = 'ENDED';
-    } else {
-        const schedule = data.schedules[targetDateStr] || {
-            openTime: '18:00', closeTime: '23:30', type: 'normal', cast: []
-        };
-        const [openH, openM] = schedule.openTime.split(':').map(Number);
-        const [closeH, closeM] = schedule.closeTime.split(':').map(Number);
-        const nowMinutes = currentHour * 60 + currentMin;
-        const openMinutes = openH * 60 + openM;
-        const closeMinutes = closeH * 60 + closeM;
-
-        if (nowMinutes < openMinutes) {
-            displayState = 'PRE_OPEN';
-        } else if (nowMinutes >= openMinutes && nowMinutes < closeMinutes) {
-            displayState = 'OPEN';
-        } else {
-            displayState = 'ENDED';
-        }
-        if (schedule.type === 'holiday') displayState = 'HOLIDAY';
+        logicalNow.setUTCDate(logicalNow.getUTCDate() - 1);
+        currentHour += 24; // 24時台、25時台として扱い、閉店時間の比較を簡単にする
     }
+
+    let targetDateStr = logicalNow.toISOString().split('T')[0];
+    let displayState = 'PRE_OPEN';
+
+    const schedule = data.schedules[targetDateStr] || {
+        openTime: '18:00', closeTime: '23:30', type: 'normal', cast: []
+    };
+    const [openH, openM] = schedule.openTime.split(':').map(Number);
+    const [closeH, closeM] = schedule.closeTime.split(':').map(Number);
+
+    // 閉店時間が早朝（7時未満）の場合は翌日扱いなので +24 する
+    // または、閉店時間が開店時間を下回る場合（例: 18:00〜01:00）も +24 する
+    let adjustedCloseH = closeH;
+    if (closeH < 7 || closeH < openH) {
+        adjustedCloseH += 24;
+    }
+
+    const nowMinutes = currentHour * 60 + currentMin;
+    const openMinutes = openH * 60 + openM;
+    const closeMinutes = adjustedCloseH * 60 + closeM;
+
+    if (nowMinutes < openMinutes) {
+        displayState = 'PRE_OPEN';
+    } else if (nowMinutes >= openMinutes && nowMinutes < closeMinutes) {
+        displayState = 'OPEN';
+    } else {
+        displayState = 'ENDED';
+    }
+    if (schedule.type === 'holiday') displayState = 'HOLIDAY';
 
     const todaySchedule = data.schedules[targetDateStr] || {
         openTime: '18:00', closeTime: '23:30', type: 'normal', cast: []
@@ -151,6 +162,7 @@ app.get('/api/status-v2', async (req, res) => {
     res.json({
         displayState,
         serverTime: nowJST.toISOString(),
+        logicalDate: targetDateStr, // フロントエンドでも今日の日付として使えるように返す
         schedule: todaySchedule, // For public page convenience
         schedules: data.schedules, // For admin calendar
         seats: data.seats,

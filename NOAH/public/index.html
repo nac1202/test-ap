@@ -654,7 +654,7 @@
 
       // Always render weekly schedule regardless of state
       // Pass state to handle "ENDED" logic (skip today)
-      renderSchedule(data.schedules, castMaster, state);
+      renderSchedule(data.schedules, castMaster, state, data.logicalDate);
     }
 
     function renderSeats(seats, isReserved) {
@@ -710,12 +710,25 @@
       });
     }
 
-    function renderSchedule(allSchedules, castMaster, currentState) {
+    function renderSchedule(allSchedules, castMaster, currentState, logicalDateStr) {
       const listEl = document.getElementById('weekly-list');
       listEl.innerHTML = '';
       allSchedules = allSchedules || {};
 
-      const today = new Date();
+      let today;
+      if (logicalDateStr) {
+        // パースしてローカル時間の0時として扱う (JST環境等でのズレ防止)
+        const [y, m, d] = logicalDateStr.split('-').map(Number);
+        today = new Date(y, m - 1, d);
+      } else {
+        // フォールバック: 7時未満なら前日扱い
+        const rawToday = new Date();
+        if (rawToday.getHours() < 7) {
+          rawToday.setDate(rawToday.getDate() - 1);
+        }
+        today = rawToday;
+      }
+
       // If ENDED, start from tomorrow (i=1), else today (i=0)
       const startIndex = (currentState === 'ENDED') ? 1 : 0;
 
