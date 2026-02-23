@@ -45,11 +45,20 @@ body {
   /* 余白を狭める */
 }
 
+.logo-container {
+  display: inline-block;
+  position: relative;
+  /* 親要素基準で星を配置できるようにする */
+  margin: 0 auto;
+}
+
 .logo {
   max-width: 120px;
   height: auto;
   display: block;
-  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  /* キラキラより前面にロゴを配置 */
 }
 
 .logo-svg {
@@ -68,6 +77,65 @@ body {
   50% {
     transform: translateY(-5px);
     filter: drop-shadow(0 0 15px var(--logo-fill, rgba(197, 160, 89, 0.8)));
+  }
+}
+
+/* ロゴ周りのキラキラ */
+.logo-sparkle {
+  position: absolute;
+  color: var(--logo-fill, #C5A059);
+  font-size: 1.2rem;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  text-shadow: 0 0 5px var(--logo-fill, #C5A059);
+  animation: logoSparkleAnim 3s infinite ease-in-out;
+}
+
+/* それぞれの星の配置とアニメーション遅延 */
+.s-1 {
+  top: -10px;
+  left: -15px;
+  font-size: 1.5rem;
+  animation-delay: 0s;
+}
+
+.s-2 {
+  top: 20%;
+  right: -25px;
+  font-size: 1rem;
+  animation-delay: 1.2s;
+}
+
+.s-3 {
+  bottom: 10px;
+  left: -10px;
+  font-size: 0.8rem;
+  animation-delay: 0.5s;
+}
+
+.s-4 {
+  bottom: -15px;
+  right: 0;
+  font-size: 1.2rem;
+  animation-delay: 2s;
+}
+
+@keyframes logoSparkleAnim {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(0deg);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2) rotate(45deg);
+    filter: blur(0.5px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(90deg);
   }
 }
 
