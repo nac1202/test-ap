@@ -50,10 +50,11 @@ body {
   position: relative;
   /* 親要素基準で星を配置できるようにする */
   margin: 0 auto;
+  max-width: 120px;
 }
 
 .logo {
-  max-width: 120px;
+  width: 100%;
   height: auto;
   display: block;
   position: relative;
