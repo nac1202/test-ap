@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>NOA 営業時間と予約の切り替わりについて</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            background: #080808;
+            color: #fff;
+            padding: 20px;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #C5A059;
+            border-bottom: 2px solid #C5A059;
+            padding-bottom: 5px;
+            margin-top: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+            background: #1a1a2e;
+        }
+
+        th,
+        td {
+            border: 1px solid #444;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #e94560;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .note {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .highlight {
+            color: #00ffaa;
+            font-weight: bold;
+        }
+
+        .warning {
+            color: #ff004c;
+            font-weight: bold;
+        }
+
+        .scenario {
+            background: #222;
+            padding: 15px;
+            border-left: 5px solid #e94560;
+            margin-bottom: 15px;
+        }
+
+        .blue-text {
+            color: #88c0d0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>NOA 営業時間と「予約できる日・できない日」のルール</h1>
+    <p>アプリを見るタイミングによって、お客様が<strong>「今日（いま終わったばかりの夜）」</strong>の予約ができるかどうかが自動で切り替わります。</p>
+
+    <!-- 具体例から入る -->
+    <h2>📖 よくある例：深夜1時にアプリを見たらどうなる？</h2>
+    <div class="scenario">
+        <strong>【状況】</strong> 「2月24日」の深夜 1:00 に、お客様がアプリを開いた場合<br><br>
+        <strong>❌ 終わったばかりの営業（2月23日の夜）は予約できません</strong><br>
+        <span class="note">「本日の営業は終了しました」と表示され、すでにお店が閉まっている時間帯の受付は自動でシャットアウトされます。</span><br>
+        <strong>⭕️ これから先の営業（2月24日の夜、2月25日の夜〜）はすべて予約可能です</strong><br>
+        <span class="note">画面の下にあるカレンダーから、その日（24日）の18時からの予約や、明日以降の予約ボタンが押せるようになっています。</span>
+    </div>
+    <p>つまり、<strong>「お店が閉まった後（閉店時間〜朝7時）は、終わったばかりの日の予約だけができなくなり、それ以降の未来の予約はいつでも可能」</strong>という仕組みです。</p>
+
+    <h2>⏰ 1日の画面の切り替わり（18:00 OPEN 〜 23:30 CLOSEの場合）</h2>
+    <p>システム上、<strong>朝 7:00</strong> を「1日のスタート」としてカレンダーが切り替わります。</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>時間帯（現実時間）</th>
+                <th>お店の状況</th>
+                <th>お客様が見る画面</th>
+                <th>予約の受付について</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>07:00 〜 17:59</strong><br><span class="note">（開店前の昼間・夕方）</span></td>
+                <td><strong>準備中</strong></td>
+                <td>「本日の営業は18時からです」<br>「ご来店お待ちしております」</td>
+                <td>
+                    <span class="highlight">「今日の夜」の事前予約ができます</span><br>
+                    <span class="note">※もちろん明日以降の予約もカレンダーから可能です</span>
+                </td>
+            </tr>
+            <tr>
+                <td><strong>18:00 〜 23:29</strong><br><span class="note">（営業時間中）</span></td>
+                <td><strong>営業中</strong></td>
+                <td>「只今の空席状況」<br><span class="note">お店の座席ランプ（空席/満席など）が光ります</span></td>
+                <td>
+                    <span class="highlight">「今日の夜（いま）」の予約ができます</span><br>
+                    <span class="note">来店直前の予約などに使えます</span>
+                </td>
+            </tr>
+            <tr>
+                <td><strong>23:30 〜 翌朝 06:59</strong><br><span class="note">（閉店直後〜深夜・早朝）</span></td>
+                <td><strong>営業終了</strong></td>
+                <td>「本日の営業は終了いたしました」<br>「またのご来店をお待ちしております」</td>
+                <td>
+                    <span class="warning">「いま終わった夜」の予約はできません</span><br>
+                    <span class="blue-text">★「これから来る夜（翌日以降）」の予約はカレンダーから可能です！</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h2>📅 定休日・貸切を設定した場合</h2>
+    <p>管理画面のカレンダーから特別なステータスを設定した日の見え方です。</p>
+    <table>
+        <thead>
+            <tr>
+                <th>管理画面での設定</th>
+                <th>お客様が見る画面</th>
+                <th>予約の受付について</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>定休日</strong></td>
+                <td>「本日は定休日です」</td>
+                <td><span class="warning">その日の終日、予約はできません</span><br><span class="note">※別の日であれば予約可能です</span></td>
+            </tr>
+            <tr>
+                <td><strong>貸切</strong></td>
+                <td>「只今の空席状況」<br><span style="color:#4444ff; font-weight:bold;">貸切（青ランプ）</span></td>
+                <td><span class="warning">その日の終日、予約はできません</span><br><span class="note">※貸切であることを知らせるランプが表示されます</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h3>💡 従業員の方への補足事項</h3>
+    <ul>
+        <li>時間帯のパネルの切り替わりは、管理画面カレンダーの<strong>「営業時間（OPEN / CLOSE）」</strong>の入力した時間に連動して自動で動きます。</li>
+        <li>たとえば、土曜日だけ営業時間を「19:00 〜
+            01:00」等に変更した場合でも、正しく<strong>19時〜翌深夜1時までが「営業中」、深夜1時〜朝7時までが「営業終了」</strong>として自動で賢く対応してくれます。</li>
+    </ul>
+
+</body>
+
+</html>
