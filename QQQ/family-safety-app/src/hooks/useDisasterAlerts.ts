@@ -211,8 +211,8 @@ export function useDisasterAlerts() {
 
                                 // Parse the weekly forecast
                                 for (let i = 0; i < timeDef.length; i++) {
-                                    const dateObj = new Date(timeDef[i]);
-                                    const shortDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+                                    const dParts = timeDef[i].split('T')[0].split('-');
+                                    const shortDate = `${parseInt(dParts[1])}/${parseInt(dParts[2])}`;
 
                                     const weatherCode = weatherArea.weatherCodes ? weatherArea.weatherCodes[i] : 'unknown';
 
@@ -255,8 +255,11 @@ export function useDisasterAlerts() {
                                         let todayWeatherCode = 'unknown';
                                         if (stTimeDef && stWeatherArea) {
                                             for (let j = 0; j < stTimeDef.length; j++) {
-                                                const d = new Date(stTimeDef[j]);
-                                                if (`${d.getMonth() + 1}/${d.getDate()}` === todayStr) {
+                                                const tStr = stTimeDef[j];
+                                                if (!tStr) continue;
+                                                const jmaDateParts = tStr.split('T')[0].split('-');
+                                                const jmaDateStr = `${parseInt(jmaDateParts[1])}/${parseInt(jmaDateParts[2])}`;
+                                                if (jmaDateStr === todayStr) {
                                                     todayWeatherCode = stWeatherArea.weatherCodes ? stWeatherArea.weatherCodes[j] : 'unknown';
                                                     break;
                                                 }
