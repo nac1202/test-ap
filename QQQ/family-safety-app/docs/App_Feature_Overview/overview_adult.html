@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kizuna Safety - 機能紹介</title>
+    <style>
+        /* スマホでの閲覧に特化した縦型レイアウト */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.7;
+            padding: 20px 15px;
+            max-width: 480px;
+            /* スマートフォンの幅を想定 */
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            margin-top: 10px;
+        }
+
+        .header h1 {
+            color: #0f172a;
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            font-size: 1em;
+            color: #64748b;
+        }
+
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            /* 常に縦並び */
+            gap: 20px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .icon-wrapper {
+            background-color: #f1f5f9;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            margin: 0 0 10px 0;
+            color: #1e293b;
+            font-size: 1.2M;
+        }
+
+        .card p {
+            margin: 0;
+            color: #475569;
+            font-size: 0.95em;
+        }
+
+        .offline-section {
+            margin-top: 40px;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 12px;
+            padding: 25px 20px;
+            border: 1px solid #bae6fd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .offline-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .offline-content h3 {
+            margin: 0 0 15px 0;
+            color: #0369a1;
+            font-size: 1.15em;
+        }
+
+        .offline-content p {
+            margin: 0;
+            color: #0c4a6e;
+            font-size: 0.95em;
+            text-align: left;
+            /* 長文は左揃えの方が見やすいため */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Kizuna Safety</h1>
+        <p>あなたと、大切な人を守るための<br>防災・安否確認アプリ</p>
+    </div>
+
+    <div class="feature-list">
+        <div class="card">
+            <div class="icon-wrapper">🚨</div>
+            <h3>リアルタイム災害アラート</h3>
+            <p>地震や台風などの重大な災害情報を瞬時にキャッチし、プッシュ通知で迅速にお知らせします。初動対応の遅れを防ぎます。</p>
+        </div>
+
+        <div class="card">
+            <div class="icon-wrapper">📱</div>
+            <h3>ワンタップ安否報告</h3>
+            <p>緊急時でも焦らず、ワンタップで自身の状況（無事、ケガあり等）を大切な人へ発信できます。確実な安否確認を実現します。</p>
+        </div>
+
+        <div class="card">
+            <div class="icon-wrapper">📍</div>
+            <h3>位置情報の共有マップ</h3>
+            <p>大切な人が現在どこにいるかをマップ上でリアルタイムに把握できます。はぐれてしまった際の位置特定や合流に役立ちます。</p>
+        </div>
+
+        <div class="card">
+            <div class="icon-wrapper">🏥</div>
+            <h3>最寄り避難所の検索・確認</h3>
+            <p>現在地周辺の適切な避難所をリストアップし、マップで経路を確認できます。事前の避難場所登録や共有も可能です。</p>
+        </div>
+
+        <div class="card">
+            <div class="icon-wrapper">📖</div>
+            <h3>実践的なあんしんガイド</h3>
+            <p>防災知識、応急手当、防犯対策など、いざという時に役立つ専門的なガイドラインをオフラインでも読める形で収録しています。</p>
+        </div>
+
+        <div class="card">
+            <div class="icon-wrapper">🤝</div>
+            <h3>グループ連携機能</h3>
+            <p>大切な人をアプリ上のグループに招待し、クローズドなネットワークを構築。迅速かつ確実な情報共有を可能にします。</p>
+        </div>
+    </div>
+
+    <div class="offline-section">
+        <div class="offline-icon">📡</div>
+        <div class="offline-content">
+            <h3>通信障害時でも安心の「オフライン設計」</h3>
+            <p>
+                大規模災害時にはインターネットが繋がらない状況が想定されます。本アプリでは、一度取得した避難所データや防災ガイドを端末内に保持し、オフラインでも閲覧可能です。<br><br>
+                さらに、<strong>「オフラインコンパス」機能</strong>を搭載。電波が届かない環境下でも、大切な人が最後に確認された位置までの「方向と距離」をスマートフォンの画面上に指し示し、合流を強力にサポートします。
+            </p>
+        </div>
+    </div>
+
+</body>
+
+</html>

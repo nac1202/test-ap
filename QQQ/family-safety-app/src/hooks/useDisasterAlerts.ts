@@ -206,24 +206,24 @@ export function useDisasterAlerts() {
                             if (timeDef && weatherArea && tempArea) {
                                 const parsedWeekly: DailyForecast[] = [];
 
-                                // Weekly temps are staggered, tempsMin/tempsMax usually start from index 1 or have empty strings for today if today is almost over
-                                // We iterate through timeDef (dates)
+                                // Ensure we use Tokyo time for 'today' to match JMA
+                                const todayStr = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric' });
+
+                                // Parse the weekly forecast
                                 for (let i = 0; i < timeDef.length; i++) {
-                                    // Parse ISO string to short date (e.g. 2/22)
                                     const dateObj = new Date(timeDef[i]);
                                     const shortDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
 
                                     const weatherCode = weatherArea.weatherCodes ? weatherArea.weatherCodes[i] : 'unknown';
 
-                                    // tempsMin and Max array length might differ or be empty for index 0
-                                    let minTemp = "";
-                                    let maxTemp = "";
+                                    let minTemp = "-";
+                                    let maxTemp = "-";
 
-                                    if (tempArea.tempsMin && tempArea.tempsMin.length > i) {
-                                        minTemp = tempArea.tempsMin[i] !== "" ? tempArea.tempsMin[i] : "-";
+                                    if (tempArea.tempsMin && tempArea.tempsMin.length > i && tempArea.tempsMin[i] !== "") {
+                                        minTemp = tempArea.tempsMin[i];
                                     }
-                                    if (tempArea.tempsMax && tempArea.tempsMax.length > i) {
-                                        maxTemp = tempArea.tempsMax[i] !== "" ? tempArea.tempsMax[i] : "-";
+                                    if (tempArea.tempsMax && tempArea.tempsMax.length > i && tempArea.tempsMax[i] !== "") {
+                                        maxTemp = tempArea.tempsMax[i];
                                     }
 
                                     parsedWeekly.push({
@@ -233,6 +233,87 @@ export function useDisasterAlerts() {
                                         maxTemp
                                     });
                                 }
+
+                                // Check if we need to prepend "Today" or fill in missing temperatures for "Today"
+                                // using the shortTerm forecast data (forecastData[0])
+                                const stWeatherArea = shortTerm.timeSeries[0]?.areas[0];
+                                const stTimeDef = shortTerm.timeSeries[0]?.timeDefines;
+                                const stTempArea = shortTerm.timeSeries[2]?.areas[0];
+                                const stTempTimeDef = shortTerm.timeSeries[2]?.timeDefines;
+
+                                if (parsedWeekly.length > 0) {
+                                    if (parsedWeekly[0].date !== todayStr) {
+                                        // Today is entirely missing from the weekly array, so we inject it
+                                        let todayWeatherCode = 'unknown';
+                                        if (stTimeDef && stWeatherArea) {
+                                            for (let j = 0; j < stTimeDef.length; j++) {
+                                                const d = new Date(stTimeDef[j]);
+                                                if (`${d.getMonth() + 1}/${d.getDate()}` === todayStr) {
+                                                    todayWeatherCode = stWeatherArea.weatherCodes ? stWeatherArea.weatherCodes[j] : 'unknown';
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        let minTemp = "-";
+                                        let maxTemp = "-";
+                                        if (stTempTimeDef && stTempArea && stTempArea.temps) {
+                                            for (let k = 0; k < stTempTimeDef.length; k++) {
+                                                const tStr = stTempTimeDef[k];
+                                                if (!tStr) continue;
+                                                const jmaDateParts = tStr.split('T')[0].split('-');
+                                                const jmaDateStr = `${parseInt(jmaDateParts[1])}/${parseInt(jmaDateParts[2])}`;
+
+                                                if (jmaDateStr === todayStr) {
+                                                    const h = parseInt(tStr.split('T')[1].substring(0, 2), 10);
+
+                                                    // JMA typically provides max temp at 09:00 for the day, and min temp at 00:00 or 06:00
+                                                    if (h === 9) maxTemp = stTempArea.temps[k];
+                                                    // Fallback if maxTemp already caught by 09:00 isn't there, sometimes it's at 15:00 
+                                                    if ((h === 12 || h === 15 || h === 18) && maxTemp === "-") maxTemp = stTempArea.temps[k];
+
+                                                    if (h === 0 || h === 6) minTemp = stTempArea.temps[k];
+                                                }
+                                            }
+                                        }
+
+                                        parsedWeekly.unshift({
+                                            date: todayStr,
+                                            weatherCode: todayWeatherCode,
+                                            minTemp,
+                                            maxTemp
+                                        });
+
+                                        if (parsedWeekly.length > 7) {
+                                            parsedWeekly.pop(); // Keep it to 7 days
+                                        }
+                                    } else {
+                                        // Today is present, but JMA often omits min/max in the weekly forecast for today
+                                        if (parsedWeekly[0].minTemp === "-" || parsedWeekly[0].maxTemp === "-") {
+                                            if (stTempTimeDef && stTempArea && stTempArea.temps) {
+                                                for (let k = 0; k < stTempTimeDef.length; k++) {
+                                                    const tStr = stTempTimeDef[k];
+                                                    if (!tStr) continue;
+                                                    const jmaDateParts = tStr.split('T')[0].split('-');
+                                                    const jmaDateStr = `${parseInt(jmaDateParts[1])}/${parseInt(jmaDateParts[2])}`;
+
+                                                    if (jmaDateStr === todayStr) {
+                                                        const h = parseInt(tStr.split('T')[1].substring(0, 2), 10);
+
+                                                        if (parsedWeekly[0].maxTemp === "-") {
+                                                            if (h === 9 || h === 12 || h === 15) parsedWeekly[0].maxTemp = stTempArea.temps[k];
+                                                        }
+
+                                                        if (parsedWeekly[0].minTemp === "-") {
+                                                            if (h === 0 || h === 6) parsedWeekly[0].minTemp = stTempArea.temps[k];
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
                                 setWeeklyForecast(parsedWeekly);
                             }
                         }
