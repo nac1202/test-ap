@@ -238,7 +238,15 @@ export function useDisasterAlerts() {
                                 // using the shortTerm forecast data (forecastData[0])
                                 const stWeatherArea = shortTerm.timeSeries[0]?.areas[0];
                                 const stTimeDef = shortTerm.timeSeries[0]?.timeDefines;
-                                const stTempArea = shortTerm.timeSeries[2]?.areas[0];
+
+                                // Find the shortTerm temp area that matches the weekly temp area name (e.g., "熊谷"), otherwise fallback to index 0
+                                const targetWeeklyAreaName = tempArea?.area?.name;
+                                let stTempArea = shortTerm.timeSeries[2]?.areas[0];
+                                if (targetWeeklyAreaName && shortTerm.timeSeries[2]?.areas) {
+                                    const matchedArea = shortTerm.timeSeries[2].areas.find((a: any) => a.area.name === targetWeeklyAreaName);
+                                    if (matchedArea) stTempArea = matchedArea;
+                                }
+
                                 const stTempTimeDef = shortTerm.timeSeries[2]?.timeDefines;
 
                                 if (parsedWeekly.length > 0) {
