@@ -206,8 +206,14 @@ export function useDisasterAlerts() {
                             if (timeDef && weatherArea && tempArea) {
                                 const parsedWeekly: DailyForecast[] = [];
 
-                                // Ensure we use Tokyo time for 'today' to match JMA
-                                const todayStr = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric' });
+                                // Extract "Today" strictly from JMA's short-term forecast to avoid local clock drift
+                                let jmaTodayStr = "";
+                                if (shortTerm && shortTerm.timeSeries && shortTerm.timeSeries[0]?.timeDefines?.length > 0) {
+                                    const stParts = shortTerm.timeSeries[0].timeDefines[0].split('T')[0].split('-');
+                                    jmaTodayStr = `${parseInt(stParts[1])}/${parseInt(stParts[2])}`;
+                                } else {
+                                    jmaTodayStr = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric' });
+                                }
 
                                 // Parse the weekly forecast
                                 for (let i = 0; i < timeDef.length; i++) {
@@ -250,7 +256,7 @@ export function useDisasterAlerts() {
                                 const stTempTimeDef = shortTerm.timeSeries[2]?.timeDefines;
 
                                 if (parsedWeekly.length > 0) {
-                                    if (parsedWeekly[0].date !== todayStr) {
+                                    if (parsedWeekly[0].date !== jmaTodayStr) {
                                         // Today is entirely missing from the weekly array, so we inject it
                                         let todayWeatherCode = 'unknown';
                                         if (stTimeDef && stWeatherArea) {
@@ -259,7 +265,7 @@ export function useDisasterAlerts() {
                                                 if (!tStr) continue;
                                                 const jmaDateParts = tStr.split('T')[0].split('-');
                                                 const jmaDateStr = `${parseInt(jmaDateParts[1])}/${parseInt(jmaDateParts[2])}`;
-                                                if (jmaDateStr === todayStr) {
+                                                if (jmaDateStr === jmaTodayStr) {
                                                     todayWeatherCode = stWeatherArea.weatherCodes ? stWeatherArea.weatherCodes[j] : 'unknown';
                                                     break;
                                                 }
@@ -275,7 +281,7 @@ export function useDisasterAlerts() {
                                                 const jmaDateParts = tStr.split('T')[0].split('-');
                                                 const jmaDateStr = `${parseInt(jmaDateParts[1])}/${parseInt(jmaDateParts[2])}`;
 
-                                                if (jmaDateStr === todayStr) {
+                                                if (jmaDateStr === jmaTodayStr) {
                                                     const h = parseInt(tStr.split('T')[1].substring(0, 2), 10);
 
                                                     // JMA typically provides max temp at 09:00 for the day, and min temp at 00:00 or 06:00
@@ -289,7 +295,7 @@ export function useDisasterAlerts() {
                                         }
 
                                         parsedWeekly.unshift({
-                                            date: todayStr,
+                                            date: jmaTodayStr,
                                             weatherCode: todayWeatherCode,
                                             minTemp,
                                             maxTemp
@@ -308,7 +314,7 @@ export function useDisasterAlerts() {
                                                     const jmaDateParts = tStr.split('T')[0].split('-');
                                                     const jmaDateStr = `${parseInt(jmaDateParts[1])}/${parseInt(jmaDateParts[2])}`;
 
-                                                    if (jmaDateStr === todayStr) {
+                                                    if (jmaDateStr === jmaTodayStr) {
                                                         const h = parseInt(tStr.split('T')[1].substring(0, 2), 10);
 
                                                         if (parsedWeekly[0].maxTemp === "-") {
