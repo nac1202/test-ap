@@ -1,0 +1,44 @@
+[
+  {
+    "date": "2/25",
+    "weatherCode": "300",
+    "minTemp": "-",
+    "maxTemp": "-"
+  },
+  {
+    "date": "2/26",
+    "weatherCode": "200",
+    "minTemp": "-",
+    "maxTemp": "-"
+  },
+  {
+    "date": "2/27",
+    "weatherCode": "200",
+    "minTemp": "7",
+    "maxTemp": "18"
+  },
+  {
+    "date": "2/28",
+    "weatherCode": "200",
+    "minTemp": "7",
+    "maxTemp": "20"
+  },
+  {
+    "date": "3/1",
+    "weatherCode": "101",
+    "minTemp": "5",
+    "maxTemp": "18"
+  },
+  {
+    "date": "3/2",
+    "weatherCode": "201",
+    "minTemp": "4",
+    "maxTemp": "16"
+  },
+  {
+    "date": "3/3",
+    "weatherCode": "202",
+    "minTemp": "6",
+    "maxTemp": "12"
+  }
+]
