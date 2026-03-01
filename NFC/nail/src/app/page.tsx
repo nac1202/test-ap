@@ -43,9 +43,9 @@ export default async function Home() {
                   マイページ
                 </Link>
               ) : (
-                <spanWrapper className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-300 bg-indigo-50 cursor-not-allowed md:py-4 md:text-lg md:px-10">
+                <SpanWrapper className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-300 bg-indigo-50 cursor-not-allowed md:py-4 md:text-lg md:px-10">
                   マイページ (未設定)
-                </spanWrapper>
+                </SpanWrapper>
               )}
             </>
           ) : (
@@ -69,6 +69,6 @@ export default async function Home() {
 }
 
 // Helper to avoid hydration issues if needed, but span is fine
-function spanWrapper({ children, className }: { children: React.ReactNode, className: string }) {
+function SpanWrapper({ children, className }: { children: React.ReactNode, className: string }) {
   return <span className={className}>{children}</span>
 }

@@ -81,7 +81,7 @@ export default function AnalyticsDashboard() {
                         <Tooltip
                             contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                             labelStyle={{ color: '#374151', fontWeight: 'bold', marginBottom: '4px' }}
-                            formatter={(value: number) => [`${value} views`, 'アクセス数']}
+                            formatter={(value: any) => [`${value} views`, 'アクセス数']}
                         />
                         <Line
                             type="monotone"
