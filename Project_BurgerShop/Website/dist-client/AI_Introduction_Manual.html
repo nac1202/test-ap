@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIコンシェルジュ 導入マニュアル</title>
+    <style>
+        :root {
+            --primary-color: #4169e1;
+            --accent-color: #e91e63;
+            --secondary-color: #6c757d;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+            background-color: #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .intro {
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .alert-box {
+            background-color: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+
+        .alert-box h3 {
+            margin-top: 0;
+            color: #f57f17;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-box h3::before {
+            content: '💡';
+        }
+
+        .alert-box ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+
+        .alert-box li {
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 40px;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--secondary-color);
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .badge {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: white;
+            font-weight: normal;
+        }
+
+        .badge-recommended {
+            background-color: var(--accent-color);
+        }
+
+        .badge-standard {
+            background-color: var(--secondary-color);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            background-color: #edf2fb;
+            color: #333;
+            padding: 15px 20px;
+            border-left: 6px solid var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .step {
+            margin-bottom: 40px;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            background-color: var(--primary-color);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        pre {
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            position: relative;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f3f5;
+            font-weight: bold;
+        }
+
+        .note {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .file-tree {
+            background-color: #f8f9fa;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>AIコンシェルジュ 導入マニュアル</h1>
+
+        <div class="intro">
+            <p>貴社Webサイトに「AIコンシェルジュ」を導入する手順について解説します。<br>お客様の環境やご要望に合わせて、<strong>2つの導入方法</strong>からお選びいただけます。</p>
+        </div>
+
+        <div class="alert-box">
+            <h3>どちらを選べばいいですか？</h3>
+            <ul>
+                <li><strong>方法A（推奨）</strong>：とにかく簡単に手早く導入したい場合。ファイルのアップロードが不要です。</li>
+                <li><strong>方法B（標準）</strong>：自社サーバーでファイルを管理したい場合。インターネット接続制限がある閉域環境などの場合。</li>
+            </ul>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('planA')">
+                方法A：かんたん設置プラン <span class="badge badge-recommended">推奨</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('planB')">
+                方法B：ファイル納品プラン <span class="badge badge-standard">標準</span>
+            </button>
+        </div>
+
+        <!-- =============== PLAN A =============== -->
+        <div id="planA" class="tab-content active">
+            <h2>方法A: かんたん設置（ファイルアップロード不要）</h2>
+            <p>CDNサーバー上の最新ファイルを直接読み込みます。お客様はHTMLにコードを追記するだけで導入完了です。</p>
+
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">HTMLファイルを開く</h3>
+                </div>
+                <p>お客様のホームページのHTMLファイル（<code>index.html</code> など）を編集エディタで開いてください。</p>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">コードの追加</h3>
+                </div>
+                <p><strong><code>&lt;/body&gt;</code> タグの直前</strong>（終了タグの直前）に、以下のコードをそのままコピー＆ペーストしてください。</p>
+
+                <pre><button class="copy-btn" onclick="copyCode(this)">コピー</button><code>&lt;!-- AI Widget Script --&gt;
+&lt;script src="https://bunbun-burger.vercel.app/assets/js/widget.js"&gt;&lt;/script&gt;
+&lt;link rel="stylesheet" href="https://bunbun-burger.vercel.app/assets/css/widget.css"&gt;
+&lt;script&gt;
+  window.addEventListener('DOMContentLoaded', () =&gt; {
+    initConciergeWidget({
+      // 1. 基本設定
+      brandName: "BUN BUN BURGER",      // 表示される店舗名
+      themeColor: "#4169e1",            // ブランドカラー
+      
+      // 2. 業種設定
+      businessType: "restaurant",       // restaurant / retail / salon / generic
+      
+      // 3. 営業時間 (24時間表記)
+      hours: { 
+        open: 10,   // 開店時間
+        close: 19   // 閉店時間
+      },
+      
+      // 4. AIサーバー接続先 (必須)
+      apiUrl: "https://bunbun-burger.vercel.app/api/chat"
+    });
+  });
+&lt;/script&gt;</code></pre>
+                <div class="note">
+                    <p>※上記は BurgerShop（バーガーショップ）用の設定例です。<br><code>brandName</code>（店舗名）や
+                        <code>themeColor</code>（ブランドカラー）を貴社に合わせて変更してください。</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">動作確認</h3>
+                </div>
+                <p>
+                    1. Webサイトにアクセスし、画面右下にアイコンが表示されることを確認してください。<br>
+                    2. アイコンをクリックしてチャット画面を開き、「こんにちは」と送信してください。<br>
+                    3. AIから返信があれば導入成功です。
+                </p>
+            </div>
+        </div>
+
+
+        <!-- =============== PLAN B =============== -->
+        <div id="planB" class="tab-content">
+            <h2>方法B: ファイル納品（自社サーバー手動設置）</h2>
+            <p>納品されたファイルを自社サーバーにアップロードして利用する方法です。</p>
+
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">納品ファイルの確認</h3>
+                </div>
+                <p>以下のファイルが揃っていることを確認してください。</p>
+                <ul>
+                    <li><code>widget.js</code> (AIシステムの本体)</li>
+                    <li><code>widget.css</code> (デザイン・スタイルシート)</li>
+                    <li><code>assistant.png</code> (アイコン画像)</li>
+                    <li><code>assistant-55.png</code> (モバイル用アイコン画像 ※あれば)</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">サーバーへのアップロード</h3>
+                </div>
+                <p>これらのファイルを、Webサイトのサーバー上の任意の場所にアップロードしてください。<br>（例: <code>assets</code> フォルダや <code>js</code>,
+                    <code>css</code> フォルダなど）</p>
+
+                <p><strong>推奨構成:</strong></p>
+                <div class="file-tree">
+                    / (ルートディレクトリ)<br>
+                    &nbsp;├─ index.html (既存のトップページ)<br>
+                    &nbsp;├─ assets/<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ css/<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└─ widget.css<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ js/<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└─ widget.js<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ img/<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ assistant.png<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ assistant-55.png
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">HTMLへのコード追加</h3>
+                </div>
+                <p>WebサイトのHTMLファイル（<code>index.html</code> など）を編集し、以下の2箇所にコードを追記してください。</p>
+
+                <h4>① CSSの読み込み</h4>
+                <p><code>&lt;head&gt;</code> タグの中に、以下の行を追加します。パスはアップロード先に合わせて変更してください。</p>
+                <pre><button class="copy-btn" onclick="copyCode(this)">コピー</button><code>&lt;link rel="stylesheet" href="assets/css/widget.css"&gt;</code></pre>
+
+                <h4>② スクリプトの読み込みと初期化</h4>
+                <p><code>&lt;/body&gt;</code> タグの直前（終了タグの直前）に、以下のコードを追加します。</p>
+
+                <div class="note">
+                    <strong>重要:</strong> <code>apiUrl</code> の部分には、別途ご案内する「AIサーバーのURL」を設定してください。
+                </div>
+
+                <pre><button class="copy-btn" onclick="copyCode(this)">コピー</button><code>&lt;!-- AI Widget Script --&gt;
+&lt;script src="assets/js/widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  window.addEventListener('DOMContentLoaded', () =&gt; {
+    initConciergeWidget({
+      // 1. 基本設定
+      brandName: "BUN BUN BURGER",          // 表示される店舗名
+      themeColor: "#4169e1",            // ブランドカラー
+      
+      // 2. 業種設定 (restaurant / retail / salon / generic)
+      businessType: "restaurant", 
+      
+      // 3. 営業時間 (24時間表記)
+      hours: { 
+        open: 10,   // 開店時間
+        close: 19   // 閉店時間
+      },
+      
+      // 4. AIサーバー接続先 (必須)
+      apiUrl: "https://bunbun-burger.vercel.app/api/chat"
+    });
+  });
+&lt;/script&gt;</code></pre>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <h3 class="step-title">動作確認</h3>
+                </div>
+                <p>
+                    1. Webサイトにアクセスし、画面右下にアイコンが表示されることを確認してください。<br>
+                    2. アイコンをクリックしてチャット画面を開き、「こんにちは」と送信してください。<br>
+                    3. AIから返信があれば導入成功です。
+                </p>
+            </div>
+        </div>
+
+        <!-- =============== COMMON SETTINGS =============== -->
+        <hr style="margin: 50px 0; border: 0; border-top: 2px dashed #dee2e6;">
+
+        <h2>カスタマイズ項目（A・B共通）</h2>
+        <p>初期化コード内の各項目を変更することで、挙動をカスタマイズできます。</p>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>説明</th>
+                        <th>設定例</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>brandName</strong></td>
+                        <td>チャット画面に表示される名前です。</td>
+                        <td><code>"BUN BUN BURGER"</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>themeColor</strong></td>
+                        <td>ボタンやヘッダーの色コードです。</td>
+                        <td><code>"#ff0000"</code> (赤)<br><code>"#000000"</code> (黒)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>businessType</strong></td>
+                        <td>AIの振る舞いを決定します。<br>・<code>restaurant</code> (飲食店)<br>・<code>salon</code>
+                            (美容室)<br>・<code>retail</code> (物販)<br>・<code>generic</code> (一般)</td>
+                        <td><code>"restaurant"</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>hours</strong></td>
+                        <td>営業時間外は「営業時間外です」と案内します。<br>※AI自体は24時間応答可能です。</td>
+                        <td><code>{ open: 9, close: 18 }</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>apiUrl</strong></td>
+                        <td>AIエンジンの接続先URLです。（<strong>※変更必須</strong>）<br>別途契約・納品時にご案内したURLを設定してください。</td>
+                        <td><code>"https://your-app.vercel.app/api/chat"</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note" style="margin-top: 40px; background-color: #fdf2f4; border-left-color: #e91e63;">
+            <h3 style="margin-top: 0; color: #e91e63;">うまく動かない場合</h3>
+            <ul style="margin-bottom: 0;">
+                <li><strong>返信が来ない:</strong> <code>apiUrl</code> が正しく設定されているか確認してください。</li>
+                <li><strong>表示が崩れる:</strong> 他のCSSと干渉している可能性があります。<code>widget.css</code> の読み込み順を最後にしてみてください。</li>
+                <li><strong>アイコンが出ない:</strong> スクリプトやCSSの <code>src</code> または <code>href</code>
+                    のパス（ファイルの置き場所）が間違っていないか確認してください。</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+    // タブ切り替え制御
+    function switchTab(tabId) {
+        // ボタンのアクティブ状態を切り替え
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        
+        // コンテンツの表示/非表示を切り替え
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // コードコピー機能
+    function copyCode(btn) {
+        const codeElement = btn.nextElementSibling;
+        const codeText = codeElement.innerText;
+        
+        navigator.clipboard.writeText(codeText).then(() => {
+            const originalText = btn.innerText;
+            btn.innerText = 'コピーしました!';
+            btn.style.backgroundColor = '#4caf50';
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = '';
+            }, 2000);
+        }).catch(err => {
+            console.error('コピーに失敗しました:', err);
+            btn.innerText = '失敗';
+        });
+    }
+    </script>
+
+</body>
+
+</html>
