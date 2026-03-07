@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>DMMサロン モックページ</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .post-container {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-author {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .post-content {
+            line-height: 1.5;
+            color: #444;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>DMMサロン モックページ（テスト用）</h1>
+    <p>※実際のDMMサロンのURL（https://salon.dmm.com/...）で動作確認するためのダミーページです。<br>手元で動作確認する場合は、manifest.jsonの "matches"
+        に一時的にこのファイルのURL（または *://*/* ）を追加してください。</p>
+
+    <!-- 正常な投稿 -->
+    <div class="post-container">
+        <div class="post-author">ユーザーA</div>
+        <div class="post-content">
+            おはようございます！今日のテーマもとても面白かったです。
+            引き続きよろしくお願いします。
+        </div>
+    </div>
+
+    <!-- 注意（Warning）想定の投稿: 強い言葉遣いなど -->
+    <div class="post-container">
+        <div class="post-author">ユーザーB</div>
+        <div class="post-content">
+            なんでそんなことも分からないんですか？馬鹿じゃないの。本当に迷惑です。
+        </div>
+    </div>
+
+    <!-- 危険（Danger）想定の投稿1: サロン外への転記 -->
+    <div class="post-container">
+        <div class="post-author">ユーザーC</div>
+        <div class="post-content">
+            今日のオーナーの限定配信の内容、すごく良かったので私のTwitter（X）に全部コピペして拡散しておきました！
+        </div>
+    </div>
+
+    <!-- 危険（Danger）想定の投稿2: 投資案件・勧誘 -->
+    <div class="post-container">
+        <div class="post-author">ユーザーD</div>
+        <div class="post-content">
+            皆さん、実は今絶対に儲かる仮想通貨の案件を知り合いから紹介されました。
+            このサロン限定で教えますので、興味ある人はLINE登録してください。
+            http://example.com/line
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>DMM Salon Check Tool</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 15px;
+      font-family: sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input[type="password"] {
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 8px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #status {
+      color: green;
+      font-size: 14px;
+      margin-top: 5px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>DMM Salon Check</h2>
+
+    <label for="apiKey">スタッフ用パスワード:</label>
+    <input type="password" id="apiKey" placeholder="パスワードを入力">
+
+    <label for="strictness">判定の厳しさ:</label>
+    <select id="strictness" style="margin-bottom: 10px; padding: 5px;">
+      <option value="loose">緩い (明らかな違反のみ警告)</option>
+      <option value="normal" selected>普通 (通常)</option>
+      <option value="strict">厳しい (少しでも疑わしければ警告)</option>
+    </select>
+
+    <button id="saveBtn">設定を保存する</button>
+    <div id="status">保存しました！</div>
+
+    <hr>
+
+    <button id="checkBtn">今すぐ一括チェック (一覧表示)</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+
+</html>
