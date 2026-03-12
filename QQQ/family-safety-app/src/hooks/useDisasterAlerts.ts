@@ -61,9 +61,20 @@ export interface DisasterAlert {
     areaName: string;
 }
 
+export interface HourlyForecast {
+    time: string; // e.g., "14:00"
+    temp: string;
+    weatherCode: number; // WMO code
+    pop: string;
+}
+
 export interface WeatherForecast {
     areaName: string;
     weather: string;
+    currentTemp?: string;
+    humidity?: string;
+    pop?: string;
+    hourly?: HourlyForecast[];
 }
 
 export interface DailyForecast {
@@ -185,15 +196,82 @@ export function useDisasterAlerts() {
                         const shortTerm = forecastData[0];
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const tsWeathers = shortTerm.timeSeries.find((ts: any) => ts.areas && ts.areas.length > 0 && ts.areas[0].weathers);
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const tsPops = shortTerm.timeSeries.find((ts: any) => ts.areas && ts.areas.length > 0 && ts.areas[0].pops);
+
+                        let parsedWeatherText = "";
+                        let parsedPop = "";
+
                         if (tsWeathers && tsWeathers.areas && tsWeathers.areas.length > 0) {
                             const area = tsWeathers.areas[0];
                             if (area.weathers && area.weathers.length > 0) {
-                                setForecast({
-                                    areaName: area.area.name,
-                                    weather: area.weathers[0].replace(/　/g, ' ')
-                                });
+                                parsedWeatherText = area.weathers[0].replace(/　/g, ' ');
                             }
                         }
+
+                        if (tsPops && tsPops.areas && tsPops.areas.length > 0) {
+                            const area = tsPops.areas[0];
+                            if (area.pops && area.pops.length > 0) {
+                                // Find the first non-empty POP
+                                const validPop = area.pops.find((p: string) => p && p !== "");
+                                if (validPop) parsedPop = validPop;
+                            }
+                        }
+
+                        let currentTemp = undefined;
+                        let humidity = undefined;
+                        let hourly: HourlyForecast[] = [];
+
+                        // Fetch real-time temperature, humidity, and hourly forecast from Open-Meteo
+                        if (lat && lng) {
+                            try {
+                                const omCurrentUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m&hourly=temperature_2m,precipitation_probability,weather_code&timezone=Asia%2FTokyo`;
+                                const omCurrentRes = await fetch(omCurrentUrl);
+                                if (omCurrentRes.ok) {
+                                    const omCurrentData = await omCurrentRes.json();
+                                    if (omCurrentData?.current?.temperature_2m !== undefined) {
+                                        currentTemp = Math.round(omCurrentData.current.temperature_2m).toString();
+                                    }
+                                    if (omCurrentData?.current?.relative_humidity_2m !== undefined) {
+                                        humidity = Math.round(omCurrentData.current.relative_humidity_2m).toString();
+                                    }
+
+                                    if (omCurrentData?.hourly?.time && omCurrentData.hourly.time.length > 0) {
+                                        // Find current hour in JST to slice the next 24 hours
+                                        const currentJST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+                                        const currentJSTISO = currentJST.getFullYear() + "-" +
+                                            String(currentJST.getMonth() + 1).padStart(2, '0') + "-" +
+                                            String(currentJST.getDate()).padStart(2, '0') + "T" +
+                                            String(currentJST.getHours()).padStart(2, '0') + ":00";
+
+                                        const startIndex = omCurrentData.hourly.time.findIndex((t: string) => t >= currentJSTISO);
+                                        const actualStart = startIndex >= 0 ? startIndex : 0;
+
+                                        for (let i = actualStart; i < actualStart + 24 && i < omCurrentData.hourly.time.length; i++) {
+                                            const timeStr = omCurrentData.hourly.time[i]; // e.g., "2026-02-26T14:00"
+                                            const hour = timeStr.split('T')[1].substring(0, 5); // "14:00"
+                                            hourly.push({
+                                                time: hour,
+                                                temp: Math.round(omCurrentData.hourly.temperature_2m[i]).toString(),
+                                                weatherCode: omCurrentData.hourly.weather_code[i],
+                                                pop: omCurrentData.hourly.precipitation_probability[i]?.toString() || "0"
+                                            });
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Error fetching Open-Meteo current/hourly data:', e);
+                            }
+                        }
+
+                        setForecast({
+                            areaName: tsWeathers?.areas[0]?.area.name || foundAreaName,
+                            weather: parsedWeatherText,
+                            pop: parsedPop,
+                            currentTemp,
+                            humidity,
+                            hourly
+                        });
 
                         // --- Weekly Forecast (7 Days) ---
                         // Usually forecastData[1] contains the weekly forecast
@@ -305,6 +383,40 @@ export function useDisasterAlerts() {
                                                 }
                                             }
                                         }
+                                    }
+                                }
+
+                                // --- Fallback for Missing Temperatures using Open-Meteo ---
+                                if (parsedWeekly.some(d => d.minTemp === "-" || d.maxTemp === "-") && lat && lng) {
+                                    try {
+                                        const omUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
+                                        const omRes = await fetch(omUrl);
+                                        if (omRes.ok) {
+                                            const omData = await omRes.json();
+                                            if (omData?.daily?.time && omData?.daily?.temperature_2m_max) {
+                                                const omTimes = omData.daily.time; // ["2026-02-25", "2026-02-26", ...]
+                                                // create a map of shortDate -> { min, max }
+                                                const omMap = new Map();
+                                                omTimes.forEach((tStr: string, idx: number) => {
+                                                    const tParts = tStr.split('-');
+                                                    const shortDate = `${parseInt(tParts[1])}/${parseInt(tParts[2])}`;
+                                                    omMap.set(shortDate, {
+                                                        max: Math.round(omData.daily.temperature_2m_max[idx]).toString(),
+                                                        min: Math.round(omData.daily.temperature_2m_min[idx]).toString()
+                                                    });
+                                                });
+
+                                                parsedWeekly.forEach(day => {
+                                                    const omFallback = omMap.get(day.date);
+                                                    if (omFallback) {
+                                                        if (day.maxTemp === "-") day.maxTemp = omFallback.max;
+                                                        if (day.minTemp === "-") day.minTemp = omFallback.min;
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    } catch (omErr) {
+                                        console.error('Error fetching Open-Meteo fallback:', omErr);
                                     }
                                 }
 

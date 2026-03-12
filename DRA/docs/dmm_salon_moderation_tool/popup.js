@@ -36,7 +36,19 @@ document.addEventListener('DOMContentLoaded', () => {
     checkBtn.addEventListener('click', () => {
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
             if (tabs.length === 0) return;
-            chrome.tabs.sendMessage(tabs[0].id, { action: "manual_check" });
+            chrome.tabs.sendMessage(tabs[0].id, { action: "manual_check" }, function (response) {
+                if (chrome.runtime.lastError) {
+                    // エラーを握りつぶし、ユーザーに通知
+                    statusDiv.textContent = '対象のページを開き直してください';
+                    statusDiv.style.color = '#ff4a4a';
+                    statusDiv.style.display = 'block';
+                    setTimeout(() => {
+                        statusDiv.style.display = 'none';
+                        statusDiv.style.color = '#fff'; // リセット
+                        statusDiv.textContent = '保存しました'; // リセット
+                    }, 3000);
+                }
+            });
         });
     });
 });

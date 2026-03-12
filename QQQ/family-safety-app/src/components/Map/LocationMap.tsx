@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { APIProvider, Map, AdvancedMarker, Pin, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
+import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { useFamilyLocation } from "@/hooks/useFamilyLocation";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { calculateDistance } from "@/utils/geoCalculations";
@@ -240,27 +240,36 @@ export function LocationMap() {
                                         <span className="whitespace-nowrap truncate">{isMe ? 'あなた' : member.name}</span>
                                     </div>
 
-                                    {/* Focus Ring for Selected Target */}
+                                    {/* Focus Ring for Selected Target: moved to bottom of pin */}
                                     {isSelected && !isMe && (
-                                        <div className="absolute top-6 w-12 h-12 bg-amber-400 rounded-full animate-ping opacity-40 -z-10 pointer-events-none blur-[2px]"></div>
+                                        <div className="absolute top-10 w-16 h-16 bg-amber-500 rounded-full animate-ping opacity-60 -z-10 pointer-events-none blur-[1px]"></div>
                                     )}
 
                                     {isMe ? (
                                         // Custom GPS-style blue beacon for the current user
-                                        <div className="relative flex items-center justify-center w-8 h-8 mt-1">
+                                        <div className="relative flex items-center justify-center w-8 h-8 mt-1 z-20">
                                             <div className="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-60"></div>
                                             <div className="absolute inset-1 bg-blue-400 rounded-full opacity-40"></div>
                                             <div className="relative w-4 h-4 bg-blue-600 border-2 border-white rounded-full shadow-lg z-10"></div>
                                         </div>
                                     ) : (
-                                        // Standard pin for other members
-                                        <div className="relative">
-                                            <Pin
-                                                background={getMemberColor(member.id)} // Distinct hash color for others
-                                                borderColor={isSelected ? '#f59e0b' : '#FFFFFF'} // Highlight border if selected
-                                                glyphColor={'#FFFFFF'}
-                                                scale={isSelected ? 1.25 : 1} // Markedly larger pin if selected
-                                            />
+                                        // Custom HTML pin for other members (ensures it ALWAYS renders)
+                                        <div className="relative flex flex-col items-center mt-1 z-20 transition-transform duration-300 transform origin-bottom hover:scale-110">
+                                            {/* Avatar / Circle */}
+                                            <div
+                                                className={`w-9 h-9 flex items-center justify-center rounded-full shadow-md relative z-10 border-[3px] ${isSelected ? 'border-amber-400 w-10 h-10 shadow-amber-500/50' : 'border-white'}`}
+                                                style={{ backgroundColor: getMemberColor(member.id), transition: 'all 0.3s ease' }}
+                                            >
+                                                <UserIcon size={18} className="text-white relative z-20" strokeWidth={2.5} />
+                                            </div>
+                                            {/* Pointer triangle */}
+                                            <div
+                                                className={`w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent -mt-[3px] relative z-0 ${isSelected ? 'border-t-amber-400' : 'border-t-white'}`}
+                                                style={{ transition: 'all 0.3s ease' }}
+                                            ></div>
+
+                                            {/* Static shadow under the pin */}
+                                            <div className="w-4 h-1 bg-black/30 rounded-[100%] blur-[2px] mt-0.5"></div>
                                         </div>
                                     )}
                                 </div>

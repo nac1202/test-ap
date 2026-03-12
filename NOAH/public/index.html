@@ -751,6 +751,28 @@
         const card = document.createElement('div');
         card.className = 'weekly-card';
 
+        // Calculate Remaining Seats early to determine dynamic full state
+        let remainHtml = '';
+        let canReserve = false;
+        let counterLeft = 0;
+        let boxLeft = 0;
+        let isZeroSeats = false;
+
+        if (sched.type !== 'holiday' && sched.type !== 'reserved' && sched.type !== 'full') {
+          canReserve = true;
+          const reservations = sched.reservations || [];
+
+          const counterUsed = reservations.filter(r => r.type === 'counter').reduce((sum, r) => sum + (r.count || 0), 0);
+          const boxUsed = reservations.filter(r => r.type === 'box').reduce((sum, r) => sum + (r.count || 0), 0);
+
+          const MAX_COUNTER = 5;
+          const MAX_BOX = 6;
+
+          counterLeft = Math.max(0, MAX_COUNTER - counterUsed);
+          boxLeft = Math.max(0, MAX_BOX - boxUsed);
+          isZeroSeats = (counterLeft === 0 && boxLeft === 0);
+        }
+
         // Status Text
         let statusText = '';
         let statusClass = 'status-cls-normal';
@@ -760,7 +782,7 @@
         } else if (sched.type === 'reserved') {
           statusText = '貸切';
           statusClass = 'status-cls-reserved';
-        } else if (sched.type === 'full') {
+        } else if (sched.type === 'full' || isZeroSeats) {
           statusText = '満席';
           statusClass = 'status-cls-full';
         } else if (sched.type === 'limited') {
@@ -782,24 +804,9 @@
           castHtml = `<div class="weekly-cast-row"><span style="color:#666;">(キャスト未定)</span></div>`;
         }
 
-        // Calculate Remaining Seats
-        let remainHtml = '';
-        let canReserve = false;
-        if (sched.type !== 'holiday' && sched.type !== 'reserved' && sched.type !== 'full') {
-          canReserve = true;
-          const reservations = sched.reservations || [];
-
-          const counterUsed = reservations.filter(r => r.type === 'counter').reduce((sum, r) => sum + (r.count || 0), 0);
-          const boxUsed = reservations.filter(r => r.type === 'box').reduce((sum, r) => sum + (r.count || 0), 0);
-
-          const MAX_COUNTER = 5;
-          const MAX_BOX = 6;
-
-          const counterLeft = Math.max(0, MAX_COUNTER - counterUsed);
-          const boxLeft = Math.max(0, MAX_BOX - boxUsed);
-
+        if (canReserve) {
           let btnHtml = '';
-          if (counterLeft === 0 && boxLeft === 0) {
+          if (isZeroSeats) {
             btnHtml = '<span style="color:red; font-size:0.8rem; font-weight:bold;">満席</span>';
           } else if (counterLeft <= 2 || boxLeft <= 2) {
             btnHtml = `<button class="reserve-btn-limited" onclick="openReservationModal('${dateKey}')">残りわずか</button>`;

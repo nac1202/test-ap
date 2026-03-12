@@ -1,8 +1,9 @@
 "use client";
 
 import { useDisasterAlerts, DisasterAlert } from "@/hooks/useDisasterAlerts";
-import { AlertTriangle, Info, Bell, AlertOctagon } from "lucide-react";
+import { AlertTriangle, Info, Bell, AlertOctagon, Thermometer, Droplets, Wind } from "lucide-react";
 import { WeeklyForecast } from "./WeeklyForecast";
+import { HourlyForecast } from "./HourlyForecast";
 
 export function DisasterAlertBanner() {
     const { alerts, forecast, weeklyForecast, locationName, loading, error, refetch } = useDisasterAlerts();
@@ -30,12 +31,43 @@ export function DisasterAlertBanner() {
                     <button onClick={refetch} className="ml-auto flex-shrink-0 underline text-[10px] text-teal-600">更新</button>
                 </div>
                 {forecast && (
-                    <div className="flex items-center gap-1.5 ml-5 text-slate-600 font-medium">
-                        <span className="text-[10px] bg-white text-teal-700 px-1.5 py-0.5 rounded border border-teal-200">今日の天気</span>
-                        <span className="truncate">{forecast.weather}</span>
+                    <div className="ml-5 mt-1 bg-white/70 rounded-lg p-2.5 shadow-sm border border-teal-100 flex flex-col gap-1.5 mr-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] bg-teal-600 text-white px-1.5 py-0.5 rounded shadow-sm">今日の天気</span>
+                            <span className="text-sm font-bold text-slate-700 truncate">{forecast.weather}</span>
+                        </div>
+
+                        {(forecast.currentTemp !== undefined || forecast.pop || forecast.humidity !== undefined) && (
+                            <div className="flex items-center gap-3.5 text-xs text-slate-600 font-medium ml-0.5 mt-0.5">
+                                {forecast.currentTemp !== undefined && (
+                                    <span className="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded-md shadow-sm border border-slate-100">
+                                        <Thermometer size={14} className="text-red-500" />
+                                        現在 {forecast.currentTemp}℃
+                                    </span>
+                                )}
+                                {forecast.pop !== undefined && forecast.pop !== "" && (
+                                    <span className="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded-md shadow-sm border border-slate-100">
+                                        <Droplets size={14} className="text-blue-500" />
+                                        降水 {forecast.pop}%
+                                    </span>
+                                )}
+                                {forecast.humidity !== undefined && (
+                                    <span className="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded-md shadow-sm border border-slate-100">
+                                        <Wind size={14} className="text-teal-500" />
+                                        湿度 {forecast.humidity}%
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 1時間ごとのタイムライン */}
+                        {forecast.hourly && forecast.hourly.length > 0 && (
+                            <div className="mt-2 border-t border-slate-100 pt-1">
+                                <HourlyForecast forecasts={forecast.hourly} />
+                            </div>
+                        )}
                     </div>
                 )}
-
                 {/* 週間天気予報 */}
                 {weeklyForecast && weeklyForecast.length > 0 && (
                     <div className="ml-5 mt-1">
@@ -85,9 +117,37 @@ export function DisasterAlertBanner() {
                     <div>
                         <span className="text-xs font-bold opacity-90 block">{locationName}の気象情報</span>
                         {forecast && (
-                            <span className="text-[11px] opacity-90 block mt-0.5">
-                                天気: {forecast.weather}
-                            </span>
+                            <div className="mt-1 flex flex-col gap-1 mb-1">
+                                <span className="text-[11px] opacity-100 font-bold block">
+                                    今日の天気: <span className="font-medium">{forecast.weather}</span>
+                                </span>
+                                {(forecast.currentTemp !== undefined || forecast.pop || forecast.humidity !== undefined) && (
+                                    <div className="flex items-center gap-3 text-[10px] opacity-90 mt-0.5">
+                                        {forecast.currentTemp !== undefined && (
+                                            <span className="flex items-center gap-0.5 bg-black/10 px-1 py-0.5 rounded">
+                                                <Thermometer size={12} /> {forecast.currentTemp}℃
+                                            </span>
+                                        )}
+                                        {forecast.pop !== undefined && forecast.pop !== "" && (
+                                            <span className="flex items-center gap-0.5 bg-black/10 px-1 py-0.5 rounded">
+                                                <Droplets size={12} /> {forecast.pop}%
+                                            </span>
+                                        )}
+                                        {forecast.humidity !== undefined && (
+                                            <span className="flex items-center gap-0.5 bg-black/10 px-1 py-0.5 rounded">
+                                                <Wind size={12} /> {forecast.humidity}%
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* 1時間ごとのタイムライン */}
+                                {forecast.hourly && forecast.hourly.length > 0 && (
+                                    <div className="mt-2 border-t border-black/10 pt-1 mb-2 max-w-[calc(100vw-4rem)]">
+                                        <HourlyForecast forecasts={forecast.hourly} />
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                     <button onClick={refetch} className="text-[10px] underline opacity-80 hover:opacity-100 flex-shrink-0">更新</button>

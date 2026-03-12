@@ -1,12 +1,11 @@
 {
     "manifest_version": 3,
     "name": "DMM Salon Check Tool",
-    "version": "1.0",
+    "version": "1.2",
     "description": "DMMオンラインサロンの規約違反書き込みをAIでチェックするツール",
     "permissions": [
         "storage",
-        "activeTab",
-        "scripting"
+        "activeTab"
     ],
     "host_permissions": [
         "https://salon.dmm.com/*",

@@ -93,7 +93,12 @@ async function analyzeAndHighlight(element, isManualAction = false) {
         // background.js にテキストを送って判定をリクエスト
         const response = await new Promise((resolve) => {
             chrome.runtime.sendMessage({ action: "check_content", text: text }, (res) => {
-                resolve(res);
+                if (chrome.runtime.lastError) {
+                    // 通信エラー（拡張機能の更新直後など）は握りつぶす
+                    resolve(null);
+                } else {
+                    resolve(res);
+                }
             });
         });
 
@@ -161,6 +166,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (tooltip) tooltip.remove();
         });
         checkAllPosts(true);
+        sendResponse({ status: "ok" });
+        return true;
     }
 });
 
