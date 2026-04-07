@@ -915,6 +915,20 @@ body.theme-christmas {
   --logo-fill: #ffcccc;
 }
 
+body.theme-birthday {
+  background-color: #1a0515;
+  background-image: url('/images/icon_birthday.png'), linear-gradient(to bottom, #1a0515, #3d002e);
+  background-position: bottom 5px right 5px, center;
+  background-size: 130px auto, cover;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
+  --text-primary: #ffccf2;
+  --text-secondary: #ffd700;
+  --card-bg: rgba(40, 10, 30, 0.85);
+  --card-border: #ffd700;
+  --logo-fill: #ffccf2;
+}
+
 .logo-svg path,
 .logo-svg polygon {
   fill: var(--logo-fill, #C5A059);
