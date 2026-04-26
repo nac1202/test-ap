@@ -341,29 +341,30 @@
 /* New Caption Style */
 .card-caption {
     font-family: var(--font-serif);
-    font-size: 1.5rem;
-    color: #fff;
-    letter-spacing: 0.2em;
+    font-size: 1.15rem;
+    color: #e8cca1; /* 落ち着いた明るいゴールド */
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     text-align: center;
-    margin-top: 0.2rem;
-    /* Reduced margin-top as JA is above */
-    text-shadow: 0 0 15px rgba(197, 160, 89, 0.8);
-    border-bottom: 1px solid rgba(197, 160, 89, 0.6);
+    margin-top: 0;
+    line-height: 1.3;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9), 0 0 10px rgba(197, 160, 89, 0.5);
+    border-bottom: 1px solid rgba(197, 160, 89, 0.4);
     padding-bottom: 0.5rem;
-    width: 100%;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .card-caption-ja {
     font-family: var(--font-serif);
-    font-size: 1rem;
-    color: var(--text-secondary);
-    letter-spacing: 0.1em;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    letter-spacing: 0.15em;
     text-align: center;
-    margin-top: 1rem;
-    /* Move top margin here */
+    margin-top: 0.6rem;
     margin-bottom: 0;
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 1), 0 0 5px rgba(0, 0, 0, 0.8);
 }
 
 .result-content {
