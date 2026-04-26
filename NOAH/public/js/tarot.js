@@ -30,8 +30,59 @@ document.addEventListener('DOMContentLoaded', () => {
         // Wait for user interaction
         cardDeck.addEventListener('click', () => {
             if (isAnimating) return;
+            playMagicSound();
             startDivination();
         });
+    }
+
+    // Web Audio APIを利用した魔法陣/シャッフル風のSE生成
+    let audioCtx = null;
+    function playMagicSound() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const t = audioCtx.currentTime;
+            // シャララン♪という魔法のようなアルペジオ（Aメジャーコードの分散和音）
+            const notes = [880.00, 1108.73, 1318.51, 1760.00]; 
+            
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, t + index * 0.1);
+                
+                gain.gain.setValueAtTime(0, t + index * 0.1);
+                gain.gain.linearRampToValueAtTime(0.3, t + index * 0.1 + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + index * 0.1 + 1.0);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(t + index * 0.1);
+                osc.stop(t + index * 0.1 + 1.0);
+            });
+
+            // 最後にキラッと光るような高い音
+            const oscWin = audioCtx.createOscillator();
+            const gainWin = audioCtx.createGain();
+            oscWin.type = 'triangle';
+            oscWin.frequency.setValueAtTime(2093.00, t + 0.4); 
+            gainWin.gain.setValueAtTime(0, t + 0.4);
+            gainWin.gain.linearRampToValueAtTime(0.2, t + 0.45);
+            gainWin.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
+            oscWin.connect(gainWin);
+            gainWin.connect(audioCtx.destination);
+            oscWin.start(t + 0.4);
+            oscWin.stop(t + 1.5);
+        } catch(e) {
+            console.error('Audio play failed', e);
+        }
     }
 
     // retryBtn removed

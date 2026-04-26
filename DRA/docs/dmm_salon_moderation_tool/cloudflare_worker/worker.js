@@ -2,8 +2,14 @@
  * DMM Salon Check Tool - Cloudflare Worker
  */
 
-const BASE_PROMPT = `あなたはDMMオンラインサロンの書き込みを監視するAIモデレーターです。
-以下の規約に基づいて、ユーザーの投稿内容を判定し、JSON形式で結果を返してください。
+const BASE_PROMPT = `あなたはDMMオンラインサロン「Mr.都市伝説 関暁夫のD.R.A」の書き込みを監視するAIモデレーターです。
+
+【重要：サロン独自の前提コンテキスト（大前提）】
+本サロンは「都市伝説」「オカルト」「陰謀論」「スピリチュアル」「精神世界」などの話題を扱う専門的なエンターテインメント・考察コミュニティです。
+そのため、一般的なSNSやAIの安全基準では「不適切・奇抜」とされるようなオカルト的、スピリチュアル的、都市伝説的な発言（例：特定の秘密結社、宇宙人、世界の裏側、過激な予言など）であっても、それ自体は本サロンにおいては【正常なコミュニケーション】です。
+他の利用者への明白な誹謗中傷や、現実の犯罪行為への直接的な教唆、明らかな外部ツールでの詐欺・投資勧誘などがない限り、「オカルト的な話題であること」を理由に「公序良俗に反する内容」や「スパム」としてwarningやdanger判定をしないでください。
+
+以下の規約に基づいて、ユーザーの投稿内容を客観的かつサロンの趣旨に寄り添って判定し、JSON形式で結果を返してください。
 
 【違反基準】
 ■D.R.A 独自規約
@@ -16,9 +22,9 @@ const BASE_PROMPT = `あなたはDMMオンラインサロンの書き込みを�
 2. 出会い・交際目的
 3. 権利侵害（著作権、プライバシー権、肖像権等）
 4. 差別的な表現
-5. 自殺、違法・脱法薬物使用等の勧誘・助長
-6. スパム、チェーンメール、無許可の宣伝・広告
-7. 明らかに公序良俗に反する内容
+5. 自殺、違法・脱法薬物使用等の現実的な犯罪行為の勧誘・助長
+6. 単なる不気味な話題ではなく、無許可の宣伝・明らかなスパムやチェーンメール
+7. 現実社会において明らかに公序良俗に反する内容（オカルト的な思考や世界観はこれに該当しません）
 
 【出力形式】
 以下のJSONフォーマットで出力してください。
@@ -66,7 +72,13 @@ export default {
                 strictnessPrompt = "\n【判定の厳しさ】: 普通。一般的なモデレーションの基準で公平に判断してください。";
             }
 
-            const finalSystemPrompt = BASE_PROMPT + strictnessPrompt;
+            // カスタムルールの結合処理
+            let customRulesPrompt = "";
+            if (body.customRules && body.customRules.trim() !== "") {
+                customRulesPrompt = `\n\n【ユーザ側の追加規約・NGワード】\n以下の基準も「厳格に」判定に含めてください:\n${body.customRules.trim()}`;
+            }
+
+            const finalSystemPrompt = BASE_PROMPT + strictnessPrompt + customRulesPrompt;
 
             const openAIResponse = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
@@ -86,7 +98,19 @@ export default {
             });
 
             if (!openAIResponse.ok) {
-                return new Response(JSON.stringify({ level: "error", reason: "AI APIエラー" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                let errorBody = "AI APIエラー";
+                try {
+                    const errorJson = await openAIResponse.json();
+                    errorBody = JSON.stringify(errorJson);
+                } catch(e) {
+                    errorBody = await openAIResponse.text();
+                }
+                
+                // OpenAIのエラー内容をそのまま包含して返す
+                return new Response(JSON.stringify({ 
+                    level: "error", 
+                    reason: `【OpenAIエラー】ステータス: ${openAIResponse.status}, 内容: ${errorBody}` 
+                }), { status: openAIResponse.status === 429 ? 429 : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
 
             const openAIData = await openAIResponse.json();

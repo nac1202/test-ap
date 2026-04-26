@@ -1,18 +1,23 @@
 {
     "manifest_version": 3,
-    "name": "DMM Salon Check Tool",
-    "version": "1.2",
-    "description": "DMMオンラインサロンの規約違反書き込みをAIでチェックするツール",
+    "name": "D.R.A Salon Checker",
+    "version": "2.15.5",
+    "description": "D.R.Aオンラインサロンの規約違反書き込みをAIでチェックするツール",
     "permissions": [
         "storage",
-        "activeTab"
+        "activeTab",
+        "sidePanel"
     ],
     "host_permissions": [
         "https://salon.dmm.com/*",
-        "https://api.openai.com/*"
+        "https://api.openai.com/*",
+        "https://blue-night-035a.sekilab55.workers.dev/*"
     ],
+    "side_panel": {
+        "default_path": "popup.html"
+    },
     "action": {
-        "default_popup": "popup.html"
+        "default_title": "D.R.A Salon Checker を開く"
     },
     "background": {
         "service_worker": "background.js"

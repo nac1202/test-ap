@@ -1,75 +1,151 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <meta charset="utf-8">
-  <title>DMM Salon Check Tool</title>
-  <style>
-    body {
-      width: 300px;
-      padding: 15px;
-      font-family: sans-serif;
-    }
-
-    .container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    label {
-      font-weight: bold;
-    }
-
-    input[type="password"] {
-      padding: 5px;
-      margin-bottom: 10px;
-    }
-
-    button {
-      padding: 8px 15px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #status {
-      color: green;
-      font-size: 14px;
-      margin-top: 5px;
-      display: none;
-    }
-  </style>
+    <meta charset="utf-8">
+    <title>D.R.A Salon Checker</title>
+    <link rel="stylesheet" href="popup.css">
 </head>
-
 <body>
-  <div class="container">
-    <h2>DMM Salon Check</h2>
+    <!-- ① リサイズ対応のラッパー -->
+    <div id="app-container">
+        <!-- Main View (Check Screen) -->
+        <div id="main-view" class="view active">
+            <div class="header">
+                <div style="display:flex; align-items:center; gap: 8px;">
+                    <h2>D.R.A Checker</h2>
+                    <span id="popup-progress" style="display:none; font-size: 10px; color:#000; background-color:#39ff14; border-radius:3px; padding:2px 6px; font-weight:bold; box-shadow: 0 0 5px #39ff14; white-space: nowrap;">巡回中...</span>
+                </div>
+                <button id="goToSettingsBtn" class="icon-btn" title="設定">⚙️</button>
+            </div>
 
-    <label for="apiKey">スタッフ用パスワード:</label>
-    <input type="password" id="apiKey" placeholder="パスワードを入力">
+            <div style="padding-top: 10px;">
+                <!-- v2.13.7: API通信（AI判定）のオンオフ -->
+                <div class="form-group">
+                    <label for="main-aimode">AI判定エンジン (API利用):</label>
+                    <select id="main-aimode" class="form-control">
+                        <option value="on" selected>オン (AI判定 ＋ NGワード)</option>
+                        <option value="off">オフ (NGワードのみチェック)</option>
+                    </select>
+                </div>
 
-    <label for="strictness">判定の厳しさ:</label>
-    <select id="strictness" style="margin-bottom: 10px; padding: 5px;">
-      <option value="loose">緩い (明らかな違反のみ警告)</option>
-      <option value="normal" selected>普通 (通常)</option>
-      <option value="strict">厳しい (少しでも疑わしければ警告)</option>
-    </select>
+                <div class="form-group">
+                    <label for="main-strictness">判定の厳しさ:</label>
+                    <select id="main-strictness" class="form-control">
+                        <option value="loose">緩い (明らかな違反のみ警告)</option>
+                        <option value="normal" selected>普通 (通常)</option>
+                        <option value="strict">厳しい (少しでも疑わしければ警告)</option>
+                    </select>
+                </div>
 
-    <button id="saveBtn">設定を保存する</button>
-    <div id="status">保存しました！</div>
+                <div class="form-group">
+                    <label for="interval-select">自動巡回 (自動スキャン):</label>
+                    <select id="interval-select" class="form-control">
+                        <option value="0" selected>オフ (手動のみ)</option>
+                        <option value="5">5分ごとに巡回</option>
+                        <option value="10">10分ごとに巡回</option>
+                        <option value="60">60分ごとに巡回</option>
+                    </select>
+                </div>
 
-    <hr>
+                <button id="checkBtn" class="btn-primary">
+                    🔍 今すぐ一括チェック
+                </button>
+                <div id="main-status" class="status-msg"></div>
 
-    <button id="checkBtn">今すぐ一括チェック (一覧表示)</button>
-  </div>
-  <script src="popup.js"></script>
+                <div class="results-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px;">
+                    <h3 style="margin: 0; padding: 0;">違反一覧</h3>
+                    <div style="display: flex; align-items: center;">
+                        <span id="violation-count" style="font-size: 13px; color: #aaaaaa; font-weight: bold; margin-right: 15px;">0件</span>
+                        <button id="downloadCsvBtn" style="background:#20502b; color:#fff; border:1px solid #3b824a; border-radius:3px; cursor:pointer; padding:3px 8px; font-size:11px; margin-right: 5px;">📄 CSV出力</button>
+                        <button id="clearAllBtn" style="background:#222; color:#ccc; border:1px solid #555; border-radius:3px; cursor:pointer; padding:3px 8px; font-size:11px;">🗑️ 全て削除</button>
+                    </div>
+                </div>
+                
+                <div id="violation-list">
+                    <div class="empty-state">
+                        まだチェックされていません。<br>
+                        上のボタンから実行してください。
+                    </div>
+                </div>
+
+                <hr>
+                <div style="text-align: center; padding-bottom: 20px;">
+                    <button id="addDummyBtn" class="btn-secondary">【テスト用】ダミー投稿を追加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings View -->
+        <div id="settings-view" class="view">
+            <div class="header">
+                <button id="goToMainBtn" class="icon-btn" style="font-size: 12px;" title="戻る">◀</button>
+                <h2>設定</h2>
+                <div style="width: 24px;"></div> <!-- Spacer -->
+            </div>
+
+            <div style="padding-top: 10px; padding-bottom: 20px;">
+                <div class="setting-item">
+            <label for="ui-theme" title="UIのカラーテーマを変更します">🎨 UIテーマ (デザイン):</label>
+            <select id="ui-theme" class="dmm-checker-select">
+                <option value="dra-dark" selected>D.R.A ダーク (黒×深い赤)</option>
+                <option value="cyber-green">サイバーグリーン (黒×ネオングリーン)</option>
+                <option value="ocean-blue">オーシャンブルー (紺色×爽やかな青)</option>
+                <option value="sunset-gold">サンセットゴールド (焦げ茶×高級感あるゴールド)</option>
+                <option value="light">モダンライト (白ベース・高視認性)</option>
+                <option value="tron-ares">サイバークリムゾン (漆黒×深紅)</option>
+            </select>
+        </div>
+                </div>
+
+                <!-- ② 入力項目の分離 -->
+                <div class="form-group">
+                    <label for="customRules">① 追加の審査ルール (文章):</label>
+                    <textarea id="customRules" class="form-control" placeholder="例: 他のサロンへの勧誘や誘導はすべてNG。"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="ngWords">② NGワード (単語の羅列):</label>
+                    <textarea id="ngWords" class="form-control" placeholder="例: 絶対儲かる, 詐欺, LINE追加" style="min-height: 60px;"></textarea>
+                </div>
+
+                <!-- ③ 除外ワード用テキストエリアを追加 -->
+                <div class="form-group">
+                    <label for="whiteWords">③ 除外ワード (この単語があれば安全とする):</label>
+                    <textarea id="whiteWords" class="form-control" placeholder="例: UFO, 瞑想, ヨガ" style="min-height: 50px; border-color: #81c995;"></textarea>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="form-group" style="margin-top: 15px; border-top: 1px dashed #444; padding-top: 15px;">
+                    <label for="discordWebhook">💬 Discord Webhook URL (Danger通知用):</label>
+                    <input type="text" id="discordWebhook" class="form-control" placeholder="https://discord.com/api/webhooks/..." />
+                    <div style="margin-top: 5px;">
+                        <label style="display: inline-flex; align-items: center; font-size: 12px; cursor: pointer;">
+                            <input type="checkbox" id="notifyEnabled" checked style="margin-right: 5px;" />
+                            通知をオンにする
+                        </label>
+                    </div>
+                </div>
+
+                <button id="saveBtn" class="btn-primary" style="margin-top: 10px;">設定を保存する</button>
+                <div id="save-status" class="status-msg"></div>
+
+                <hr style="margin-top: 30px;">
+                <div style="text-align: left;">
+                    <h4>📜 承認（セーフ）履歴一覧</h4>
+                    <p style="font-size: 11px; color: #aaa; margin-bottom: 8px;">過去に「✅ 承認」した書き込みです。解除すると再びスキャン対象になります。</p>
+                    <div id="safelist-container" style="max-height: 150px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; padding: 5px;">
+                        <div style="color: #666; font-size: 11px; text-align: center; padding: 10px;">履歴はありません</div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button id="resetSafeListBtn" class="btn-secondary" style="color: #ffb3b3; border-color: #cc0000; font-size: 11px;">⚠️ すべての承認履歴をリセットする</button>
+                        <div id="reset-status" class="status-msg" style="margin-top: 5px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
 </body>
-
 </html>

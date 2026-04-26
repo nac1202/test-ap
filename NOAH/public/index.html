@@ -373,6 +373,9 @@
           <span class="star-icon">★</span> 本日の運勢を占う <span class="star-icon">★</span>
         </a>
       </div>
+      <div id="guardian-cast-display" class="hidden" style="text-align:center; font-size:0.85rem; color:var(--text-secondary); margin-bottom: 0.5rem; letter-spacing: 0.05em;">
+        あなたの守護キャスト: <span id="guardian-cast-name" style="color:var(--text-primary); font-weight:bold;"></span>
+      </div>
       <div id="clock" class="clock"></div>
     </header>
 
@@ -666,7 +669,8 @@
       }
 
       // Intro Cast Check (Only once)
-      if (!localStorage.getItem('noa_intro_cast')) {
+      const introCastId = localStorage.getItem('noa_intro_cast');
+      if (!introCastId) {
         const introModal = document.getElementById('intro-cast-modal');
         if (introModal && introModal.classList.contains('hidden')) {
           const select = document.getElementById('intro-cast-select');
@@ -680,6 +684,14 @@
           if (Object.keys(castMaster).length > 0) {
             introModal.classList.remove('hidden');
           }
+        }
+      } else {
+        // Display guardian cast
+        const guardianCastEl = document.getElementById('guardian-cast-display');
+        if (guardianCastEl) {
+          const castName = castMaster[introCastId] || introCastId;
+          document.getElementById('guardian-cast-name').textContent = castName;
+          guardianCastEl.classList.remove('hidden');
         }
       }
 
