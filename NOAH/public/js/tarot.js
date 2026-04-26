@@ -19,13 +19,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // const shuffleSound = new Audio('/sounds/shuffle.mp3');
     // const flipSound = new Audio('/sounds/flip.mp3');
 
+    const instruction = document.querySelector('.instruction');
+
     // Check for existing result on load
     const savedResult = getStoredDailyResult();
     if (savedResult !== null) {
-        // Show result immediately
-        cardDeck.style.display = 'none';
-        resultContainer.classList.remove('hidden');
-        showResult(savedResult);
+        // すでに占っている場合は、タップで結果を表示するように変更（タップ時に別のSEを鳴らすため）
+        if (instruction) instruction.innerHTML = "タップして結果を確認";
+        cardDeck.addEventListener('click', () => {
+            if (isAnimating) return;
+            isAnimating = true;
+            playRevealSound();
+            
+            showResult(savedResult);
+            // Transition immediately without shuffling
+            cardDeck.style.opacity = '0';
+            setTimeout(() => {
+                cardDeck.style.display = 'none';
+                resultContainer.classList.remove('hidden');
+            }, 500);
+        });
     } else {
         // Wait for user interaction
         cardDeck.addEventListener('click', () => {
@@ -80,6 +93,57 @@ document.addEventListener('DOMContentLoaded', () => {
             gainWin.connect(audioCtx.destination);
             oscWin.start(t + 0.4);
             oscWin.stop(t + 1.5);
+        } catch(e) {
+            console.error('Audio play failed', e);
+        }
+    }
+
+    // すでに占った結果を開く時のSE（明るい和音＋キラッ）
+    function playRevealSound() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const t = audioCtx.currentTime;
+            
+            // Fリディアンのような明るい和音 [F5, A5, C6, E6] を一斉に鳴らす
+            const notes = [698.46, 880.00, 1046.50, 1318.51]; 
+            notes.forEach((freq) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, t);
+                
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.3, t + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(t);
+                osc.stop(t + 1.2);
+            });
+
+            // 短く素早いキラキラ音
+            const oscWin = audioCtx.createOscillator();
+            const gainWin = audioCtx.createGain();
+            oscWin.type = 'triangle';
+            oscWin.frequency.setValueAtTime(2637.02, t + 0.1); // E7
+            oscWin.frequency.exponentialRampToValueAtTime(3135.96, t + 0.3); // G7へ上昇
+            gainWin.gain.setValueAtTime(0, t + 0.1);
+            gainWin.gain.linearRampToValueAtTime(0.15, t + 0.15);
+            gainWin.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+            oscWin.connect(gainWin);
+            gainWin.connect(audioCtx.destination);
+            oscWin.start(t + 0.1);
+            oscWin.stop(t + 0.8);
+
         } catch(e) {
             console.error('Audio play failed', e);
         }
