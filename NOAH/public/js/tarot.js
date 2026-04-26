@@ -215,9 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = tarotDeck[cardIndex];
 
         cardNumber.textContent = card.number;
-        // cardName & cardNameJs elements were removed from HTML
-        // cardName.textContent = card.name;
-        // if (cardNameJs) cardNameJs.textContent = card.nameJs;
+        const cardName = document.getElementById('card-name');
+        const cardNameJs = document.getElementById('card-name-js');
+        if (cardName) cardName.textContent = card.name;
+        if (cardNameJs) cardNameJs.textContent = card.nameJs;
         // cardSymbol.textContent = '★'; 
         cardSymbol.textContent = card.number;
 
