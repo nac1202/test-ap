@@ -340,6 +340,7 @@
 
 /* New Caption Style */
 .card-caption {
+    display: none; /* 一時的に非表示（画像差し替え時に外す） */
     font-family: var(--font-serif);
     font-size: 1.15rem;
     color: #e8cca1; /* 落ち着いた明るいゴールド */
