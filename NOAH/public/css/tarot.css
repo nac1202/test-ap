@@ -357,7 +357,12 @@
     margin-right: auto;
 }
 
+.card-text-overlay {
+    display: none !important; /* 一時的にテキストオーバーレイ全体（背景グラデーション含む）を非表示 */
+}
+
 .card-caption-ja {
+    display: none; /* 一時的に非表示 */
     font-family: var(--font-serif);
     font-size: 0.95rem;
     color: var(--text-primary);
