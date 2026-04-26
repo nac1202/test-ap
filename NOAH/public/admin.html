@@ -550,8 +550,10 @@
 
           const info = document.createElement('div');
           const typeLabel = (r.type === 'counter') ? 'C' : 'B';
+          const introCastName = r.introCast ? (master[r.introCast] || r.introCast) : '';
+          const introHtml = introCastName ? `<span style="margin-left: 0.5rem; color:#e94560; font-size:0.8rem; font-weight:bold;">[紹介: ${introCastName}]</span>` : '';
           info.innerHTML = `
-                <div style="font-weight:bold;">${r.time} ${r.name}様 (${typeLabel}:${r.count}名)</div>
+                <div style="font-weight:bold;">${r.time} ${r.name}様 (${typeLabel}:${r.count}名)${introHtml}</div>
                 <div style="font-size:0.8rem; color:#aaa;">${r.contact || ''}</div>
               `;
 

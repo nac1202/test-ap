@@ -542,7 +542,6 @@
         </form>
       </div>
     </div>
-    </div>
 
     <!-- Success Modal -->
     <div id="success-modal" class="modal hidden">
@@ -550,6 +549,20 @@
         <h3 style="color:#e94560; margin-bottom:1rem;">予約完了</h3>
         <p id="success-message" class="modal-message"></p>
         <button class="modal-ok-btn" onclick="closeSuccessModal()">閉じる</button>
+      </div>
+    </div>
+
+    <!-- Intro Cast Modal -->
+    <div id="intro-cast-modal" class="modal hidden" style="z-index: 3000;">
+      <div class="modal-content">
+        <h3 style="color:#e94560; margin-bottom:1rem; font-size:1.2rem; line-height:1.4;">NOAを紹介してくれた<br>キャストを教えてください</h3>
+        <p style="font-size:0.8rem; color:#aaa; margin-bottom:1rem;">※この画面は初回起動時のみ表示されます。</p>
+        <div class="form-group">
+          <select id="intro-cast-select" style="font-size:1.1rem; padding:0.8rem; text-align:center;">
+            <!-- Dynamic -->
+          </select>
+        </div>
+        <button class="modal-ok-btn" onclick="saveIntroCast()" style="margin-top:1rem; width:100%; padding:0.8rem; font-size:1rem;">保存して進む</button>
       </div>
     </div>
   </main>
@@ -650,6 +663,24 @@
         document.getElementById('mama-title').textContent = mamaTitle || 'みりゅうママからの伝言';
       } else {
         document.getElementById('mama-message-section').classList.add('hidden');
+      }
+
+      // Intro Cast Check (Only once)
+      if (!localStorage.getItem('noa_intro_cast')) {
+        const introModal = document.getElementById('intro-cast-modal');
+        if (introModal && introModal.classList.contains('hidden')) {
+          const select = document.getElementById('intro-cast-select');
+          select.innerHTML = '';
+          Object.keys(castMaster).forEach(id => {
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = castMaster[id];
+            select.appendChild(opt);
+          });
+          if (Object.keys(castMaster).length > 0) {
+            introModal.classList.remove('hidden');
+          }
+        }
       }
 
       // Always render weekly schedule regardless of state
@@ -866,6 +897,14 @@
       document.getElementById('success-modal').classList.add('hidden');
     }
 
+    function saveIntroCast() {
+      const select = document.getElementById('intro-cast-select');
+      if (select && select.value) {
+        localStorage.setItem('noa_intro_cast', select.value);
+        document.getElementById('intro-cast-modal').classList.add('hidden');
+      }
+    }
+
     async function submitReservation() {
       const date = document.getElementById('res-date-label').textContent;
       const name = document.getElementById('res-name').value;
@@ -889,12 +928,15 @@
         console.log('LIFF info skipped:', e);
       }
 
+      // Retrieve introCast
+      const introCast = localStorage.getItem('noa_intro_cast') || '';
+
       try {
         const res = await fetch('/api/reserve', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            date, name, type, count, time, contact, lineUserId
+            date, name, type, count, time, contact, lineUserId, introCast
           })
         });
         const json = await res.json();

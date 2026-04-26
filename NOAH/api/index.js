@@ -247,7 +247,7 @@ app.post('/api/status-v2', authMiddleware, async (req, res) => {
 // Reservation API (Public/LIFF)
 app.post('/api/reserve', async (req, res) => {
     try {
-        const { date, name, type, count, time, contact, lineUserId } = req.body;
+        const { date, name, type, count, time, contact, lineUserId, introCast } = req.body;
 
         // Basic Validation
         if (!date || !name || !type || !count) {
@@ -291,6 +291,7 @@ app.post('/api/reserve', async (req, res) => {
             time: time || '18:00',
             contact: contact || '',
             lineUserId: lineUserId || '',
+            introCast: introCast || '',
             createdAt: new Date().toISOString()
         };
 

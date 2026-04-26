@@ -803,8 +803,7 @@ a:hover {
 /* Themes */
 body.theme-normal {
   background-color: var(--bg-color);
-  --logo-fill: #fff;
-  /* デフォルトのロゴ色（白） */
+  /* デフォルトのロゴ色指定を削除済 */
 }
 
 /* Common Theme Background Settings */
