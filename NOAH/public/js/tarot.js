@@ -24,21 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check for existing result on load
     const savedResult = getStoredDailyResult();
     if (savedResult !== null) {
-        // すでに占っている場合は、タップで結果を表示するように変更（タップ時に別のSEを鳴らすため）
-        if (instruction) instruction.innerHTML = "タップして結果を確認";
-        cardDeck.addEventListener('click', () => {
-            if (isAnimating) return;
-            isAnimating = true;
-            playRevealSound();
-            
-            showResult(savedResult);
-            // Transition immediately without shuffling
-            cardDeck.style.opacity = '0';
-            setTimeout(() => {
-                cardDeck.style.display = 'none';
-                resultContainer.classList.remove('hidden');
-            }, 500);
-        });
+        // すでに占っている場合は、即座に結果を表示する
+        cardDeck.style.display = 'none';
+        resultContainer.classList.remove('hidden');
+        showResult(savedResult);
+        
+        // ブラウザ次第で許可されればSEを鳴らす
+        playRevealSound();
     } else {
         // Wait for user interaction
         cardDeck.addEventListener('click', () => {
