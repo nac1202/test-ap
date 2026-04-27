@@ -44,3 +44,5 @@
 | XIX | **THE SUN** | 太陽 | 成功・祝福 | A large sun with a face shining down on a child riding a white horse, holding a red banner. |
 | XX | **JUDGEMENT** | 審判 | 復活・決断 | An angel blowing a trumpet in the sky, people rising from graves or water below with arms raised. |
 | XXI | **THE WORLD** | 世界 | 完成・達成 | A figure dancing inside a laurel wreath, surrounded by the four living creatures (angel, eagle, lion, bull). |
+| GD | **GUARDIAN DEITY** | 守護神 | 絶対守護・無条件の愛 | A happy brown dog in center, two scops owls on branches, two ball pythons (white and tan) intertwined in background, surrounded by holy beasts spirits. |
+| SP | **THE SANCTUARY** | 運命のオアシス | 最高の縁・繁栄 | A gorgeous, elegant goddess-like woman with a gentle smile in a mystical oasis, welcoming the viewer, surrounded by blooming glowing flowers and golden stardust. |

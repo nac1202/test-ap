@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check for existing result on load
     const savedResult = getStoredDailyResult();
     if (savedResult !== null) {
+        // コレクションに追加（すでに引いている今日のカードが未登録なら登録）
+        saveToCollection(savedResult);
         // すでに占っている場合は、即座に結果を表示する
         cardDeck.style.display = 'none';
         resultContainer.classList.remove('hidden');
@@ -177,20 +179,109 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getOrGenerateDailyResult() {
         const existing = getStoredDailyResult();
-        if (existing !== null) return existing;
+        if (existing !== null) {
+            saveToCollection(existing);
+            return existing;
+        }
 
         const STORAGE_KEY = 'noa_tarot_v1';
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`; // YYYY-M-D
 
-        // Generate new random result
-        const newIndex = Math.floor(Math.random() * tarotDeck.length);
+        // --- SP Card & Guardian Deity Probability Logic ---
+        // Currently 24 cards in deck (0-21: standard, 22: Guardian(SP), 23: Sanctuary(SP)).
+        // Standard count is 22 (draws 0 to 21).
+        const standardCardCount = 22; 
+        
+        let resCount = parseInt(localStorage.getItem('noa_reservation_count') || '0', 10);
+        let spProbability = 0.01; // Base 1%
+        spProbability += (resCount * 0.005); // +0.5% per reservation
+        if (spProbability > 0.15) spProbability = 0.15; // Max 15%
+
+        let newIndex;
+        let rand = Math.random();
+
+        if (tarotDeck.length > 23 && rand < spProbability) {
+            // Draw THE SANCTUARY (SP)
+            newIndex = 23;
+        } else if (tarotDeck.length > 22 && rand < (spProbability * 2)) {
+            // Draw GUARDIAN DEITY (SP)
+            newIndex = 22;
+        } else {
+            // Draw standard card (0 to 21)
+            newIndex = Math.floor(Math.random() * standardCardCount);
+        }
+
         const newData = {
             date: todayStr,
             cardIndex: newIndex
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+        
+        // --- コレクションに追加 ---
+        saveToCollection(newIndex);
+        
         return newIndex;
+    }
+
+    // コレクション保存ロジック
+    function saveToCollection(cardIndex) {
+        const COLLECTION_KEY = 'noa_tarot_collection';
+        const STATS_KEY = 'noa_tarot_stats';
+
+        let collection = [];
+        try {
+            const stored = localStorage.getItem(COLLECTION_KEY);
+            if (stored) {
+                collection = JSON.parse(stored);
+            }
+        } catch(e) {}
+
+        let stats = {};
+        try {
+            const storedStats = localStorage.getItem(STATS_KEY);
+            if (storedStats) stats = JSON.parse(storedStats);
+        } catch(e) {}
+
+        // 統計情報の更新（1日1回だけカウントアップする）
+        const now = new Date();
+        const todayPrefix = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+        const dateTimeStr = `${todayPrefix} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+        if (!stats[cardIndex]) {
+            stats[cardIndex] = { count: 0, dates: [] };
+        }
+
+        const alreadyDrawnToday = stats[cardIndex].dates.some(d => d.startsWith(todayPrefix));
+        if (!alreadyDrawnToday) {
+            stats[cardIndex].count += 1;
+            stats[cardIndex].dates.push(dateTimeStr);
+            // 履歴が増えすぎないように直近20回までに制限（必要に応じて）
+            if (stats[cardIndex].dates.length > 20) {
+                stats[cardIndex].dates.shift();
+            }
+            localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+        }
+
+        // コレクションのアンロック処理
+        if (!collection.includes(cardIndex)) {
+            collection.push(cardIndex);
+            // 昇順にソートしておく
+            collection.sort((a, b) => a - b);
+            localStorage.setItem(COLLECTION_KEY, JSON.stringify(collection));
+            
+            // コンプリート判定 (全24枚予定)
+            if (collection.length === 24) {
+                triggerCompletionEffect();
+            }
+        }
+    }
+
+    function triggerCompletionEffect() {
+        setTimeout(() => {
+            // とりあえずアラートでお祝い。後からリッチな演出を追加可能
+            alert("【Congratulations!】\n全24枚のタロットカードをすべてコンプリートしました！\nカードコレクション画面から、すべてのカードをご確認いただけます。");
+        }, 1500);
     }
 
     function drawCard() {

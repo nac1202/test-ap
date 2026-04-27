@@ -179,6 +179,7 @@
     perspective: 1000px;
     position: relative;
     /* Adjust for caption */
+    margin-top: 1.5rem;
     margin-bottom: 1rem;
     animation: float 6s ease-in-out infinite;
     /* Floating effect */
