@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>GMOコイン専用 プレミアム自動売買AIシステム『くりぷとくん』導入提案資料</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+  <!-- テーマとして black をベースにカスタムCSSで近未来風にアレンジ -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/black.min.css" id="theme">
+  <!-- コードハイライト用スタイル -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --r-main-font: 'Outfit', 'Noto Sans JP', sans-serif;
+      --r-heading-font: 'Outfit', 'Noto Sans JP', sans-serif;
+      --color-cyan: #00f0ff; /* サイバーネオンブルー */
+      --color-green: #00ff88; /* ネオングリーン */
+      --color-pink: #ff3366; /* ネオンピンク（FX/警告色） */
+      --color-dark-bg: #090b11; /* 深い宇宙・サイバー空間の背景 */
+      --color-card-bg: rgba(255, 255, 255, 0.04);
+      --color-text-light: #ffffff;
+      --color-text-muted: #8e95ac;
+    }
+
+    body {
+      background-color: var(--color-dark-bg);
+      font-family: var(--r-main-font);
+      color: var(--color-text-light);
+    }
+
+    .reveal {
+      font-family: var(--r-main-font);
+      color: var(--color-text-light);
+    }
+
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+      font-family: var(--r-heading-font);
+      text-transform: none;
+      word-wrap: break-word;
+      color: var(--color-text-light);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    /* 各スライド領域のパディング（縦方向の切れを防ぐため縮小） */
+    .reveal .slides section {
+      padding: 15px 25px;
+      box-sizing: border-box;
+    }
+
+    /* ネオン文字効果 */
+    .glow-cyan {
+      color: var(--color-cyan) !important;
+      text-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+    }
+    .glow-green {
+      color: var(--color-green) !important;
+      text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+    }
+    .glow-pink {
+      color: var(--color-pink) !important;
+      text-shadow: 0 0 15px rgba(255, 51, 102, 0.6);
+    }
+
+    /* グリッドカードレイアウト（縦切れ防止のため余白・ギャップを縮小） */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 15px;
+    }
+
+    /* Glassmorphism カードスタイル（パディングと余白を詰めて縦幅をコンパクトに） */
+    .card {
+      background: var(--color-card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 16px 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+      text-align: left;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: var(--color-cyan);
+      box-shadow: 0 10px 30px rgba(0, 240, 255, 0.15);
+    }
+    
+    .card-warn {
+      border-left: 4px solid var(--color-pink);
+    }
+    .card-warn:hover {
+      border-color: var(--color-pink);
+      box-shadow: 0 10px 30px rgba(255, 51, 102, 0.15);
+    }
+
+    .card-success {
+      border-left: 4px solid var(--color-green);
+    }
+    .card-success:hover {
+      border-color: var(--color-green);
+      box-shadow: 0 10px 30px rgba(0, 255, 136, 0.15);
+    }
+
+    .card h4 {
+      margin-top: 0 !important;
+      margin-bottom: 8px !important;
+      font-size: 0.95em !important;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .card p {
+      font-size: 0.72em !important;
+      line-height: 1.5 !important;
+      margin: 0 !important;
+      color: #b0b7ce;
+    }
+
+    /* 数字バッジ */
+    .card-num {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75em;
+      font-weight: bold;
+    }
+    .card-warn .card-num {
+      background: rgba(255, 51, 102, 0.2);
+      color: var(--color-pink);
+    }
+
+    /* 特徴リスト（余白とフォントサイズを調整） */
+    .feature-list {
+      list-style: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    .feature-list li {
+      position: relative;
+      padding-left: 28px !important;
+      margin-bottom: 12px !important;
+      font-size: 0.78em !important;
+      line-height: 1.5 !important;
+      color: #b0b7ce;
+    }
+    .feature-list li strong {
+      color: #fff;
+    }
+    .feature-list li::before {
+      content: "\f00c";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      position: absolute;
+      left: 0;
+      top: 2px;
+      color: var(--color-green);
+      font-size: 0.9em;
+    }
+
+    /* 表紙のフレーム付きコンテナ */
+    .title-slide-content {
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      padding: 40px;
+      border-radius: 20px;
+      background: rgba(0, 240, 255, 0.01);
+      backdrop-filter: blur(8px);
+      box-shadow: inset 0 0 30px rgba(0, 240, 255, 0.05), 0 15px 40px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    
+    .title-slide-content::before {
+      content: "";
+      position: absolute;
+      top: -2px; left: -2px; right: -2px; bottom: -2px;
+      background: linear-gradient(135deg, var(--color-cyan), transparent, var(--color-green));
+      border-radius: 20px;
+      z-index: -1;
+      padding: 1px;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* 暗い背景装飾用の光球 */
+    .bg-glow {
+      position: absolute;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    /* 発表者メモ用フローティングパネル */
+    #custom-notes-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(9, 11, 17, 0.98);
+      color: #fff;
+      padding: 15px 25px;
+      box-sizing: border-box;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      border-top: 3px solid var(--color-cyan);
+      z-index: 999;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      max-height: 25vh;
+      overflow-y: auto;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.5);
+      text-align: left;
+    }
+    #custom-notes-panel.show {
+      transform: translateY(0);
+    }
+    #custom-notes-title {
+      font-weight: bold;
+      color: var(--color-cyan);
+      margin-bottom: 6px;
+      font-family: var(--r-main-font);
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+    }
+    #custom-notes-content {
+      font-size: 0.85em;
+      color: #d2d8e8;
+    }
+    
+    /* 発表者メモ表示用ボタン（潰れ・重なり対策） */
+    #toggle-notes-btn {
+      position: fixed;
+      bottom: 25px;
+      left: 25px;
+      z-index: 1000;
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--color-cyan);
+      border: 1px solid var(--color-cyan);
+      padding: 8px 16px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-family: var(--r-main-font);
+      font-size: 0.8rem;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+      min-width: 140px;
+      justify-content: center;
+    }
+    #toggle-notes-btn:hover {
+      background: var(--color-cyan);
+      color: var(--color-dark-bg);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.4);
+    }
+    #toggle-notes-btn i {
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- スライド1：タイトル -->
+      <section data-background-gradient="radial-gradient(circle, #131726 0%, #06070a 100%)">
+        <div class="bg-glow" style="top: -100px; left: -100px;"></div>
+        <div class="bg-glow" style="bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(0, 255, 136, 0.06) 0%, transparent 70%);"></div>
+        
+        <div class="title-slide-content">
+          <p class="glow-cyan" style="font-size: 0.85em; letter-spacing: 0.25em; font-weight: 600; margin-bottom: 15px; text-transform: uppercase;">相場に張り付く日々は、もう終わり。</p>
+          <h2 style="font-size: 1.85em; line-height: 1.35; font-weight: 800; margin-bottom: 20px;">
+            GMOコイン専用 自動売買AIシステム<br>
+            <span class="glow-cyan">『くりぷとくん』</span>
+          </h2>
+          <hr style="border-color: rgba(0, 240, 255, 0.2); width: 30%; margin: 20px auto;">
+          <p style="font-size: 0.78em; color: var(--color-text-muted); letter-spacing: 0.08em; margin: 0;">
+            プロの投資ロジック ✖ 最先端AIによる24時間完全自動資産運用
+          </p>
+        </div>
+        
+        <aside class="notes">
+          本日は、GMOコインに完全直結し、感情を一切排除して24時間あなたの代わりにビットコインを自動売買するプレミアムAIシステム「くりぷとくん」のご紹介をさせていただきます。
+        </aside>
+      </section>
+
+      <!-- スライド2：よくある個人投資家の悩み -->
+      <section data-background-color="#090b11">
+        <h3 style="font-size: 1.2em; border-bottom: 2px solid var(--color-cyan); padding-bottom: 8px; display: inline-block; margin-bottom: 5px; margin-top: 0;" class="glow-cyan">暗号資産（仮想通貨）投資のよくある課題</h3>
+        <p style="font-size: 0.7em; margin-bottom: 10px; color: var(--color-text-muted);">多くの個人投資家が、以下のようなプレッシャーや失敗に直面しています。</p>
+        
+        <div class="grid-container">
+          <div class="card card-warn">
+            <h4><span class="card-num"><i class="fa-solid fa-bed-pulse"></i></span> 眠れない・相場依存</h4>
+            <p>暗号資産は24時間365日動くため、深夜や早朝の急変動が心配で、スマホ画面が手放せず精神的に疲弊してしまう。</p>
+          </div>
+          <div class="card card-warn">
+            <h4><span class="card-num"><i class="fa-solid fa-heart-crack"></i></span> 感情トレードによる損失</h4>
+            <p>焦りや欲などの感情に流され、最も高値のタイミングで「高値づかみ」し、一時的な下落で慌てて「損切り」してしまう。</p>
+          </div>
+          <div class="card card-warn">
+            <h4><span class="card-num"><i class="fa-solid fa-gears"></i></span> 自動ボットの導入難易度</h4>
+            <p>世の中の自動売買は難解なプログラミングや複雑な設定ファイルが必要で、初心者にはハードルが高すぎる。</p>
+          </div>
+          <div class="card card-warn">
+            <h4><span class="card-num"><i class="fa-solid fa-lock-open"></i></span> セキュリティと資金流出不安</h4>
+            <p>海外の怪しいシステムに自分の大切な資金（プライベートキー等）を預けるのは非常にリスクが高く恐怖を感じる。</p>
+          </div>
+        </div>
+        
+        <aside class="notes">
+          ビットコインは値動きが非常に激しく、仕事中や夜間でも相場が急変動します。結果として感情に左右された無駄な売買を行ってしまい、資産をすり減らしてしまう個人投資家が後を絶ちません。
+        </aside>
+      </section>
+
+      <!-- スライド3：解決策としての『くりぷとくん』 -->
+      <section data-background-color="#090b11">
+        <h3 style="font-size: 1.2em; border-bottom: 2px solid var(--color-cyan); padding-bottom: 8px; display: inline-block; margin-bottom: 20px; margin-top: 0;" class="glow-cyan">解決策：GMOコイン専用AI自動売買『くりぷとくん』</h3>
+        <p style="font-size: 0.8em; margin-bottom: 25px; font-weight: 400; line-height: 1.6; color: #fff;">
+          感情を一切挟まず、安全な日本国内の取引所口座と連携し、<br>
+          <strong class="glow-cyan" style="font-size: 1.15em;">24時間365日、プロのトレードロジックを全自動で実行</strong>し続けます。
+        </p>
+
+        <div style="display: flex; justify-content: space-around; align-items: stretch; gap: 20px;">
+          <div class="card card-success" style="flex: 1; text-align: center; border-left: none; border-top: 4px solid var(--color-green); padding: 16px;">
+            <div style="font-size: 1.8em; color: var(--color-green); margin-bottom: 10px;"><i class="fa-solid fa-clock"></i></div>
+            <h5 style="margin: 0 0 8px 0; font-size: 0.9em; font-weight: bold; color: #fff;">24時間 機会損失ゼロ</h5>
+            <p style="font-size: 0.7em; text-align: left; line-height: 1.4;">睡眠中、仕事中、旅行中であっても、AIがミリ秒単位で市場のチャンスを監視し、最適な売買を実行。</p>
+          </div>
+          <div class="card card-success" style="flex: 1; text-align: center; border-left: none; border-top: 4px solid var(--color-cyan); padding: 16px;">
+            <div style="font-size: 1.8em; color: var(--color-cyan); margin-bottom: 10px;"><i class="fa-solid fa-shield-halved"></i></div>
+            <h5 style="margin: 0 0 8px 0; font-size: 0.9em; font-weight: bold; color: #fff;">徹底した安全・資金管理</h5>
+            <p style="font-size: 0.7em; text-align: left; line-height: 1.4;">一括全額買いはしません。「分割購入（ナンピン）」と「強制上限」で、下落リスクをコントロールする安心設計。</p>
+          </div>
+          <div class="card card-success" style="flex: 1; text-align: center; border-left: none; border-top: 4px solid #ab47bc; padding: 16px;">
+            <div style="font-size: 1.8em; color: #ab47bc; margin-bottom: 10px;"><i class="fa-solid fa-mobile-screen-button"></i></div>
+            <h5 style="margin: 0 0 8px 0; font-size: 0.9em; font-weight: bold; color: #fff;">直感的な極上UI</h5>
+            <p style="font-size: 0.7em; text-align: left; line-height: 1.4;">プログラミング知識ゼロでOK。スマホから簡単にAIの動作状況の確認や、ワンタップ設定変更が行えます。</p>
+          </div>
+        </div>
+
+        <aside class="notes">
+          『くりぷとくん』は、単なる投機的なボットではありません。ユーザーの資金安全を最優先にし、プロのファンドマネージャーと同等の資金管理戦略を自動化したシステムです。
+        </aside>
+      </section>
+
+      <!-- スライド4：特徴① プロ仕様の資金管理（分割エントリー方式） -->
+      <section data-background-color="#090b11">
+        <h3 style="font-size: 1.2em; border-bottom: 2px solid var(--color-cyan); padding-bottom: 8px; display: inline-block; margin-bottom: 5px; margin-top: 0;" class="glow-cyan">特徴① プロ仕様の資金管理（分割エントリー方式）</h3>
+        <p style="font-size: 0.75em; font-weight: 500; color: var(--color-green); margin-bottom: 20px;">「一度に買わず、徐々に買い、一気に売る」ことでリスクを圧倒的に低減</p>
+        
+        <div style="display: flex; gap: 30px; align-items: center; text-align: left;">
+          <div style="flex: 1.2;">
+            <ul class="feature-list">
+              <li><strong>安全な「打診買い / ナンピン」:</strong> 買いシグナル時、予算のわずか**20%**のみを購入。下落した場合は、安い価格帯で自動的に追加購入し、平均取得単価を安全に引き下げます。</li>
+              <li><strong>安心の「フルポジ制限」:</strong> 保有資産が予算の**85%**を超えたら、それ以上の追加買いをストップ。相場の底なし沼に資金を使い果たすことを防ぎます。</li>
+              <li><strong>確実な「全額決済クリア」:</strong> 売りシグナル（利確または損切り）が出た際は、中途半端に残さず保有BTCを**全量即売却**し、安全な日本円資産へとリセットします。</li>
+            </ul>
+          </div>
+          <div style="flex: 0.8; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); text-align: center;">
+            <div style="padding: 5px 0;">
+              <div style="font-size: 0.9em; font-weight: bold; color: var(--color-green);"><i class="fa-solid fa-arrow-down-short-wide" style="margin-right: 6px;"></i> 分割買い (20%ずつ)</div>
+              <div style="font-size: 1.1em; color: rgba(255,255,255,0.15); margin: 6px 0;"><i class="fa-solid fa-arrow-down-long"></i></div>
+              <div style="font-size: 0.9em; font-weight: bold; color: var(--color-cyan);"><i class="fa-solid fa-shield" style="margin-right: 6px;"></i> フルポジ上限 (85%規制)</div>
+              <div style="font-size: 1.1em; color: rgba(255,255,255,0.15); margin: 6px 0;"><i class="fa-solid fa-arrow-down-long"></i></div>
+              <div style="font-size: 0.9em; font-weight: bold; color: var(--color-pink);"><i class="fa-solid fa-coins" style="margin-right: 6px;"></i> 全量売却 (日本円へ)</div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="notes">
+          一括全額購入は、最高値で捕まった際のリスクが極めて大きくなります。くりぷとくんは2万円（20%）ずつ小分けに買うため、相場が下がったときにも安値で買い増すことができ、最終的に利確しやすくなります。
+        </aside>
+      </section>
+
+      <!-- スライド5：特徴② 感情を排除した「AIの頭脳」（3大指標連動） -->
+      <section data-background-color="#090b11">
+        <h3 style="font-size: 1.2em; border-bottom: 2px solid var(--color-cyan); padding-bottom: 8px; display: inline-block; margin-bottom: 5px; margin-top: 0;" class="glow-cyan">特徴② 感情を排除した「AIの頭脳」</h3>
+        <p style="font-size: 0.75em; font-weight: 500; color: var(--color-cyan); margin-bottom: 20px;">5分足チャートを常時監視し、3つの指標から最適なシグナルを抽出</p>
+
+        <div style="display: flex; gap: 16px; text-align: left;">
+          <div class="card" style="flex: 1; border-top: 4px solid var(--color-cyan); padding: 16px;">
+            <h5 style="margin: 0 0 8px 0; font-size: 0.9em; color: #fff;"><i class="fa-solid fa-chart-line glow-cyan"></i> RSI (相対力指数)</h5>
+            <p style="font-size: 0.68em; line-height: 1.4;">市場の「買われすぎ（天井）」「売られすぎ（底値）」を数値化。統計上の行き過ぎを検知します。</p>
+          </div>
+          <div class="card" style="flex: 1; border-top: 4px solid var(--color-green); padding: 16px;">
+            <h5 style="margin: 0 0 8px 0; font-size: 0.9em; color: #fff;"><i class="fa-solid fa-arrows-split-up-and-left glow-green"></i> MACD ヒスト</h5>
+            <p style="font-size: 0.68em; line-height: 1.4;">トレンド転換点（ゴールデン／デッドクロス）を検知。勢いが出た瞬間を逃しません。</p>
+          </div>
+          <div class="card" style="flex: 1; border-top: 4px solid var(--color-pink); padding: 16px;">
+            <h5 style="margin: 0 0 8px 0; font-size: 0.9em; color: #fff;"><i class="fa-solid fa-triangle-exclamation glow-pink"></i> Fear & Greed</h5>
+            <p style="font-size: 0.68em; line-height: 1.4;">市場の極端な「強欲（バブル状態）」を監視し、天井高値づかみを自動で回避します。</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 15px; padding: 10px; background: rgba(0, 240, 255, 0.03); border-radius: 8px; border: 1px dashed var(--color-cyan); font-size: 0.7em; color: var(--color-cyan); font-weight: 500; text-align: center;">
+          <i class="fa-solid fa-magnifying-glass-chart" style="margin-right: 6px;"></i> 「RSI 45未満」かつ「MACD上昇転換」かつ「Fear & Greed 75未満」の全条件一致で購入を実行。
+        </div>
+
+        <aside class="notes">
+          くりぷとくんは、テクニカル分析（RSI・MACD）に加えて、市場心理（Fear & Greed Index）を取り入れているのが特徴です。これにより、世間が仮想通貨で盛り上がっている最悪の高値圏での購入を自動で抑制します。
+        </aside>
+      </section>
+
+      <!-- スライド6：特徴③ 現物＆FX空売りの「ツインエンジン」 -->
+      <section data-background-color="#090b11">
+        <h3 style="font-size: 1.2em; border-bottom: 2px solid var(--color-cyan); padding-bottom: 8px; display: inline-block; margin-bottom: 5px; margin-top: 0;" class="glow-cyan">特徴③ 現物＆FX空売りの「ツインエンジン」</h3>
+        <p style="font-size: 0.75em; font-weight: 500; color: var(--color-cyan); margin-bottom: 20px;">上昇局面でも下落局面でも、あらゆる相場を利益チャンスに変える</p>
+
+        <div style="display: flex; gap: 20px; text-align: left;">
+          <!-- Spot -->
+          <div class="card" style="flex: 1; border-left: 4px solid var(--color-green); background: rgba(0, 255, 136, 0.01); padding: 16px 20px;">
+            <h4 style="color: var(--color-green); font-size: 1.05em;"><i class="fa-solid fa-circle-arrow-up"></i> 🟢 現物（Spot）買い特命部隊</h4>
+            <p style="font-size: 0.72em; line-height: 1.5; color: #d2d8e8; margin-bottom: 8px;">
+              相場の上昇時に実力を発揮。底値圏で現物を安く分割購入し、上昇トレンドに乗って最高値付近で全額利確します。
+            </p>
+            <ul style="font-size: 0.65em; color: #a0a8c0; padding-left: 15px; line-height: 1.5;">
+              <li>スプレッドの狭い「GMOコイン取引所現物」を使用</li>
+              <li>レバレッジなしの安全な現物保有</li>
+            </ul>
+          </div>
+          <!-- FX -->
+          <div class="card" style="flex: 1; border-left: 4px solid var(--color-pink); background: rgba(255, 51, 102, 0.01); padding: 16px 20px;">
+            <h4 style="color: var(--color-pink); font-size: 1.05em;"><i class="fa-solid fa-circle-arrow-down"></i> 🔴 FX（証拠金）空売り特命部隊</h4>
+            <p style="font-size: 0.72em; line-height: 1.5; color: #d2d8e8; margin-bottom: 8px;">
+              相場の下落トレンド転換を検知し、「空売り（ショート）」を仕掛けます。暴落時でも、資産を守りながら増やせます。
+            </p>
+            <ul style="font-size: 0.65em; color: #a0a8c0; padding-left: 15px; line-height: 1.5;">
+              <li>RSI高値から下落トレンドへの反転を契機にエントリー</li>
+              <li>証拠金管理を行い、レバレッジ上限を抑えた安全運用</li>
+            </ul>
+          </div>
+        </div>
+
+        <aside class="notes">
+          従来の自動売買は「買い」だけを行うものが多く、ビットコインが下落トレンドに入ると塩漬けになってしまいます。くりぷとくんはFXの「空売り（ショート）」も自動で仕掛けるため、どんな相場状況でも利益を追求できます。
+        </aside>
+      </section>
+
+      <!-- スライド7：特徴④ 初心者向けワンタッチ設定と絶対防衛 -->
+      <section data-background-color="#090b11">
+        <h3 style="font-size: 1.2em; border-bottom: 2px solid var(--color-cyan); padding-bottom: 8px; display: inline-block; margin-bottom: 5px; margin-top: 0;" class="glow-cyan">特徴④ 初心者向け設定と絶対防衛システム</h3>
+        <p style="font-size: 0.75em; font-weight: 500; color: var(--color-cyan); margin-bottom: 20px;">直感的に操作できるダッシュボードと、最悪の事態を防ぐ安全弁</p>
+
+        <div style="display: flex; gap: 24px; text-align: left; align-items: center;">
+          <div style="flex: 1.1;">
+            <ul class="feature-list">
+              <li><strong>ワンタッチ運用プリセット:</strong> 「🛡️ 安全」「⚖️ 標準」「🔥 攻め」から自分のリスク許容度に合わせてボタン一つで設定をAIに自動反映。</li>
+              <li><strong>絶対防衛損切りライン:</strong> 含み損が設定割合（例: 5%）に達した瞬間、全建玉を強制ストップロス（決済）。予期せぬ超大暴落から資産を守ります。</li>
+              <li><strong>リアルタイム可視化:</strong> スマホやPCから、現在の資産総額、保有BTC、AIの行動ログ、市場指標をリアルタイムに可視化。</li>
+            </ul>
+          </div>
+          <div style="flex: 0.9; display: flex; flex-direction: column; gap: 10px;">
+            <div style="background: rgba(0, 240, 255, 0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.15);">
+              <div style="font-size: 0.75em; font-weight: bold; color: var(--color-cyan); margin-bottom: 5px;"><i class="fa-solid fa-sliders"></i> 初心者向けプリセット</div>
+              <div style="display: flex; gap: 6px; font-size: 0.65em;">
+                <span style="background: #2e7d32; padding: 2px 6px; border-radius: 4px; color: #fff;">🛡️ 安全重視</span>
+                <span style="background: #1565c0; padding: 2px 6px; border-radius: 4px; color: #fff;">⚖️ 標準</span>
+                <span style="background: #c62828; padding: 2px 6px; border-radius: 4px; color: #fff;">🔥 攻め</span>
+              </div>
+            </div>
+            <div style="background: rgba(255, 51, 102, 0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(255, 51, 102, 0.15);">
+              <div style="font-size: 0.75em; font-weight: bold; color: var(--color-pink); margin-bottom: 5px;"><i class="fa-solid fa-shield-heart"></i> 絶対防衛損切り</div>
+              <div style="font-size: 0.65em; color: #d2d8e8; line-height: 1.3;">
+                含み損が指定した%に到達した瞬間、全建玉を強制清算し、致命傷を確実に防ぎます。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="notes">
+          システム設定は、スライダーや数値入力で自分好みに微調整可能ですが、初心者の方でも迷わないように、安全・標準・攻めの「ワンタッチ設定」を用意しています。また、絶対防衛損切り機能により、最大損失を最初から自分で決定・コントロールできます。
+        </aside>
+      </section>
+
+      <!-- スライド8：安全・安心の国内口座直結設計 -->
+      <section data-background-color="#090b11">
+        <h3 style="font-size: 1.2em; border-bottom: 2px solid var(--color-cyan); padding-bottom: 8px; display: inline-block; margin-bottom: 5px; margin-top: 0;" class="glow-cyan">安全・安心の「取引所口座直結」設計</h3>
+        <p style="font-size: 0.75em; font-weight: 500; color: var(--color-cyan); margin-bottom: 20px;">資金をどこにも預けない。あなた自身の口座の中で安全に運用</p>
+
+        <div style="display: flex; gap: 20px; text-align: left;">
+          <div class="card" style="flex: 1; border-top: 4px solid var(--color-cyan); padding: 16px 20px;">
+            <h5 style="margin: 0 0 8px 0; font-size: 0.95em; color: #fff;"><i class="fa-solid fa-building-columns glow-cyan"></i> GMOコイン直結（出金権限なし）</h5>
+            <p style="font-size: 0.7em; line-height: 1.5; color: #b0b7ce;">
+              システムとはAPI接続（取引専用キー）で連携。APIには「取引権限」のみを付与し、「出金権限」は与えないため、万が一にも第三者に資金を盗まれる心配はありません。資金は常にあなた自身のGMO口座の中にあります。
+            </p>
+          </div>
+          <div class="card" style="flex: 1; border-top: 4px solid var(--color-green); padding: 16px 20px;">
+            <h5 style="margin: 0 0 8px 0; font-size: 0.95em; color: #fff;"><i class="fa-solid fa-chart-area glow-green"></i> 資産推移を半永久的に記録</h5>
+            <p style="font-size: 0.7em; line-height: 1.5; color: #b0b7ce;">
+              資産の推移（履歴データ）は外部サーバーではなく、ローカルの安全なデータベースに半永久的に蓄積。時間足（15分足、1時間足、4時間足、日足）を切り替えながら、AIの成長の記録をいつでも確認できます。
+            </p>
+          </div>
+        </div>
+
+        <aside class="notes">
+          最大の強みは、「投資資金はご自身のGMOコイン口座から一歩も出ない」という点です。怪しい海外のボットサービスとは異なり、国内大手の取引所セキュリティに守られた状態で、完全に安全にシステム運用が行えます。
+        </aside>
+      </section>
+
+      <!-- スライド9：まとめ -->
+      <section data-background-gradient="radial-gradient(circle, #131726 0%, #06070a 100%)">
+        <h2 style="font-size: 1.6em; margin-bottom: 25px; font-weight: 800; margin-top: 0;"><span class="glow-cyan">『くりぷとくん』</span>が提供する4つの約束</h2>
+        
+        <div class="grid-container" style="max-width: 950px; margin: 0 auto; gap: 12px;">
+          <div class="card" style="border-left-color: var(--color-cyan); background: rgba(0, 240, 255, 0.01); padding: 12px 18px;">
+            <h4 style="color: var(--color-cyan); font-size: 0.9em; font-weight: bold; margin-bottom: 5px !important;"><i class="fa-solid fa-circle-check"></i> 感情なき「最適取引」</h4>
+            <p style="color: #b0b7ce; font-size: 0.65em !important; line-height: 1.4;">24時間365日、プロのテクニカル分析（RSI・MACD）に基いて合理的に自動売買します。</p>
+          </div>
+          <div class="card" style="border-left-color: var(--color-green); background: rgba(0, 255, 136, 0.01); padding: 12px 18px;">
+            <h4 style="color: var(--color-green); font-size: 0.9em; font-weight: bold; margin-bottom: 5px !important;"><i class="fa-solid fa-shield-halved"></i> 破綻を防ぐ「リスク管理」</h4>
+            <p style="color: #b0b7ce; font-size: 0.65em !important; line-height: 1.4;">打診分割買い・フルポジ規制・F&Gバブルストッパー・絶対防衛損切りで徹底防御。</p>
+          </div>
+          <div class="card" style="border-left-color: var(--color-pink); background: rgba(255, 51, 102, 0.01); padding: 12px 18px;">
+            <h4 style="color: var(--color-pink); font-size: 0.9em; font-weight: bold; margin-bottom: 5px !important;"><i class="fa-solid fa-arrows-up-down"></i> 下落も狙う「ツイン」</h4>
+            <p style="color: #b0b7ce; font-size: 0.65em !important; line-height: 1.4;">現物の買いだけでなく、FXによる「空売り」も自動実行し、下落トレンドも利益に。</p>
+          </div>
+          <div class="card" style="border-left-color: #ab47bc; background: rgba(171, 71, 188, 0.01); padding: 12px 18px;">
+            <h4 style="color: #ab47bc; font-size: 0.9em; font-weight: bold; margin-bottom: 5px !important;"><i class="fa-solid fa-lock"></i> 資金安全「口座内運用」</h4>
+            <p style="color: #b0b7ce; font-size: 0.65em !important; line-height: 1.4;">資金を送金する必要はなく、自身のGMOコイン口座の中でAPIを用いて安全に運用されます。</p>
+          </div>
+        </div>
+
+        <p style="margin-top: 25px; font-size: 0.72em; color: #8e95ac; font-style: italic; letter-spacing: 0.05em; margin-bottom: 0;">
+          相場を気にするストレスをなくし、AIによる賢明な資産運用と自由な時間を手に入れませんか？
+        </p>
+
+        <aside class="notes">
+          『くりぷとくん』は、安全性を追求した「プロ仕様の自動売買AIシステム」です。ぜひ導入をご検討ください。ご清聴ありがとうございました。
+        </aside>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- フローティング発表者メモ -->
+  <button id="toggle-notes-btn">
+    <i class="fa-solid fa-eye"></i> 発表者メモを表示
+  </button>
+
+  <div id="custom-notes-panel">
+    <div id="custom-notes-title">発表者メモ (Speaker Notes)</div>
+    <div id="custom-notes-content">スライドが読み込まれると表示されます。</div>
+  </div>
+
+  <!-- Reveal.js コア JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.js"></script>
+  <!-- Reveal.js コードハイライト用プラグイン -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+
+  <script>
+    // Reveal.jsの初期化
+    Reveal.initialize({
+      hash: true,
+      respondToHashChanges: true,
+      history: true,
+      transition: 'fade', // 切り替えアニメーション
+      plugins: [ RevealHighlight ],
+      width: 1100, // 横幅をやや広めに確保
+      height: 750, // 縦幅を750pxに拡張して縦切れを完全に防止
+      margin: 0.08, // 余白を狭めてコンテンツエリアを最大化
+      minScale: 0.2,
+      maxScale: 2.0
+    });
+
+    // スピーカーノート（発表者メモ）トグルの処理
+    Reveal.on('ready', event => {
+      updateSpeakerNotes(event.currentSlide);
+    });
+
+    Reveal.on('slidechanged', event => {
+      updateSpeakerNotes(event.currentSlide);
+    });
+
+    function updateSpeakerNotes(slide) {
+      const notesElement = slide.querySelector('aside.notes');
+      const contentArea = document.getElementById('custom-notes-content');
+      if (notesElement) {
+        contentArea.innerHTML = notesElement.innerHTML.trim().replace(/\n/g, '<br>');
+      } else {
+        contentArea.innerHTML = '<span style="color: #666;">発表者メモはありません。</span>';
+      }
+    }
+
+    const toggleBtn = document.getElementById('toggle-notes-btn');
+    const notesPanel = document.getElementById('custom-notes-panel');
+
+    toggleBtn.addEventListener('click', () => {
+      const isShown = notesPanel.classList.toggle('show');
+      if (isShown) {
+        toggleBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> 発表者メモを隠す';
+        toggleBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+        toggleBtn.style.color = '#8e95ac';
+        toggleBtn.style.borderColor = '#8e95ac';
+      } else {
+        toggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i> 発表者メモを表示';
+        toggleBtn.style.background = 'rgba(0, 240, 255, 0.15)';
+        toggleBtn.style.color = 'var(--color-cyan)';
+        toggleBtn.style.borderColor = 'var(--color-cyan)';
+      }
+    });
+  </script>
+</body>
+</html>

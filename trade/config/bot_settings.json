@@ -1,0 +1,19 @@
+{
+    "trade_amount_limit": 590000,
+    "entry_size_percent": 20,
+    "full_position_percent": 85,
+    "rsi_buy_threshold": 45,
+    "rsi_sell_threshold": 70,
+    "fng_stopper": 75,
+    "loss_cut_percent": 5,
+    "cooldown_minutes": 60,
+    "price_drop_percent": 1.5,
+    "margin_rsi_short": 55,
+    "margin_trade_amount_limit": 240000,
+    "reserved_margin_jpy": 140000,
+    "fx_cooldown_minutes": 30,
+    "fx_price_drop_percent": 1.0,
+    "trailing_stop_percent": 1.5,
+    "panic_buy_rsi": 20,
+    "auto_budget_mode": "normal"
+}

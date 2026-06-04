@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>くりぷとくん - 自動売買システム仕様書</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --surface-color: #161b22;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --accent-blue: #2f81f7;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-gold: #e3b341;
+            --border-color: #30363d;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--accent-blue), #b392f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 50px;
+        }
+
+        .section {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .section h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 0;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.5rem;
+        }
+
+        .section h2.green { color: var(--accent-green); }
+        .section h2.red { color: var(--accent-red); }
+        .section h2.gold { color: var(--accent-gold); }
+        .section h2.blue { color: var(--accent-blue); }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: rgba(47, 129, 247, 0.2);
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>くりぷとくん (Cryptokun)</h1>
+    <div class="subtitle">初心者から上級者まで対応する、プロ仕様の全自動・仮想通貨AIトレードシステム</div>
+
+    <!-- セクション1: アプリの全体像 -->
+    <div class="section">
+        <h2 class="blue">🌟 システムの概要</h2>
+        <p>「くりぷとくん」は、ビットコイン（BTC）の価格変動を24時間監視し、人間の感情（恐怖や強欲）を排除して全自動で利益を狙うAIシステムです。単なる「安い時に買う」システムではなく、相場の状況に合わせて以下の<strong>2つのエンジン</strong>を切り替えて戦います。</p>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🟢</div>
+                <div class="feature-title">現物エンジン（平常時・上昇時）</div>
+                <p>仮想通貨を「安く買って高く売る」王道のエンジンです。一時的な下落（押し目）を狙って手堅く買い集め、価格が上がったところで確実に利益を確定させます。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔴</div>
+                <div class="feature-title">FXエンジン（大暴落時）</div>
+                <p>市場が大暴落している最中に起動する攻撃用エンジンです。現物買いを停止して資産を守りつつ、「空売り（ショート）」という手法を使って、<strong>下落相場すらも利益に変えます。</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- セクション2: 鉄壁の防衛システム -->
+    <div class="section">
+        <h2 class="gold">🛡️ 資産を守る「3つのAIフィルター」</h2>
+        <p>安易なトレードで損をしないよう、プロのトレーダーと同じ視点で相場を監視するフィルターが備わっています。</p>
+        <ul>
+            <li><span class="highlight">大局トレンド分析（MTF）</span><br>
+            5分間の短い値動きだけでなく、1時間ごとの「大きな波」を常に確認します。大きな波が下を向いている時（大暴落中）は「落ちるナイフ」と判断し、現物買いをストップして怪我を防ぎます。</li>
+            <li><span class="highlight">恐怖と強欲指数（F&G）ストッパー</span><br>
+            市場全体が「バブル状態（みんなが強欲になっている状態）」を数値で察知し、高値掴み（一番高いところで買わされること）を未然に防ぎます。</li>
+            <li><span class="highlight">ダマシ回避フィルター</span><br>
+            「一瞬だけ価格が動いた」ようなフェイク（ダマシ）に引っかからないよう、移動平均線（価格の平均ライン）や直近の高値・安値を計算し、本当にトレンドが変わった確証が持てた時だけエントリーします。</li>
+        </ul>
+    </div>
+
+    <!-- セクション3: 利益を極限まで引き出す機能 -->
+    <div class="section">
+        <h2 class="green">📈 利益最大化の特殊機能</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="badge">利益を逃さない</div>
+                <div class="feature-title">トレイリングストップ（利益追従）</div>
+                <p>目標金額に達してもすぐには売却しません。「価格が伸びている間はどこまでも追いかけ、下落に転じた瞬間に売る」ことで、相場の波を天井から底まで余すことなく利益に変えます。</p>
+            </div>
+            <div class="feature-card">
+                <div class="badge">大底を狙う</div>
+                <div class="feature-title">セリクラ特攻（逆張り大底拾い）</div>
+                <p>パニック売りによる歴史的な大暴落が起きた際、通常の防衛フィルターを一時的に解除し、リスクを取って「一番の大底（最安値）」をピンポイントで拾いに行くプロ向けの攻撃機能です。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- セクション4: 選べる運用モード -->
+    <div class="section">
+        <h2 class="red">🎮 ワンタッチ運用モード</h2>
+        <p>専門的な数値がわからなくても、ダッシュボードのボタンを1つ押すだけで、お客様の性格に合わせた最適な設定が自動入力されます。</p>
+        
+        <div class="feature-card" style="margin-bottom:15px;">
+            <div class="feature-title">🛡️ 守りながらコツコツ（安全重視）</div>
+            <p style="margin:0; font-size:0.95rem; color:#ccc;">無駄なトレードやリスクを極力減らし、本当に安全なタイミングでのみ取引を行う初心者・放置向けモード。FX（空売り）への資金割り当ても少なめです。</p>
+        </div>
+        
+        <div class="feature-card" style="margin-bottom:15px;">
+            <div class="feature-title">⚖️ バランス運用（標準）</div>
+            <p style="margin:0; font-size:0.95rem; color:#ccc;">最もおすすめの基本設定。リスクをコントロールしつつ、上昇トレンドも下落トレンドもしっかりと利益に変えていく、攻守のバランスが取れたモードです。</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-title">🔥 積極運用・上級者向け（攻め）</div>
+            <p style="margin:0; font-size:0.95rem; color:#ccc;">多少の損切りリスクを許容し、わずかなチャンスでも積極的にエントリーしてリターンを最大化するモード。トレンドが明確な相場で圧倒的な威力を発揮します。</p>
+        </div>
+    </div>
+
+    <!-- セクション5: 設定項目の詳細解説 -->
+    <div class="section">
+        <h2 class="blue">⚙️ 設定画面の各項目の解説</h2>
+        <p>ダッシュボードの「AIシステム パラメーター設定」で調整できる各項目の意味と役割です。</p>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-title">💰 資金管理に関する設定</div>
+                <ul>
+                    <li><strong>🟢 現物 運用限度額:</strong> 現物買い（Spot）に使える最大予算です。</li>
+                    <li><strong>🔒 FX専用 取り置き資金:</strong> いざという時の空売りのために、絶対に現物買いで使わずに温存しておく日本円の枠です。</li>
+                    <li><strong>🔴 FX専用 運用限度額:</strong> 大暴落時に空売り（FX）の証拠金として使う枠の最大値です。</li>
+                    <li><strong>1回の打診買い割合:</strong> 1回のエントリーで、運用限度額の何%を使うかの設定です。20%なら、最大5回に分けてナンピン（分割買い）します。</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-title">📊 エントリー（売買）の基準</div>
+                <ul>
+                    <li><strong>現物買い RSI基準:</strong> この数値より下がったら「売られすぎ」と判断して現物を買います。（例: 45以下）</li>
+                    <li><strong>現物売却 RSI基準:</strong> この数値より上がったら「買われすぎ」と判断して利益を確定させます。（例: 70以上）</li>
+                    <li><strong>FX空売り RSI開始基準:</strong> 暴落中に一時的に反発し、この数値まで過熱したら空売りを仕掛けます。</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">⏱️ 連続買い（ナンピン）制限</div>
+                <ul>
+                    <li><strong>待機時間 (現物 / FX):</strong> 一度トレードしたら、次にトレードするまでの冷却時間です。暴落時に資金が一気に尽きるのを防ぎます。</li>
+                    <li><strong>連続エントリーに必要な値幅:</strong> 前回の購入価格から「◯%以上下がらないと次は買わない」というルールです。</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">⚔️ 特殊機能・リスク管理</div>
+                <ul>
+                    <li><strong>📈 トレイリングストップ 発動幅:</strong> 利確ライン到達後、最高値（最安値）からこの%分だけ反発した瞬間に決済し、利益を極限まで伸ばします。</li>
+                    <li><strong>⚡ セリクラ逆張り 発動RSI:</strong> この数値以下（例: 20）まで異常に暴落した瞬間に限り、AIの警告を無視して全力で底値を拾いに行きます。</li>
+                    <li><strong>バブル回避 強欲(F&G)ストッパー:</strong> 市場心理がこの数値以上（強欲バブル）の時は、高値掴み防止のため現物買いを停止します。</li>
+                    <li><strong>🚨 絶対防衛ライン (強制損切り):</strong> FX空売り時に、含み損が指定した%を超えたら破産を防ぐために全決済（損切り）して逃げます。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

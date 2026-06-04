@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>くりぷとくん | 自動売買</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-effects">
+       <div class="glow-orb orb-1"></div>
+       <div class="glow-orb orb-2"></div>
+    </div>
+    
+    <!-- デスクトップ向けのサイドナビ・トップナビとして機能させることも可能ですが、スマホに揃えます -->
+    <div class="dashboard-container">
+        <!-- ヘッダー -->
+        <header>
+            <div class="branding">
+                <h1>くりぷと<span>くん</span></h1>
+                <p>GMOコイン専用 プレミアム自動売買AIシステム</p>
+            </div>
+            <div class="system-status" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <div id="header-mode-badge" style="font-weight:800; font-size:0.85rem; padding:6px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.2); color:#aaa; background:rgba(0,0,0,0.5);">
+                    分析中...
+                </div>
+                <div class="status-indicator">
+                    <span class="pulse active" id="engine-pulse"></span>
+                    <span id="engine-status" style="font-size:0.9rem;">システム稼働中</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="grid">
+            <!-- 🟢🔴 ツインエンジン 資産サマリー (Tab: home) -->
+            <section class="tab-section active panel-wide" data-tab="home">
+
+                <!-- 👑 総資産額ヒーローセクション（統合・サイドバイサイド版） -->
+                <div class="hero-panel glass" style="margin-bottom: 25px; position: relative; overflow: hidden; border: 1px solid rgba(0, 240, 255, 0.4); padding: 30px 20px;">
+                    <div style="position:absolute; top:-50%; left:50%; transform:translateX(-50%); width:400px; height:400px; background:radial-gradient(circle, rgba(0,240,255,0.2) 0%, transparent 60%); z-index:0; pointer-events:none;"></div>
+                    
+                    <div style="position:relative; z-index:1; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; align-items: center;">
+                        
+                        <!-- 左側：総資産額 -->
+                        <div style="text-align: center; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 15px;">
+                            <h2 style="color:#00f0ff; letter-spacing: 2px; font-weight:600; margin-bottom:5px; font-size:1.1rem;">現在の総資産額</h2>
+                            <div class="value-display" style="display: flex; align-items: baseline; justify-content: center; font-size: 4.5rem; text-shadow: 0 0 25px rgba(0, 240, 255, 0.5); margin-bottom: 10px; line-height:1;">
+                                <span class="currency" style="font-size: 2.5rem; color: #8e95ac; margin-right: 8px;">¥</span>
+                                <span id="total-assets" style="font-weight: 800;">---,---</span>
+                            </div>
+                            <p style="color:#aaa; font-size: 0.9rem; font-weight:300;">( 現金残高 ＋ BTC評価額 ＋ FX評価損益 )</p>
+                        </div>
+
+                        <!-- 右側：現物 / FX -->
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            
+                            <!-- 🟢 現物 (Spot) 部隊 -->
+                            <div style="padding: 15px; background: rgba(0, 255, 136, 0.05); border-radius: 10px; border-left: 4px solid #00ff88;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                                    <h3 style="color:#00ff88; font-size:1rem; margin:0;">🟢 現物(Spot)買い部隊<span class="glossary-icon" onclick="showGlossary('spot')">❓</span></h3>
+                                    <div class="value-display highlight">
+                                        <span class="currency" style="font-size:1.1rem;">¥</span>
+                                        <span id="spot-jpy" style="font-size:1.8rem;">--</span>
+                                        <span style="font-size:0.75rem; color:#aaa; margin-left:5px; font-weight:normal;">現金残高</span>
+                                    </div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:#aaa; flex-wrap:wrap; gap:5px;">
+                                    <span>保有: <span id="spot-btc" style="color:#fff; font-weight:bold;">0.0000</span> BTC</span>
+                                    <span>評価額: <span style="color:#00ff88; font-weight:bold; font-size:1rem;">¥ <span id="spot-btc-value">0</span></span></span>
+                                </div>
+                            </div>
+
+                            <!-- 🔴 空売り (FX) 部隊 -->
+                            <div style="padding: 15px; background: rgba(255, 51, 102, 0.05); border-radius: 10px; border-left: 4px solid #ff3366;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                                    <h3 style="color:#ff3366; font-size:1rem; margin:0;">🔴 FX(証拠金)空売り部隊<span class="glossary-icon" onclick="showGlossary('margin')">❓</span></h3>
+                                    <div class="value-display highlight">
+                                        <span class="currency" style="font-size:1.1rem;">¥</span>
+                                        <span id="margin-available" style="font-size:1.8rem;">--</span>
+                                        <span style="font-size:0.75rem; color:#aaa; margin-left:5px; font-weight:normal;">証拠金余力</span>
+                                    </div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:#aaa; margin-bottom:5px; align-items:center;">
+                                    <span>維持率: <span id="margin-ratio" style="color:#fff; font-weight:bold;">--</span>%</span>
+                                    <span style="display:flex; align-items:center;">建玉: <span style="color:var(--loss-red); font-weight:bold; margin-left:4px;">売 <span id="pos-short">--</span> BTC</span><span class="glossary-icon" style="margin-left:8px;" onclick="showGlossary('margin_ratio')">❓</span></span>
+                                </div>
+                                <div style="text-align: right; font-size:0.85rem; color:#aaa;">
+                                    評価損益: <span id="unrealized-pnl" style="color:#fff; font-weight:bold; font-size:1rem;">¥ --</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 資産推移グラフ -->
+                <div class="card glass" style="margin-bottom: 25px; padding-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <h2 style="margin-bottom:0;">総合評価額 推移グラフ</h2>
+                        <div class="chart-toggles" style="display:flex; gap:6px;">
+                            <button class="btn-timeframe active" data-tf="15m" style="padding: 4px 10px; background: rgba(0,240,255,0.2); color:#fff; border:1px solid var(--accent-color); border-radius:4px; font-size:0.8rem; cursor:pointer;">15分足</button>
+                            <button class="btn-timeframe" data-tf="1h" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">1時間足</button>
+                            <button class="btn-timeframe" data-tf="4h" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">4時間足</button>
+                            <button class="btn-timeframe" data-tf="1d" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">日足</button>
+                            <button class="btn-timeframe" data-tf="1mo" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">月足</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; height: 350px; position:relative; width:100%;">
+                        <canvas id="equityChart"></canvas>
+                    </div>
+                </div>
+
+
+            </section>
+
+            <!-- 市場価格 (Tab: home) -->
+            <section class="card glass tab-section" data-tab="home" style="padding-bottom: 20px;">
+                <h2>BTC/JPY 現在市場価格</h2>
+                <div class="value-display">
+                    <span class="currency">¥</span>
+                    <span id="btc-price">--</span>
+                </div>
+                <div class="sub-value trend-up" id="last-update" style="margin-bottom: 15px;">
+                    サーバーへ接続中...
+                </div>
+                
+                <!-- 24時間 価格レンジバー -->
+                <div class="price-range-container" style="margin-top: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#aaa; margin-bottom:12px;">
+                        <span>24h 最安値: <span id="btc-low" style="color:#fff;">--</span></span>
+                        <span>24h 最高値: <span id="btc-high" style="color:#fff;">--</span></span>
+                    </div>
+                    <div class="progress-bar" style="height: 10px; background: rgba(255,255,255,0.1); overflow:visible; position:relative; border-radius:5px;">
+                        <div id="price-range-fill" style="position:absolute; left: 0; top:0; height:100%; width: 50%; background: linear-gradient(90deg, #ff3366, #ffdd57, #00f0ff); border-radius: 5px;"></div>
+                        <!-- Current Price Marker -->
+                        <div id="price-marker" style="position:absolute; left: 50%; top:-4px; width:4px; height:18px; background:#fff; border-radius:2px; box-shadow: 0 0 8px #fff; transform:translateX(-50%);"></div>
+                    </div>
+                    <div style="text-align:center; font-size:0.85rem; color:#ddd; margin-top:12px;">
+                        現在位置: <span id="price-position-percent" style="font-weight:bold; color:#00f0ff; margin-left:5px;">--%</span>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- テクニカル分析 (Tab: ai) -->
+            <!-- ★ PC版で上段に横並びさせるため、チャートパネルの「上」に手前に移動しました ★ -->
+            <section class="card glass indicators tab-section" data-tab="ai">
+                <h2>テクニカル分析 / 相場心理傾向</h2>
+                <div class="indicator-group" style="margin-bottom: 25px;">
+                    <label style="display:flex; align-items:center;">RSI（相対力指数） <span class="glossary-icon" style="margin-left:6px; margin-right:6px;" onclick="showGlossary('rsi')">❓</span> <span id="rsi-val">50.0</span></label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="rsi-bar" style="width: 50%;"></div>
+                    </div>
+                </div>
+                <div class="indicator-group" style="margin-bottom: 25px;">
+                    <label style="display:flex; align-items:center;">MACD ヒストグラム <span class="glossary-icon" style="margin-left:6px; margin-right:6px;" onclick="showGlossary('macd')">❓</span> <span id="macd-val">0.0</span></label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="macd-bar" style="width: 50%;"></div>
+                    </div>
+                </div>
+                <div class="indicator-group" style="margin-bottom: 25px;">
+                    <label>大局トレンド (上位1時間足) <span id="macro-trend-badge" style="padding:4px 8px; border-radius:4px; background:rgba(255,255,255,0.1); font-size:0.85em; font-weight:bold;">分析中</span></label>
+                </div>
+                <div class="indicator-group" style="margin-bottom: 10px;">
+                    <label style="display:flex; align-items:center;">市場心理（恐怖と強欲指数） <span class="glossary-icon" style="margin-left:6px; margin-right:6px;" onclick="showGlossary('fng')">❓</span> <span id="fng-val">50</span></label>
+                    <div class="progress-bar" style="background: rgba(255,255,255,0.03);">
+                        <div class="progress-fill" id="fng-bar" style="width: 50%; background: linear-gradient(90deg, var(--loss-red), var(--profit-green));"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin-top: 5px;">
+                        <span>0: 恐怖でパニック (買)</span>
+                        <span>100: 強欲・バブル (売)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ログパネル (Tab: log) -->
+            <section class="card glass tab-section" data-tab="log">
+                <h2>AI・システム イベントログ</h2>
+                <div class="log-container" id="log-container" style="height:240px;">
+                    <div class="log-entry system">[システム] 起動の準備をしています...</div>
+                </div>
+            </section>
+
+            <!-- ライブチャート（TradingView） (Tab: chart) -->
+            <section class="card glass panel-wide chart-container tab-section" data-tab="chart">
+                <div class="tradingview-widget-container" style="height:100%;width:100%">
+                  <div id="tradingview_chart" style="height:100%;width:100%"></div>
+                  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                  <script type="text/javascript">
+                  new TradingView.widget({
+                  "autosize": true,
+                  "symbol": "BITFLYER:BTCJPY",
+                  "interval": "5",
+                  "timezone": "Asia/Tokyo",
+                  "theme": "dark",
+                  "style": "1",
+                  "locale": "ja",
+                  "enable_publishing": false,
+                  "backgroundColor": "rgba(0,0,0,0)",
+                  "gridColor": "rgba(255, 255, 255, 0.05)",
+                  "hide_top_toolbar": false,
+                  "hide_legend": false,
+                  "save_image": false,
+                  "container_id": "tradingview_chart"
+                  });
+                  </script>
+                </div>
+            </section>
+
+
+            <!-- ⚙️ 設定パネル (Tab: settings) -->
+            <section class="card glass panel-wide tab-section" data-tab="settings">
+                <h2>⚙️ AIシステム パラメーター設定</h2>
+                
+                <!-- 現在のモード判定バッジ -->
+                <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:10px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:space-between;">
+                    <span style="color:#aaa; font-size:0.95rem;">現在のAIの思考バランス:</span>
+                    <span id="current-mode-badge" style="font-weight:800; padding:6px 12px; border-radius:6px; font-size:0.95rem; display:inline-block; transition: 0.3s;">分析中...</span>
+                </div>
+                
+                <!-- プリセットボタン -->
+                <label style="display:block; color:#ccc; font-size:0.9rem; margin-bottom:10px;">💡 初心者向け ワンタッチ設定モード</label>
+                <div class="preset-buttons">
+                    <button class="btn-preset safe" onclick="applyPreset('safe')">🛡️ 守りながらコツコツ</button>
+                    <button class="btn-preset normal" onclick="applyPreset('normal')">⚖️ バランス運用</button>
+                    <button class="btn-preset aggressive" onclick="applyPreset('aggressive')">🔥 積極運用・上級者向け</button>
+                </div>
+                
+                <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin: 30px 0;">
+                
+                <!-- AUTO / MANUAL 切替 -->
+                <div style="background: rgba(0,240,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.2); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 style="color: #00f0ff; margin: 0 0 5px 0; font-size: 1.05rem;">🔄 予算の自動追従 (AUTOモード)</h3>
+                        <p style="color: #aaa; margin: 0; font-size: 0.85rem;">※ONにすると、総資産の増減に合わせて予算枠が24時間自動で拡張・縮小されます。<br>※手動でスライダーを動かすと自動的にOFF(手動固定)になります。</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;" id="auto-budget-buttons">
+                        <button id="btn-auto-budget" onclick="setAutoBudget(true)" style="padding: 8px 15px; border-radius: 20px; border: 1px solid #00f0ff; background: rgba(0,240,255,0.2); color: #00f0ff; font-weight: bold; cursor: pointer;">ON (自動)</button>
+                        <button id="btn-manual-budget" onclick="setAutoBudget(false)" style="padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: #aaa; font-weight: bold; cursor: pointer;">OFF (手動固定)</button>
+                    </div>
+                </div>
+
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label>🟢 現物 運用限度額 (最大予算目安): <span id="val-limit">100,000</span>円</label>
+                        <input type="range" id="input-limit" min="10000" max="500000" step="10000" value="100000" oninput="updateVal('limit', this.value)">
+                    </div>
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #ffdd57; background: rgba(255,221,87,0.05); border-radius: 8px; margin-bottom: 15px;">
+                        <label style="color:#ffdd57;">🔒 FX専用 取り置き資金 (現物から守る枠): <span id="val-reserved-margin">500,000</span>円</label>
+                        <input type="range" id="input-reserved-margin" min="0" max="2000000" step="10000" value="500000" oninput="updateVal('reserved-margin', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※この金額分のお金は、現物買い(Spot)で使われないようシステムが厳重に保護します。</small>
+                    </div>
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #ff3366; background: rgba(255,51,102,0.05); border-radius: 8px; margin-bottom: 15px;">
+                        <label style="color:#ffb3c6;">🔴 FX専用 運用限度額 (証拠金枠目安): <span id="val-margin-limit">200,000</span>円</label>
+                        <input type="range" id="input-margin-limit" min="50000" max="1000000" step="10000" value="200000" oninput="updateVal('margin-limit', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※FX用の予算上限です。0.01BTC(実証拠金約6万円強)あたり約12万円の枠を使います。</small>
+                    </div>
+                    <div class="form-group">
+                        <label>1回の打診買い割合 (予算の何%): <span id="val-entry">20</span>%</label>
+                        <input type="range" id="input-entry" min="5" max="100" step="5" value="20" oninput="updateVal('entry', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>フルポジ上限 (予算の何%まで買うか): <span id="val-full">85</span>%</label>
+                        <input type="range" id="input-full" min="30" max="100" step="5" value="85" oninput="updateVal('full', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>RSI 買い基準 (この数値以下で買): <span id="val-rsi-buy">45</span></label>
+                        <input type="range" id="input-rsi-buy" min="20" max="60" step="1" value="45" oninput="updateVal('rsi-buy', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>RSI 売り基準 (この数値以上で利確): <span id="val-rsi-sell">70</span></label>
+                        <input type="range" id="input-rsi-sell" min="50" max="90" step="1" value="70" oninput="updateVal('rsi-sell', this.value)">
+                    </div>
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #ff3366; background: rgba(255,51,102,0.05); border-radius: 8px; margin-top: 15px; margin-bottom: 15px;">
+                        <label style="color:#ffb3c6;">FX空売り開始 RSI基準: <span id="val-margin-rsi-short">60</span></label>
+                        <input type="range" id="input-margin-rsi-short" min="50" max="90" step="1" value="60" oninput="updateVal('margin-rsi-short', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※この数値以上で下落トレンドに転じるとFX空売りを仕掛けます</small>
+                    </div>
+                    <div class="form-group">
+                        <label>連続エントリー待機時間 (クールダウン): <span id="val-cooldown">60</span>分</label>
+                        <input type="range" id="input-cooldown" min="10" max="180" step="10" value="60" oninput="updateVal('cooldown', this.value)">
+                    </div>
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #ff3366; background: rgba(255,51,102,0.05); border-radius: 8px; margin-bottom: 15px;">
+                        <label style="color:#ffb3c6;">🔴 FX空売り専用 連続待機時間: <span id="val-fx-cooldown">15</span>分</label>
+                        <input type="range" id="input-fx-cooldown" min="0" max="180" step="5" value="15" oninput="updateVal('fx-cooldown', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※FXでの追加エントリー(ナンピン)の待機時間。0分にすると頻繁に空売りします。</small>
+                    </div>
+                    <div class="form-group">
+                        <label>連続エントリーに必要な値幅 (ナンピン幅)<span class="glossary-icon" onclick="showGlossary('nanpin')">❓</span>: <span id="val-price-drop">1.5</span>%</label>
+                        <input type="range" id="input-price-drop" min="0.5" max="5.0" step="0.1" value="1.5" oninput="updateVal('price-drop', this.value)">
+                    </div>
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #ff3366; background: rgba(255,51,102,0.05); border-radius: 8px; margin-bottom: 15px;">
+                        <label style="color:#ffb3c6;">🔴 FX空売り専用 エントリー値幅: <span id="val-fx-price-drop">0.5</span>%</label>
+                        <input type="range" id="input-fx-price-drop" min="0.1" max="5.0" step="0.1" value="0.5" oninput="updateVal('fx-price-drop', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※この値幅だけ上昇すれば追加の空売りを仕掛けます。</small>
+                    </div>
+                    
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #00f0ff; background: rgba(0,240,255,0.05); border-radius: 8px; margin-bottom: 15px;">
+                        <label style="color:#00f0ff;">📈 トレイリングストップ 発動幅 (利益追従)<span class="glossary-icon" onclick="showGlossary('trailing')">❓</span>: <span id="val-trailing-stop">1.0</span>%</label>
+                        <input type="range" id="input-trailing-stop" min="0.1" max="5.0" step="0.1" value="1.0" oninput="updateVal('trailing-stop', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※利確ライン到達後、即座に売らずに利益を伸ばし、最高値(最安値)からこの割合だけ反発した瞬間に利確します。</small>
+                    </div>
+
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #ffaa00; background: rgba(255,170,0,0.05); border-radius: 8px; margin-bottom: 15px;">
+                        <label style="color:#ffaa00;">⚡ セリクラ逆張り 発動RSI (大底拾い)<span class="glossary-icon" onclick="showGlossary('panic_buy')">❓</span>: <span id="val-panic-buy-rsi">20</span></label>
+                        <input type="range" id="input-panic-buy-rsi" min="10" max="30" step="1" value="20" oninput="updateVal('panic-buy-rsi', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※この数値以下まで暴落した瞬間に限り、大局トレンドの警告を無視して全力で底値買い(逆張り)に特攻します。</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>バブル回避 強欲(F&G)ストッパー: <span id="val-fng">75</span></label>
+                        <input type="range" id="input-fng" min="50" max="100" step="1" value="75" oninput="updateVal('fng', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※この数値以上(お祭り騒ぎの異常バブル相場)になると、一帯の買いシグナルを完全に無視して高値づかみを防ぎます</small>
+                    </div>
+                    
+                    <div class="form-group" style="padding: 15px; background: rgba(255, 51, 102, 0.1); border: 1px solid rgba(255, 51, 102, 0.3); border-radius: 8px;">
+                        <label style="color:#ff3366; font-weight:bold;">🛡️ 絶対防衛損切りライン: <span id="val-loss-cut">5</span>%</label>
+                        <input type="range" id="input-loss-cut" min="1" max="25" step="1" value="5" oninput="updateVal('loss-cut', this.value)">
+                        <small style="color:#ffb3c6; display:block; margin-top:8px;">※致命傷を防ぐため、1トレードの含み損が運用予算上限の【この割合】に達した瞬間に、システムが全建玉を強制ストップロス（損切り）します。</small>
+                    </div>
+                    
+                    <button class="save-btn" onclick="saveSettings()">設定をシステムに保存・適用する</button>
+                    <div id="save-toast" style="display:none; color:#00ff88; margin-top:15px; text-align:center; font-weight:800; padding:10px; background:rgba(0,255,136,0.1); border-radius:8px;">✅ 保存され、AIのロジックが即座に切り替わりました！</div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- スマホ版 ボトムナビゲーション (5タブ構成) -->
+    <nav class="mobile-tabs" id="bottom-nav">
+        <button class="tab-btn active" data-target="home">
+            <i>🏠</i> 資産
+        </button>
+        <button class="tab-btn" data-target="chart">
+            <i>📈</i> チャート
+        </button>
+        <button class="tab-btn" data-target="ai">
+            <i>🧠</i> 指標
+        </button>
+        <button class="tab-btn" data-target="log">
+            <i>📝</i> 履歴
+        </button>
+        <button class="tab-btn" data-target="settings">
+            <i>⚙️</i> 設定
+        </button>
+    </nav>
+    
+    <!-- PC向けナビ（ヘッダー上部ではなくフロート） -->
+    <div class="pc-tabs" style="display:none; position:fixed; right:20px; top:30px; z-index:100; display:flex; gap:10px;">
+        <button class="tab-btn active" data-target="home" style="display:none;"></button>
+        <button class="tab-btn glass" data-target="settings" style="padding:10px 20px; border-radius:30px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.5); cursor:pointer; color:#fff; font-weight:bold;">⚙️ AI設定</button>
+        <button class="tab-btn glass" data-target="home" id="btn-close-setting" style="padding:10px 20px; border-radius:30px; border:1px solid rgba(0,240,255,0.8); background:rgba(0,240,255,0.2); cursor:pointer; color:#00f0ff; font-weight:bold; display:none;">✖ ダッシュボードに戻る</button>
+    </div>
+
+    <!-- Glossary Modal Overlay -->
+    <div class="glossary-modal-overlay" id="glossary-modal">
+        <div class="glossary-modal-content">
+            <div class="glossary-term-title" id="glossary-title">用語名</div>
+            <div class="glossary-text-main" id="glossary-main">解説テキストがここに入ります。</div>
+            <div class="glossary-text-analogy" id="glossary-analogy">【例え】例え話がここに入ります。</div>
+            <button class="glossary-close-btn" onclick="closeGlossary()">閉じる</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
