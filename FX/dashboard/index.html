@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>かわせちゃん初号機 | FX自動売買</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+    <div class="background-effects">
+       <div class="glow-orb orb-1"></div>
+       <div class="glow-orb orb-2"></div>
+    </div>
+    
+    <!-- デスクトップ向けのサイドナビ・トップナビとして機能させることも可能ですが、スマホに揃えます -->
+    <div class="dashboard-container">
+        <!-- ヘッダー -->
+        <header>
+            <div class="branding">
+                <h1>かわせちゃん<span> 初号機</span></h1>
+                <p>OANDA専用 為替FX自動売買AIシステム</p>
+                <div class="theme-selector">
+                    <div class="theme-btn" title="Sakura Navy" data-theme-id="sakura" onclick="switchTheme('sakura')" style="background:#F8B4C4;"></div>
+                    <div class="theme-btn" title="Royal Coral" data-theme-id="coral" onclick="switchTheme('coral')" style="background:#FF8A65;"></div>
+                    <div class="theme-btn" title="Lavender Night" data-theme-id="lavender" onclick="switchTheme('lavender')" style="background:#C084FC;"></div>
+                    <div class="theme-btn" title="Wealth Gold" data-theme-id="gold" onclick="switchTheme('gold')" style="background:linear-gradient(45deg, #FFD700, #FBBF24);"></div>
+                </div>
+            </div>
+            <div class="system-status" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <div id="header-mode-badge" style="font-weight:800; font-size:0.85rem; padding:6px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.2); color:#aaa; background:rgba(0,0,0,0.5);">
+                    分析中...
+                </div>
+                <div id="header-dry-run-badge" style="display:none; font-weight:800; font-size:0.85rem; padding:6px 12px; border-radius:20px; border:1px solid var(--loss-red); color:var(--loss-red); background:rgba(255,0,0,0.1);">
+                    🧪 DRY RUN（実注文なし）
+                </div>
+                <div id="header-gear-badge" style="display:none; font-weight:800; font-size:0.85rem; padding:6px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.2); color:#aaa; background:rgba(0,0,0,0.5);">
+                    ⚙️ AUTO GEAR
+                </div>
+                <div id="header-daily-pnl" style="font-weight:800; font-size:0.85rem; padding:6px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.2); color:#fff; background:rgba(0,0,0,0.5); display:flex; align-items:center; gap:5px;">
+                    💰 本日の収支: <span id="daily-pnl-val" style="color:var(--profit-green);">+0円</span> (<span id="daily-trades-val">0</span>回)
+                </div>
+                <button id="btn-auto-trade" onclick="toggleAutoTrade()" style="background: rgba(var(--profit-rgb),0.2); border: 1px solid var(--profit-green); color:var(--profit-green); padding: 6px 12px; border-radius: 20px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:5px; margin-right:10px; position:relative;">
+                    <span class="pulse active" id="auto-trade-pulse" style="width:8px;height:8px;background:var(--profit-green);border-radius:50%;display:inline-block;box-shadow:0 0 5px var(--profit-green);"></span>
+                    <span id="auto-trade-text">自動売買 ON</span>
+                </button>
+                <button id="btn-screenshot" onclick="takeScreenshot()" title="画面全体をスクショ保存" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color:#fff; padding: 6px 12px; border-radius: 20px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:5px; margin-right:10px; transition: 0.3s;">
+                    📸 スクショ保存
+                </button>
+                <div class="status-indicator">
+                    <span class="pulse active" id="engine-pulse"></span>
+                    <span id="engine-status" style="font-size:0.9rem;">システム稼働中</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="grid">
+    <!-- デバッグパネル -->
+    <div id="frontend-debug-panel" style="grid-column: 1 / -1; padding: 10px; background: rgba(0,255,0,0.1); border: 1px solid #0f0; border-radius: 5px; font-size: 0.85rem; color: #0f0;">
+        ✅ フロントエンド正常
+    </div>
+
+    <!-- ===== HOME TAB ===== -->
+            <!-- 🟢🔴 ツインエンジン 資産サマリー (Tab: home) -->
+            <section class="tab-section active panel-wide" data-tab="home">
+
+                <!-- 👑 総資産額ヒーローセクション ＆ ポジション -->
+                <div class="hero-panel glass" style="margin-bottom: 25px; position: relative; overflow: hidden; border: 1px solid rgba(var(--accent-rgb), 0.4); padding: 30px; display: flex; flex-wrap: wrap; gap: 30px; align-items: center; justify-content: space-between;">
+                    <div style="position:absolute; top:-50%; left:0%; width:100%; height:200%; background:radial-gradient(ellipse at left, rgba(var(--accent-rgb),0.15) 0%, transparent 70%); z-index:0; pointer-events:none;"></div>
+                    
+                    <!-- 左側: 総資産額 -->
+                    <div style="position:relative; z-index:1; flex: 1; min-width: 300px; text-align: center;">
+                        <h2 style="color:var(--accent-color); letter-spacing: 2px; font-weight:600; margin-bottom:5px; font-size:1.1rem;">現在の総資産額</h2>
+                        <div class="value-display hero-value" style="display: flex; align-items: baseline; justify-content: center; text-shadow: 0 0 25px rgba(var(--accent-rgb), 0.5); margin-bottom: 10px; line-height:1; font-size: clamp(2.5rem, 8vw, 4.5rem);">
+                            <span class="currency" style="color: var(--text-muted); margin-right: 8px; font-size: clamp(1.5rem, 5vw, 2.5rem);">¥</span>
+                            <span id="total-assets" style="font-weight: 800;">---,---</span>
+                        </div>
+                        <p style="color:var(--text-muted); font-size: 0.9rem; font-weight:300;">( 口座残高 ＋ 未決済ポジション評価損益 )</p>
+                    </div>
+
+                    <!-- 右側: ロング/ショート ポジション -->
+                    <div style="position:relative; z-index:1; flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 15px;">
+                        
+                        <!-- 🟢 ロング (買) ポジションパネル -->
+                        <div class="pos-panel" style="background: rgba(var(--profit-rgb), 0.05); border: 1px solid rgba(var(--profit-rgb), 0.2); border-left: 4px solid var(--profit-green); border-radius: 12px; padding: 15px; display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
+                            <div style="flex:1; min-width:120px;">
+                                <h3 style="color:var(--profit-green); font-size:1.05rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--profit-green);display:inline-block;box-shadow:0 0 8px var(--profit-green);"></span> 稼働中: ロング(買)</h3>
+                                <div style="font-size:0.85rem; color:#aaa;">維持率: <span id="long-margin-ratio" style="color:#fff; font-weight:bold;">--</span>%</div>
+                            </div>
+                            <div style="text-align:right; flex:1; min-width:140px;">
+                                <div style="font-size:1.4rem; font-weight:bold; color:#fff; display:flex; align-items:baseline; justify-content:flex-end; gap:6px;">
+                                    <span>¥</span><span id="spot-jpy">--</span> <span style="font-size:0.8rem; color:#aaa; font-weight:normal;">残高</span>
+                                </div>
+                                <div style="font-size:0.85rem; color:#aaa; margin-top:6px; display:flex; justify-content:flex-end; gap:12px;">
+                                    <span>建玉: <span style="color:var(--profit-green); font-weight:bold;"><span id="pos-long">0</span> 通貨</span></span>
+                                    <span>評価損益: <span id="long-unrealized-pnl" style="font-weight:bold;">¥ 0</span></span>
+                                </div>
+                                <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+                                    <button id="btn-close-long" onclick="forceClosePosition('LONG')" style="display:none; padding: 4px 12px; background: rgba(var(--profit-rgb), 0.2); border: 1px solid var(--profit-green); color: var(--profit-green); border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">🛑 手動決済</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 🔴 ショート (売) ポジションパネル -->
+                        <div class="pos-panel" style="background: rgba(var(--loss-rgb), 0.05); border: 1px solid rgba(var(--loss-rgb), 0.2); border-left: 4px solid var(--loss-red); border-radius: 12px; padding: 15px; display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
+                            <div style="flex:1; min-width:120px;">
+                                <h3 style="color:var(--loss-red); font-size:1.05rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--loss-red);display:inline-block;box-shadow:0 0 8px var(--loss-red);"></span> 稼働中: ショート(売)</h3>
+                                <div style="font-size:0.85rem; color:#aaa;">維持率: <span id="margin-ratio" style="color:#fff; font-weight:bold;">--</span>%</div>
+                            </div>
+                            <div style="text-align:right; flex:1; min-width:140px;">
+                                <div style="font-size:1.4rem; font-weight:bold; color:#fff; display:flex; align-items:baseline; justify-content:flex-end; gap:6px;">
+                                    <span>¥</span><span id="margin-available">--</span> <span style="font-size:0.8rem; color:#aaa; font-weight:normal;">余力</span>
+                                </div>
+                                <div style="font-size:0.85rem; color:#aaa; margin-top:6px; display:flex; justify-content:flex-end; gap:12px;">
+                                    <span>建玉: <span style="color:var(--loss-red); font-weight:bold;"><span id="pos-short">0</span> 通貨</span></span>
+                                    <span>評価損益: <span id="short-unrealized-pnl" style="font-weight:bold;">¥ 0</span></span>
+                                </div>
+                                <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+                                    <button id="btn-close-short" onclick="forceClosePosition('SHORT')" style="display:none; padding: 4px 12px; background: rgba(var(--loss-rgb), 0.2); border: 1px solid var(--loss-red); color: var(--loss-red); border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">🛑 手動決済</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 資産推移グラフ -->
+                <div class="card glass" style="padding-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <h2 style="margin-bottom:0;">総合評価額 推移グラフ</h2>
+                        <div class="chart-toggles" style="display:flex; gap:6px;">
+                            <button class="btn-timeframe active" data-tf="15m" style="padding: 4px 10px; background: rgba(0,240,255,0.2); color:#fff; border:1px solid var(--accent-color); border-radius:4px; font-size:0.8rem; cursor:pointer;">15分足</button>
+                            <button class="btn-timeframe" data-tf="1h" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">1時間足</button>
+                            <button class="btn-timeframe" data-tf="4h" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">4時間足</button>
+                            <button class="btn-timeframe" data-tf="1d" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">日足</button>
+                            <button class="btn-timeframe" data-tf="1mo" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">月足</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; height: 350px; position:relative; width:100%;">
+                        <canvas id="equityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 日次収支グラフ -->
+                <div class="card glass" style="padding-bottom: 20px; margin-top: 25px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <h2 style="margin-bottom:0;">💰 日次確定収支（チリツモ履歴）</h2>
+                        <div class="chart-toggles" style="display:flex; gap:6px;">
+                            <button class="btn-pnl-timeframe active" data-tf="1w" style="padding: 4px 10px; background: rgba(0,240,255,0.2); color:#fff; border:1px solid var(--accent-color); border-radius:4px; font-size:0.8rem; cursor:pointer;">1週間</button>
+                            <button class="btn-pnl-timeframe" data-tf="1m" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">1ヶ月</button>
+                            <button class="btn-pnl-timeframe" data-tf="1y" style="padding: 4px 10px; background: rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.8rem; cursor:pointer;">1年間</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; height: 200px; position:relative; width:100%;">
+                        <canvas id="dailyPnlChart"></canvas>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 🛡️ 安全ステータス (Tab: home) -->
+            <section class="card glass tab-section" data-tab="home" style="margin-bottom:20px;">
+                <h2>🛡️ AI 安全フィルター状況</h2>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div style="background:rgba(255,255,255,0.05); padding:10px 15px; border-radius:8px; flex:1; min-width:140px;">
+                        <span style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:5px;">本日の連敗カウント</span>
+                        <span id="status-losing-streak" style="font-weight:bold; font-size:1.1rem; color:var(--text-main);">0 連敗中</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05); padding:10px 15px; border-radius:8px; flex:1; min-width:140px;">
+                        <span style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:5px;">本日の確定損益</span>
+                        <span id="status-daily-pnl" style="font-weight:bold; font-size:1.1rem; color:var(--text-main);">0 円</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05); padding:10px 15px; border-radius:8px; flex:1; min-width:140px;">
+                        <span style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:5px;">直近の見送り理由</span>
+                        <span id="status-latest-skip" style="font-weight:bold; font-size:0.9rem; color:#ffd280;">記録なし</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 市場価格 (Tab: home) -->
+            <section class="card glass tab-section" data-tab="home" style="padding-bottom: 20px;">
+                <h2>現在監視中の為替レート <span id="current-focus-symbol" style="color:var(--accent-color); font-size:1.1rem; margin-left:10px;"></span></h2>
+                <div class="value-display">
+                    <span class="currency">¥</span>
+                    <span id="btc-price">--</span>
+                </div>
+                <div class="sub-value trend-up" id="last-update" style="margin-bottom: 15px;">
+                    サーバーへ接続中...
+                </div>
+                
+                <!-- 24時間 価格レンジバー -->
+                <div class="price-range-container" style="margin-top: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#aaa; margin-bottom:12px;">
+                        <span>24h 最安値: <span id="btc-low" style="color:var(--text-main);">--</span></span>
+                        <span>24h 最高値: <span id="btc-high" style="color:var(--text-main);">--</span></span>
+                    </div>
+                    <div class="progress-bar" style="height: 10px; background: rgba(255,255,255,0.1); overflow:visible; position:relative; border-radius:5px;">
+                        <div id="price-range-fill" style="position:absolute; left: 0; top:0; height:100%; width: 50%; background: linear-gradient(90deg, #ff3366, #ffdd57, var(--accent-color)); border-radius: 5px;"></div>
+                        <!-- Current Price Marker -->
+                        <div id="price-marker" style="position:absolute; left: 50%; top:-4px; width:4px; height:18px; background:#fff; border-radius:2px; box-shadow: 0 0 8px #fff; transform:translateX(-50%);"></div>
+                    </div>
+                    <div style="text-align:center; font-size:0.85rem; color:#ddd; margin-top:12px;">
+                        現在位置: <span id="price-position-percent" style="font-weight:bold; color:var(--accent-color); margin-left:5px;">--%</span>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- テクニカル分析 (Tab: ai) -->
+            <!-- ★ PC版で上段に横並びさせるため、チャートパネルの「上」に手前に移動しました ★ -->
+            <section class="card glass indicators tab-section" data-tab="ai">
+                <h2>テクニカル分析 / 相場心理傾向</h2>
+                <div class="indicator-group" style="margin-bottom: 25px;">
+                    <label>RSI（相対力指数） <span id="rsi-val">50.0</span></label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="rsi-bar" style="width: 50%;"></div>
+                    </div>
+                </div>
+                <div class="indicator-group" style="margin-bottom: 25px;">
+                    <label>MACD ヒストグラム <span id="macd-val">0.0</span></label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="macd-bar" style="width: 50%;"></div>
+                    </div>
+                </div>
+                <div class="indicator-group" style="margin-bottom: 10px;">
+                    <label>市場心理（恐怖と強欲指数） <span id="fng-val">50</span></label>
+                    <div class="progress-bar" style="background: rgba(255,255,255,0.03);">
+                        <div class="progress-fill" id="fng-bar" style="width: 50%; background: linear-gradient(90deg, var(--loss-red), var(--profit-green));"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin-top: 5px;">
+                        <span>0: 恐怖でパニック (買)</span>
+                        <span>100: 強欲・バブル (売)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 日次サマリー (Tab: log) -->
+            <section class="card glass panel-wide tab-section" data-tab="log">
+                <h2>📊 本日の活動サマリー</h2>
+                <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
+                    <div style="flex:1; min-width:120px; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; text-align:center;">
+                        <span style="font-size:0.8rem; color:#aaa;">AI判定回数</span><br>
+                        <span id="summary-ai-decisions" style="font-size:1.4rem; font-weight:bold; color:var(--text-main);">0</span>
+                    </div>
+                    <div style="flex:1; min-width:120px; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; text-align:center;">
+                        <span style="font-size:0.8rem; color:#aaa;">見送り回数</span><br>
+                        <span id="summary-skips" style="font-size:1.4rem; font-weight:bold; color:#ffd280;">0</span>
+                    </div>
+                    <div style="flex:1; min-width:120px; background:rgba(0,240,255,0.05); padding:15px; border-radius:8px; text-align:center;">
+                        <span style="font-size:0.8rem; color:#00f0ff;">DRY RUN発注</span><br>
+                        <span id="summary-dry-runs" style="font-size:1.4rem; font-weight:bold; color:#00f0ff;">0</span>
+                    </div>
+                    <div style="flex:1; min-width:120px; background:rgba(255,51,102,0.05); padding:15px; border-radius:8px; text-align:center;">
+                        <span style="font-size:0.8rem; color:#ff3366;">本番発注</span><br>
+                        <span id="summary-real-orders" style="font-size:1.4rem; font-weight:bold; color:#ff3366;">0</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-wrap:wrap; gap:20px;">
+                    <!-- 見送り理由ランキング -->
+                    <div style="flex:1; min-width:300px; background:rgba(0,0,0,0.3); padding:15px; border-radius:8px;">
+                        <h3 style="margin-top:0; font-size:1rem;">🚫 本日の見送り理由ランキング</h3>
+                        <div id="skip-reasons-container" style="max-height:150px; overflow-y:auto;">
+                            <div style="color:#aaa; font-size:0.9rem;">まだ見送り記録はありません。</div>
+                        </div>
+                    </div>
+                    <!-- 簡易ログ -->
+                    <div style="flex:1; min-width:300px; background:rgba(0,0,0,0.3); padding:15px; border-radius:8px;">
+                        <h3 style="margin-top:0; font-size:1rem;">AI・システム イベントログ</h3>
+                        <div class="log-container" id="log-container" style="height:150px;">
+                            <div class="log-entry system">[システム] 起動の準備をしています...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 詳細ログ履歴 (Tab: log) -->
+            <section class="card glass panel-wide tab-section" data-tab="log" style="margin-top:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:15px;">
+                    <h2 style="margin:0;">📝 AI判定・詳細ログ履歴</h2>
+                    <div class="log-filters" style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="filter-btn active" data-filter="all">すべて</button>
+                        <button class="filter-btn" data-filter="AI判定">AI判定</button>
+                        <button class="filter-btn" data-filter="見送り">見送り</button>
+                        <button class="filter-btn" data-filter="DRY RUN">DRY RUN</button>
+                        <button class="filter-btn" data-filter="発注">発注</button>
+                        <button class="filter-btn" data-filter="決済">決済</button>
+                        <button class="filter-btn" data-filter="エラー">エラー</button>
+                    </div>
+                </div>
+                <div style="max-height:600px; overflow-y:auto; overflow-x:auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                    <table class="decision-log-table" style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left; white-space:nowrap;">
+                        <thead>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.2); color:#aaa;">
+                                <th style="padding:10px;">時刻</th>
+                                <th style="padding:10px;">種別</th>
+                                <th style="padding:10px;">ペア</th>
+                                <th style="padding:10px;">方向</th>
+                                <th style="padding:10px;">RSI/MACD</th>
+                                <th style="padding:10px;">最終判定</th>
+                                <th style="padding:10px;">安全判定</th>
+                                <th style="padding:10px;">発注Units/損益上限</th>
+                                <th style="padding:10px;">メッセージ/理由</th>
+                            </tr>
+                        </thead>
+                        <tbody id="decision-log-tbody">
+                            <!-- JSで描画 -->
+                            <tr><td colspan="9" style="text-align:center; padding:20px; color:#aaa;">ログを読み込み中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ライブチャート（TradingView） (Tab: chart) -->
+            <section class="card glass panel-wide chart-container tab-section" data-tab="chart">
+                <div class="tradingview-widget-container" style="height:100%;width:100%">
+                  <div id="tradingview_chart" style="height:100%;width:100%"></div>
+                  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                </div>
+            </section>
+
+
+            <!-- ⚙️ 設定パネル (Tab: settings) -->
+            <section class="card glass panel-wide tab-section" data-tab="settings">
+                <h2>⚙️ AIシステム パラメーター設定</h2>
+                
+                <!-- 現在のモード判定バッジ -->
+                <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:10px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:space-between;">
+                    <span style="color:#aaa; font-size:0.95rem;">現在のAIの思考バランス:</span>
+                    <span id="current-mode-badge" style="font-weight:800; padding:6px 12px; border-radius:6px; font-size:0.95rem; display:inline-block; transition: 0.3s;">分析中...</span>
+                </div>
+                
+                <!-- プリセットボタン -->
+                <label style="display:block; color:#ccc; font-size:0.9rem; margin-bottom:10px;">💡 初心者向け ワンタッチ設定モード</label>
+                <div class="preset-buttons">
+                    <button class="btn-preset safe" onclick="applyPreset('safe')">🛡️ 安全</button>
+                    <button class="btn-preset normal" onclick="applyPreset('normal')">⚖️ 標準</button>
+                    <button class="btn-preset aggressive" onclick="applyPreset('aggressive')">🔥 攻め</button>
+                    <button class="btn-preset scalping" onclick="applyPreset('scalping')" style="background:linear-gradient(45deg, #FFD700, #ff8c00); color:#000; font-weight:bold; border:none; box-shadow:0 0 10px rgba(255,215,0,0.5);">⚡ スキャル</button>
+                </div>
+                
+                <!-- AUTO予算調整モード -->
+                <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:10px; margin-top:25px; margin-bottom:25px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="color:#fff; margin:0; font-size:1.1rem;">🤖 AUTO予算調整モード (AI資金管理)</h3>
+                        <button id="btn-auto-shift" onclick="toggleAutoShift()" style="background: rgba(255,255,255,0.1); border: 1px solid #aaa; color:#aaa; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.3s;">
+                            🤖 オートシフト OFF
+                        </button>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <select id="input-auto-budget" style="flex:1; padding:10px; border-radius:6px; background:rgba(0,0,0,0.5); color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                            <option value="manual">✋ 手動設定 (下のスライダーで上限を固定)</option>
+                            <option value="safe">🛡️ 安全重視: 口座余力の一部のみを運用対象にし、最大建玉も控えめに制限します</option>
+                            <option value="normal">⚖️ 標準: リスクと回転率のバランスを重視して運用します</option>
+                            <option value="aggressive">🔥 攻めの運用: 通常より積極的にエントリーしますが、過剰な全力投入は避けます</option>
+                            <option value="scalping">⚡ スキャル: 短期高回転で小さな値幅を狙います。早めの利確・損切りを重視します</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin: 30px 0;">
+
+                <!-- 📊 発注シミュレーター -->
+                <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); margin-bottom:25px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="color:#fff; margin:0; font-size:1.1rem;">📊 発注・損益シミュレーション</h3>
+                        <span style="color:#aaa; font-size:0.85rem;">※現在の設定値に基づいた概算です</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:8px;">
+                            <span style="color:#888; font-size:0.85rem;">口座残高目安</span>
+                            <div id="sim-account-balance" style="font-size:1.2rem; font-weight:bold; color:#fff;">--- 円</div>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:8px;">
+                            <span style="color:#888; font-size:0.85rem;">FX運用限度額</span>
+                            <div id="sim-margin-limit" style="font-size:1.2rem; font-weight:bold; color:#fff;">--- 円</div>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:8px;">
+                            <span style="color:#00f0ff; font-size:0.85rem;">1回の打診割合 (使用予算)</span>
+                            <div id="sim-entry-budget" style="font-size:1.2rem; font-weight:bold; color:#00f0ff;">--- 円 (---%)</div>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:8px; border:1px solid #ffdd57; grid-column: span 2;">
+                            <span style="color:#ffdd57; font-size:0.85rem;">初回発注予定 Units (レバ25倍)</span>
+                            <div id="sim-entry-units" style="font-size:0.9rem; color:#fff; margin-top:10px;">--- Units</div>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:8px; grid-column: span 2;">
+                            <span style="color:#aaa; font-size:0.85rem;">フルポジ最大 Units</span>
+                            <div id="sim-max-units" style="font-size:0.9rem; color:#fff; margin-top:10px;">--- Units</div>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:8px;">
+                            <span style="color:#aaa; font-size:0.85rem;">1pips動いた時の概算損益</span>
+                            <div id="sim-pip-value" style="font-size:1.1rem; font-weight:bold; color:#fff;">約 --- 円</div>
+                        </div>
+                        <div style="background:rgba(0,240,255,0.1); padding:15px; border-radius:8px; border:1px solid rgba(0,240,255,0.3);">
+                            <span style="color:#00f0ff; font-size:0.85rem;">トレイリング到達時の概算利益</span>
+                            <div id="sim-trailing-profit" style="font-size:1.1rem; font-weight:bold; color:#00f0ff;">(初回) 約 +--- 円<br><span style="font-size:0.85rem; color:#aaa;">(フルポジ) 約 +--- 円</span></div>
+                        </div>
+                        <div style="background:rgba(255,51,102,0.1); padding:15px; border-radius:8px; border:1px solid rgba(255,51,102,0.3); grid-column: span 2;">
+                            <span style="color:#ff3366; font-size:0.85rem;">絶対防衛損切り時の概算損失 (最終発注Unitsベース)</span>
+                            <div id="sim-loss-cut" style="font-size:0.9rem; color:#fff; margin-top:10px;">---</div>
+                        </div>
+                        <div style="background:rgba(255,165,0,0.1); padding:15px; border-radius:8px; border:1px solid rgba(255,165,0,0.3);">
+                            <span style="color:#ffa500; font-size:0.85rem;">1日最大損失停止ライン金額</span>
+                            <div id="sim-daily-loss" style="font-size:1.1rem; font-weight:bold; color:#ffa500;">約 ---- 円</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 監視通貨ペア設定 -->
+                <div style="background:rgba(0,240,255,0.05); padding:20px; border-radius:10px; border:1px solid rgba(0,240,255,0.2); margin-bottom:25px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="color:#00f0ff; margin:0; font-size:1.1rem;">🌍 監視通貨ペア (自動選定対象)</h3>
+                        <button id="btn-auto-symbol" onclick="toggleAutoSymbolSelect()" style="background: rgba(255,255,255,0.1); border: 1px solid #aaa; color:#aaa; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.3s;">
+                            ⚪ AI自動選定 OFF
+                        </button>
+                    </div>
+                    <p style="color:#aaa; font-size:0.85rem; margin-bottom:15px;">ここで設定した通貨ペアを監視し、最適なものを自動でトレード対象に選びます。</p>
+                    <div id="watch-symbols-list" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                        <!-- JSで動的にリストを描画 -->
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <select id="new-symbol-input" style="flex:1; padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.5); color:#fff;">
+                            <option value="">OANDAからリストを取得中...</option>
+                        </select>
+                        <button onclick="addWatchSymbol()" style="padding:10px 20px; background:rgba(0,240,255,0.2); border:1px solid #00f0ff; color:#00f0ff; border-radius:6px; cursor:pointer; font-weight:bold;">追加</button>
+                    </div>
+                </div>
+                
+                <!-- 📊 AI選定詳細レポート -->
+                <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); margin-bottom:25px; overflow-x:auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="color:#fff; margin:0; font-size:1.1rem;">📊 AI通貨ペア選定 詳細レポート</h3>
+                        <span style="color:#aaa; font-size:0.85rem;">全監視ペアのテスト計算と安全判定結果</span>
+                    </div>
+                    <div id="ai-selection-reason" style="background:rgba(0,240,255,0.1); padding:15px; border-radius:8px; border:1px solid rgba(0,240,255,0.3); margin-bottom:15px;">
+                        <span style="color:#00f0ff; font-weight:bold;">現在のおすすめペア: </span><span id="best-sym-display" style="color:#fff; font-weight:bold; font-size:1.1rem;">--</span><br>
+                        <span style="color:#aaa; font-size:0.9rem;">選定理由: </span><span id="best-sym-reason" style="color:#fff;">--</span>
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left; white-space:nowrap;">
+                        <thead>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.2); color:#aaa;">
+                                <th style="padding:8px;">通貨ペア</th>
+                                <th style="padding:8px;">OANDA判定</th>
+                                <th style="padding:8px;">現在レート</th>
+                                <th style="padding:8px;">スプレッド</th>
+                                <th style="padding:8px; color:#ffdd57;">証拠金計算</th>
+                                <th style="padding:8px; color:#ffdd57;">リスク許容</th>
+                                <th style="padding:8px; color:#ffdd57;">安全上限</th>
+                                <th style="padding:8px; color:#00f0ff;">最終発注Units</th>
+                                <th style="padding:8px;">想定利益(初/フ)</th>
+                                <th style="padding:8px;">想定損失(初/フ)</th>
+                                <th style="padding:8px;">RSI/MACD</th>
+                                <th style="padding:8px;">総合判定</th>
+                                <th style="padding:8px;">見送り理由</th>
+                            </tr>
+                        </thead>
+                        <tbody id="currency-scores-tbody">
+                            <!-- JS描画 -->
+                            <tr><td colspan="12" style="text-align:center; padding:15px; color:#aaa;">レポートを取得中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label>🟢 ロング(買) 運用限度額 (目安): <span id="val-limit">100,000</span>円</label>
+                        <input type="range" id="input-limit" min="10000" max="500000" step="10000" value="100000" oninput="updateVal('limit', this.value)">
+                    </div>
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #ff3366; background: rgba(255,51,102,0.05); border-radius: 8px; margin-bottom: 15px;">
+                        <label style="color:#ffb3c6;">🔴 FX 運用限度額 (手動時目安): <span id="val-margin-limit">200,000</span>円</label>
+                        <input type="range" id="input-margin-limit" min="50000" max="1000000" step="10000" value="200000" oninput="updateVal('margin-limit', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※AUTO予算調整が「手動設定」の際の上限値です。</small>
+                    </div>
+                    <div class="form-group">
+                        <label>1回の打診買い割合 (予算の何%): <span id="val-entry">20</span>%</label>
+                        <input type="range" id="input-entry" min="5" max="100" step="5" value="20" oninput="updateVal('entry', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※1回のエントリーで使う資金割合です。数値を上げると利益も損失も大きくなります。トレード頻度を上げたい場合は、この数値ではなくRSI・クールダウン・MTF条件を調整してください。</small>
+                    </div>
+                    <div class="form-group">
+                        <label>フルポジ上限 (予算の何%まで買うか): <span id="val-full">85</span>%</label>
+                        <input type="range" id="input-full" min="30" max="100" step="5" value="85" oninput="updateVal('full', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>RSI 買い基準 (この数値以下で買)<span class="glossary-icon" onclick="showGlossary('rsi')">❓</span>: <span id="val-rsi-buy">45</span></label>
+                        <input type="range" id="input-rsi-buy" min="15" max="60" step="1" value="45" oninput="updateVal('rsi-buy', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※この数値以下で買い候補になります。数値を高くするとエントリー回数は増えますが、ダマシも増えます。安全重視では30前後が目安です。</small>
+                    </div>
+                    <div class="form-group">
+                        <label>RSI 売り基準 (この数値以上で利確): <span id="val-rsi-sell">70</span></label>
+                        <input type="range" id="input-rsi-sell" min="50" max="90" step="1" value="70" oninput="updateVal('rsi-sell', this.value)">
+                    </div>
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #00f0ff; background: rgba(0,240,255,0.05); border-radius: 8px; margin-top: 15px; margin-bottom: 15px;">
+                        <label style="color:#00f0ff;">📈 トレイリングストップ発動幅<span class="glossary-icon" onclick="showGlossary('trailing')">❓</span>: <span id="val-trailing-stop">1.0</span>%</label>
+                        <input type="range" id="input-trailing-stop" min="0.05" max="1.0" step="0.05" value="0.1" oninput="updateVal('trailing-stop', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※利益が乗った後、最高値・最安値からこの割合だけ逆行したら自動で利益確定します</small>
+                    </div>
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #ff3366; background: rgba(255,51,102,0.05); border-radius: 8px; margin-top: 15px; margin-bottom: 15px;">
+                        <label style="color:#ffb3c6;">FX空売り開始 RSI基準<span class="glossary-icon" onclick="showGlossary('margin_rsi_short')">❓</span>: <span id="val-margin-rsi-short">60</span></label>
+                        <input type="range" id="input-margin-rsi-short" min="50" max="90" step="1" value="60" oninput="updateVal('margin-rsi-short', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※この数値以上でショート候補になります。RSI60前後は通常の上昇中にも出るため、初心者向け設定では70以上を推奨します。</small>
+                    </div>
+                    <div class="form-group">
+                        <label>連続エントリー待機時間 (クールダウン): <span id="val-cooldown">60</span>分</label>
+                        <input type="range" id="input-cooldown" min="1" max="180" step="1" value="60" oninput="updateVal('cooldown', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※スキャルピング（短期売買）の場合は1〜5分など短めに設定してください</small>
+                    </div>
+                    <div class="form-group">
+                        <label>連続エントリーに必要な値幅 (ナンピン幅)<span class="glossary-icon" onclick="showGlossary('nanpin')">❓</span>: <span id="val-price-drop">1.5</span>%</label>
+                        <input type="range" id="input-price-drop" min="0.1" max="1.0" step="0.05" value="0.3" oninput="updateVal('price-drop', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※最初の建玉から何％逆行したら追加エントリーするかの幅です。狭すぎるとノイズで連続ナンピンが発生します。</small>
+                    </div>
+                    <div class="form-group">
+                        <label>最大ナンピン回数: <span id="val-max-nampin">3</span>回</label>
+                        <input type="range" id="input-max-nampin" min="0" max="5" step="1" value="3" oninput="updateVal('max-nampin', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※この回数に達した場合、それ以上のナンピン（追加購入）を行いません。</small>
+                    </div>
+                    <div class="form-group">
+                        <label>バブル回避 強欲(F&G)ストッパー<span class="glossary-icon" onclick="showGlossary('fng')">❓</span>: <span id="val-fng">75</span></label>
+                        <input type="range" id="input-fng" min="50" max="100" step="1" value="75" oninput="updateVal('fng', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※この数値以上(お祭り騒ぎの異常バブル相場)になると、一帯の買いシグナルを完全に無視して高値づかみを防ぎます</small>
+                    </div>
+                    
+                    <div class="form-group" style="padding: 15px; border-left: 3px solid #ff3366; background: rgba(255,51,102,0.05); border-radius: 8px; margin-bottom: 15px;">
+                        <label style="color:#ffb3c6;">😱 セリクラ(大暴落)逆張り RSI基準: <span id="val-panic-buy">20</span></label>
+                        <input type="range" id="input-panic-buy" min="10" max="35" step="1" value="20" oninput="updateVal('panic-buy', this.value)">
+                        <small style="color:#888; display:block; margin-top:8px;">※大暴落パニック相場時に、通常ルールを無視して超底値で拾うRSI閾値です</small>
+                    </div>
+                    
+                    <div class="form-group" style="padding: 15px; background: rgba(255, 51, 102, 0.1); border: 1px solid rgba(255, 51, 102, 0.3); border-radius: 8px; margin-bottom:15px;">
+                        <label style="color:#ff3366; font-weight:bold;">🛡️ 絶対防衛損切りライン: <span id="val-loss-cut">5</span>%</label>
+                        <input type="range" id="input-loss-cut" min="0.5" max="5.0" step="0.1" value="2.0" oninput="updateVal('loss-cut', this.value)">
+                        <small style="color:#ffb3c6; display:block; margin-top:8px;">※1トレードの最大損失ラインです。数値を大きくすると損切りされにくくなりますが、1回の負けが大きくなります。</small>
+                    </div>
+                    
+                    <div class="form-group" style="padding: 15px; background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); border-radius: 8px; margin-bottom:15px;">
+                        <label style="color:#ffa500; font-weight:bold;">🛑 1日最大損失停止ライン: <span id="val-daily-loss">3.0</span>%</label>
+                        <input type="range" id="input-daily-loss" min="1.0" max="10.0" step="0.5" value="3.0" oninput="updateVal('daily-loss', this.value)">
+                        <small style="color:#ffd280; display:block; margin-top:8px;">※当日の確定損益が「FX 運用限度額」の指定％の赤字に達した場合、自動売買の新規エントリーを本日中停止します。</small>
+                    </div>
+                    
+                    <div class="form-group" style="padding: 15px; background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); border-radius: 8px;">
+                        <label style="color:#ffa500; font-weight:bold;">🛑 連敗一時停止 (回数): <span id="val-losing-streak">3</span>連敗で停止</label>
+                        <input type="range" id="input-losing-streak" min="1" max="10" step="1" value="3" oninput="updateVal('losing-streak', this.value)">
+                        <small style="color:#ffd280; display:block; margin-top:8px;">※指定回数連続で損切り決済が発生した場合、暴走を防ぐため一時的に新規エントリーを停止します。</small>
+                    </div>
+                    
+                    <button class="save-btn" onclick="saveSettings()">設定をシステムに保存・適用する</button>
+                    <div id="save-toast" style="display:none; color:var(--profit-green); margin-top:15px; text-align:center; font-weight:800; padding:10px; background:rgba(var(--profit-rgb),0.1); border-radius:8px;">✅ 保存され、AIのロジックが即座に切り替わりました！</div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- スマホ版 ボトムナビゲーション (5タブ構成) -->
+    <nav class="mobile-tabs" id="bottom-nav">
+        <button class="tab-btn active" data-target="home">
+            <i>🏠</i> 資産
+        </button>
+        <button class="tab-btn" data-target="chart">
+            <i>📈</i> チャート
+        </button>
+        <button class="tab-btn" data-target="ai">
+            <i>🧠</i> 指標
+        </button>
+        <button class="tab-btn" data-target="log">
+            <i>📝</i> 履歴
+        </button>
+        <button class="tab-btn" data-target="settings">
+            <i>⚙️</i> 設定
+        </button>
+    </nav>
+    
+    <!-- PC向けナビ（ヘッダー上部ではなくフロート） -->
+    <div class="pc-tabs" style="display:none; position:fixed; right:20px; top:30px; z-index:100; display:flex; gap:10px;">
+        <button class="tab-btn active" data-target="home" style="display:none;"></button>
+        <button class="tab-btn glass" data-target="settings" style="padding:10px 20px; border-radius:30px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.5); cursor:pointer; color:#fff; font-weight:bold;">⚙️ AI設定</button>
+        <button class="tab-btn glass" data-target="home" id="btn-close-setting" style="padding:10px 20px; border-radius:30px; border:1px solid rgba(0,240,255,0.8); background:rgba(0,240,255,0.2); cursor:pointer; color:#00f0ff; font-weight:bold; display:none;">✖ ダッシュボードに戻る</button>
+    </div>
+
+    <!-- Glossary Modal Overlay -->
+    <div class="glossary-modal-overlay" id="glossary-modal">
+        <div class="glossary-modal-content">
+            <div class="glossary-term-title" id="glossary-title">用語名</div>
+            <div class="glossary-text-main" id="glossary-main">解説テキストがここに入ります。</div>
+            <div class="glossary-text-analogy" id="glossary-analogy">【例え】例え話がここに入ります。</div>
+            <button class="glossary-close-btn" onclick="closeGlossary()">閉じる</button>
+        </div>
+    </div>
+
+    <script src="app.js?v=6"></script>
+</body>
+</html>

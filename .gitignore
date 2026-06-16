@@ -1,0 +1,40 @@
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+
+# Backups and Archives
+*.zip
+*.tar
+*.gz
+*.rar
+*backup*/
+*Backup*/
+temp_restore/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore old versions
+DRA/docs/D.R.A_Salon_Checker*/
+DRA/docs/dmm_salon_moderation_tool*/
+
+# Ignore other large directories
+kanshi/
+old/
+
+# Build artifacts
+build/
+dist/
+*.spec
+*.toc
+*.pkg
+*.pyz
