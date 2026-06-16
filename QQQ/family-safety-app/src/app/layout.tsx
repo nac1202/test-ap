@@ -36,6 +36,9 @@ import { Navbar } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { AuthProvider } from "@/components/Auth/AuthProvider";
+import { EEWProvider } from "@/components/EEW/EEWContext";
+import { EEWAlert } from "@/components/EEW/EEWAlert";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export default function RootLayout({
   children,
@@ -47,14 +50,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
-        <AuthProvider>
-          <Navbar />
-          <ServiceWorkerRegister />
-          <main className="pt-16 pb-20 min-h-screen bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-            {children}
-          </main>
-          <BottomNav />
+        <ThemeProvider attribute="data-theme" defaultTheme="default" themes={['default', 'sompo', 'tokiomarine']}>
+          <AuthProvider>
+          <EEWProvider>
+            <EEWAlert />
+            <Navbar />
+            <ServiceWorkerRegister />
+            <main className="pt-16 pb-20 md:pb-0 md:pl-20 min-h-screen bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+              <div className="max-w-4xl mx-auto w-full">
+                  {children}
+              </div>
+            </main>
+            <BottomNav />
+          </EEWProvider>
         </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

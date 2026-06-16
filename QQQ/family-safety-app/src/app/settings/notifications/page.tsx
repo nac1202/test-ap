@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Activity, Map, CloudRain, Sun, Waves, BellRing } from "lucide-react";
+import { ChevronLeft, Activity, Map, CloudRain, Sun, Waves, BellRing, AlertTriangle } from "lucide-react";
 import { Switch } from "@/components/ui/Switch";
 import { useNotificationSettings, NotificationSettings } from "@/hooks/useNotificationSettings";
+import { useEEW } from "@/components/EEW/EEWContext";
 import { useEffect, useState } from "react";
 
 const SETTING_ITEMS: {
@@ -67,6 +68,7 @@ const SETTING_ITEMS: {
 export default function NotificationSettingsPage() {
     const router = useRouter();
     const { settings, updateSetting, isLoaded } = useNotificationSettings();
+    const { triggerTestEEW } = useEEW();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -130,6 +132,25 @@ export default function NotificationSettingsPage() {
                             </div>
                         );
                     })}
+                </div>
+
+                {/* EEW Test Button */}
+                <div className="pt-8">
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center text-red-700 dark:text-red-400">
+                            <AlertTriangle className="w-5 h-5 mr-3 shrink-0" />
+                            <div>
+                                <h3 className="font-bold text-sm sm:text-base">緊急地震警報のテスト</h3>
+                                <p className="text-xs sm:text-sm mt-1 opacity-80">実際の警報画面がどのように表示されるか確認できます。</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={triggerTestEEW}
+                            className="w-full sm:w-auto px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors shrink-0 shadow-sm shadow-red-600/30"
+                        >
+                            テストを実行
+                        </button>
+                    </div>
                 </div>
 
                 <div className="pt-6 px-2 text-center">
