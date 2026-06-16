@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useEEW } from './EEWContext';
 import { AlertTriangle, MapPin, Activity, X } from 'lucide-react';
 
@@ -33,6 +33,73 @@ export const EEWAlert = () => {
   );
   
   const maxScale = maxScaleArea ? formatScale(maxScaleArea.scaleFrom) : '不明';
+
+  // 警報時の音とバイブレーション
+  useEffect(() => {
+    if (!isAlertVisible || !alertData) return;
+
+    // 1. バイブレーション（対応デバイスのみ）
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate([1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000]);
+    }
+
+    // 2. 警告音（Web Audio APIを利用してブラウザ内でビープ音を生成）
+    let audioCtx: AudioContext | null = null;
+    let intervalId: NodeJS.Timeout;
+
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+        
+        const playBeep = () => {
+          if (!audioCtx) return;
+          
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          
+          osc1.type = 'sine';
+          osc2.type = 'sine';
+          
+          // 不協和音で強い警告感を演出（C5 と F#5）
+          osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+          osc2.frequency.setValueAtTime(739.99, audioCtx.currentTime);
+          
+          // 音量（0.3から減衰）
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+          
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(audioCtx.destination);
+          
+          osc1.start();
+          osc2.start();
+          osc1.stop(audioCtx.currentTime + 0.8);
+          osc2.stop(audioCtx.currentTime + 0.8);
+        };
+
+        // 最初の再生
+        playBeep();
+        // 1秒ごとに繰り返し再生
+        intervalId = setInterval(playBeep, 1000);
+      }
+    } catch (err) {
+      console.warn('Audio playback failed', err);
+    }
+
+    // アラートが消えたら（クリーンアップ関数）音とバイブを止める
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close().catch(console.error);
+      }
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(0); // 停止
+      }
+    };
+  }, [isAlertVisible, alertData]);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-red-600/95 flex flex-col items-center justify-center p-4 text-white overflow-y-auto animate-in fade-in zoom-in duration-300">
