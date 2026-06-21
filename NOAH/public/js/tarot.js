@@ -14,11 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const luckyItem = document.getElementById('result-lucky');
 
     let isAnimating = false;
-
-    // Sound effects (Optional, if we had files)
-    // const shuffleSound = new Audio('/sounds/shuffle.mp3');
-    // const flipSound = new Audio('/sounds/flip.mp3');
-
+    // --- Sound effects ---
+    const drawWaitAudio = new Audio('/audio/draw_wait.mp3.mp3');
+    const drawNormalAudio = new Audio('/audio/draw_normal.mp3');
+    const drawSpAudio = new Audio('/audio/draw_sp.mp3');
+    
+    // 音量調整（必要に応じて）
+    drawWaitAudio.volume = 0.6;
+    drawNormalAudio.volume = 0.8;
+    drawSpAudio.volume = 0.9;
     const instruction = document.querySelector('.instruction');
 
     // Check for existing result on load
@@ -32,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showResult(savedResult);
         
         // ブラウザ次第で許可されればSEを鳴らす
-        playRevealSound();
+        playRevealSound(savedResult);
     } else {
         // Wait for user interaction
         cardDeck.addEventListener('click', () => {
@@ -42,102 +46,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Web Audio APIを利用した魔法陣/シャッフル風のSE生成
-    let audioCtx = null;
     function playMagicSound() {
         try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            const t = audioCtx.currentTime;
-            // シャララン♪という魔法のようなアルペジオ（Aメジャーコードの分散和音）
-            const notes = [880.00, 1108.73, 1318.51, 1760.00]; 
-            
-            notes.forEach((freq, index) => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, t + index * 0.1);
-                
-                gain.gain.setValueAtTime(0, t + index * 0.1);
-                gain.gain.linearRampToValueAtTime(0.3, t + index * 0.1 + 0.05);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + index * 0.1 + 1.0);
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                osc.start(t + index * 0.1);
-                osc.stop(t + index * 0.1 + 1.0);
-            });
-
-            // 最後にキラッと光るような高い音
-            const oscWin = audioCtx.createOscillator();
-            const gainWin = audioCtx.createGain();
-            oscWin.type = 'triangle';
-            oscWin.frequency.setValueAtTime(2093.00, t + 0.4); 
-            gainWin.gain.setValueAtTime(0, t + 0.4);
-            gainWin.gain.linearRampToValueAtTime(0.2, t + 0.45);
-            gainWin.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
-            oscWin.connect(gainWin);
-            gainWin.connect(audioCtx.destination);
-            oscWin.start(t + 0.4);
-            oscWin.stop(t + 1.5);
+            drawWaitAudio.currentTime = 0;
+            drawWaitAudio.play().catch(e => console.log('Audio error:', e));
         } catch(e) {
             console.error('Audio play failed', e);
         }
     }
 
-    // すでに占った結果を開く時のSE（明るい和音＋キラッ）
-    function playRevealSound() {
+    // カードがめくれた瞬間のSE（SPと通常で分岐）
+    function playRevealSound(cardIndex) {
         try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            drawWaitAudio.pause();
+            drawWaitAudio.currentTime = 0;
 
-            const t = audioCtx.currentTime;
-            
-            // Fリディアンのような明るい和音 [F5, A5, C6, E6] を一斉に鳴らす
-            const notes = [698.46, 880.00, 1046.50, 1318.51]; 
-            notes.forEach((freq) => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, t);
-                
-                gain.gain.setValueAtTime(0, t);
-                gain.gain.linearRampToValueAtTime(0.3, t + 0.05);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                osc.start(t);
-                osc.stop(t + 1.2);
-            });
-
-            // 短く素早いキラキラ音
-            const oscWin = audioCtx.createOscillator();
-            const gainWin = audioCtx.createGain();
-            oscWin.type = 'triangle';
-            oscWin.frequency.setValueAtTime(2637.02, t + 0.1); // E7
-            oscWin.frequency.exponentialRampToValueAtTime(3135.96, t + 0.3); // G7へ上昇
-            gainWin.gain.setValueAtTime(0, t + 0.1);
-            gainWin.gain.linearRampToValueAtTime(0.15, t + 0.15);
-            gainWin.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
-            oscWin.connect(gainWin);
-            gainWin.connect(audioCtx.destination);
-            oscWin.start(t + 0.1);
-            oscWin.stop(t + 0.8);
-
+            const isSp = (cardIndex === 22 || cardIndex === 23);
+            const audio = isSp ? drawSpAudio : drawNormalAudio;
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('Audio error:', e));
         } catch(e) {
             console.error('Audio play failed', e);
         }
@@ -194,9 +121,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const standardCardCount = 22; 
         
         let resCount = parseInt(localStorage.getItem('noa_reservation_count') || '0', 10);
-        let spProbability = 0.01; // Base 1%
-        spProbability += (resCount * 0.005); // +0.5% per reservation
-        if (spProbability > 0.15) spProbability = 0.15; // Max 15%
+        let spProbability = 0.002; // Base 0.2%
+        spProbability += (resCount * 0.001); // +0.1% per reservation
+        if (spProbability > 0.03) spProbability = 0.03; // Max 3%
+
+        // 初回起動かどうかの判定 (コレクションが空なら初回)
+        let isFirstTime = false;
+        try {
+            const storedCollection = localStorage.getItem('noa_tarot_collection');
+            if (!storedCollection) {
+                isFirstTime = true;
+            } else {
+                const collection = JSON.parse(storedCollection);
+                if (Array.isArray(collection) && collection.length === 0) {
+                    isFirstTime = true;
+                }
+            }
+        } catch(e) {
+            isFirstTime = true;
+        }
+
+        const excludedIndexes = [12, 13, 15, 16, 18]; // 吊るされた男(12), 死神(13), 悪魔(15), 塔(16), 月(18)
 
         let newIndex;
         let rand = Math.random();
@@ -210,6 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Draw standard card (0 to 21)
             newIndex = Math.floor(Math.random() * standardCardCount);
+            
+            // 初回の場合、除外カードを引いたら引き直す
+            if (isFirstTime) {
+                while (excludedIndexes.includes(newIndex)) {
+                    newIndex = Math.floor(Math.random() * standardCardCount);
+                }
+            }
         }
 
         const newData = {
@@ -278,11 +230,96 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function triggerCompletionEffect() {
+        // マスターフラグを保存
+        localStorage.setItem('noa_tarot_master', 'true');
+
         setTimeout(() => {
-            // とりあえずアラートでお祝い。後からリッチな演出を追加可能
-            alert("【Congratulations!】\n全24枚のタロットカードをすべてコンプリートしました！\nカードコレクション画面から、すべてのカードをご確認いただけます。");
+            // モーダルを表示
+            const completeModal = document.getElementById('complete-modal');
+            if (completeModal) {
+                completeModal.classList.remove('hidden');
+            }
+
+            // SEを再生
+            try {
+                const completeAudio = new Audio('/audio/complete.mp3');
+                completeAudio.volume = 1.0;
+                completeAudio.play().catch(e => console.log('Audio play failed', e));
+            } catch(e) {
+                console.error(e);
+            }
+
+            // オーブエフェクト
+            const canvas = document.getElementById('orb-canvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                let particles = [];
+                const particleCount = 150;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: canvas.height + Math.random() * 300,
+                        radius: Math.random() * 3 + 1,
+                        speed: Math.random() * 1.5 + 0.5,
+                        opacity: Math.random(),
+                        drift: Math.random() * 1 - 0.5
+                    });
+                }
+                
+                let animationFrameId;
+                
+                function drawOrbs() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    particles.forEach(p => {
+                        p.y -= p.speed;
+                        p.x += Math.sin(p.y * 0.02) * p.drift;
+                        
+                        p.opacity += (Math.random() - 0.5) * 0.05;
+                        if (p.opacity > 1) p.opacity = 1;
+                        if (p.opacity < 0.1) p.opacity = 0.1;
+                        
+                        if (p.y < -20) {
+                            p.y = canvas.height + 20;
+                            p.x = Math.random() * canvas.width;
+                        }
+                        
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                        // ゴールドと白が入り混じる
+                        const isWhite = Math.random() > 0.8;
+                        ctx.fillStyle = isWhite ? `rgba(255, 255, 255, ${p.opacity})` : `rgba(255, 223, 128, ${p.opacity})`;
+                        ctx.shadowBlur = 15;
+                        ctx.shadowColor = isWhite ? '#ffffff' : '#c5a059';
+                        ctx.fill();
+                    });
+                    
+                    animationFrameId = requestAnimationFrame(drawOrbs);
+                }
+                
+                drawOrbs();
+                window.currentOrbAnimation = animationFrameId;
+            }
         }, 1500);
     }
+
+    // モーダルを閉じる関数をグローバルに登録
+    window.closeCompleteModal = function() {
+        const completeModal = document.getElementById('complete-modal');
+        if (completeModal) {
+            completeModal.classList.add('hidden');
+        }
+        if (window.currentOrbAnimation) {
+            cancelAnimationFrame(window.currentOrbAnimation);
+        }
+    };
+
+    // テスト用にコンプリート演出をグローバルから呼び出せるようにする
+    window.testCompletionEffect = triggerCompletionEffect;
 
     function drawCard() {
         // 2. Select Card (Daily Persistence)
@@ -297,6 +334,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             cardDeck.style.display = 'none';
             resultContainer.classList.remove('hidden');
+            
+            // アニメーションして表示されたタイミングでめくり音を再生
+            playRevealSound(cardIndex);
         }, 500);
 
         isAnimating = false;
@@ -317,8 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const cardInner = document.querySelector('.card-inner');
 
         // Clear old injection
-        const oldImg = cardInner.querySelector('.card-image-bg');
-        if (oldImg) oldImg.remove();
+        const oldWrapper = cardInner.querySelector('.card-image-wrapper');
+        if (oldWrapper) oldWrapper.remove();
         const oldLogo = cardInner.querySelector('.card-logo-overlay');
         if (oldLogo) oldLogo.remove();
 
@@ -327,6 +367,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const imgName = card.name.toLowerCase().replace(/\s+/g, '_') + '.png';
         const imgPath = `/images/${imgName}`;
 
+        const STATS_KEY = 'noa_tarot_stats';
+        let stats = {};
+        try {
+            const storedStats = localStorage.getItem(STATS_KEY);
+            if (storedStats) stats = JSON.parse(storedStats);
+        } catch(e) {}
+        const cardStats = stats[cardIndex] || { count: 1 };
+        
+        let glowClass = '';
+        if (cardStats.count >= 20) glowClass = 'glow-rainbow';
+        else if (cardStats.count >= 10) glowClass = 'glow-gold';
+        else if (cardStats.count >= 7) glowClass = 'glow-strong';
+        else if (cardStats.count >= 5) glowClass = 'glow-weak';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'card-image-wrapper ' + glowClass;
+        wrapper.style.position = 'absolute';
+        wrapper.style.width = '100%';
+        wrapper.style.height = '100%';
+        wrapper.style.top = '0';
+        wrapper.style.left = '0';
+        wrapper.style.borderRadius = '16px'; // カードの角丸に合わせる
+        wrapper.style.zIndex = '0';
+
         const img = document.createElement('img');
         img.src = imgPath;
         img.className = 'card-image-bg';
@@ -334,12 +398,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Error handling: if image not found, do nothing (keep CSS background)
         img.onerror = function () {
             console.log('Image not found, using CSS background:', imgPath);
-            img.remove();
+            wrapper.remove();
         };
 
         // Success: insert image
         // Must insert before card-front content to be background
-        cardInner.insertBefore(img, cardInner.firstChild);
+        img.onload = function () {
+            wrapper.appendChild(img);
+            cardInner.insertBefore(wrapper, cardInner.firstChild);
+        };
 
         // Add Logo
         const logo = document.createElement('img');
