@@ -10,6 +10,78 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  --color-brand-primary: var(--theme-primary);
+  --color-brand-primary-hover: var(--theme-primary-hover);
+  --color-brand-light: var(--theme-primary-light);
+  --color-brand-light-hover: var(--theme-primary-light-hover);
+  --color-brand-header-from: var(--theme-header-from);
+  --color-brand-header-to: var(--theme-header-to);
+}
+
+@layer base {
+  :root, [data-theme="default"] {
+    --theme-primary: #0d9488;
+    --theme-primary-hover: #0f766e;
+    --theme-primary-light: #ccfbf1;
+    --theme-primary-light-hover: #99f6e4;
+    --theme-header-from: rgba(13, 148, 136, 0.95);
+    --theme-header-to: rgba(8, 145, 178, 0.95);
+  }
+
+  [data-theme="red"] {
+    --theme-primary: #c8161d;
+    --theme-primary-hover: #9f1116;
+    --theme-primary-light: #fee2e2;
+    --theme-primary-light-hover: #fecaca;
+    --theme-header-from: rgba(159, 17, 22, 0.95);
+    --theme-header-to: rgba(200, 22, 29, 0.95);
+  }
+
+  [data-theme="blue"] {
+    --theme-primary: #004d9c;
+    --theme-primary-hover: #003a7a;
+    --theme-primary-light: #dbeafe;
+    --theme-primary-light-hover: #bfdbfe;
+    --theme-header-from: rgba(0, 58, 122, 0.95);
+    --theme-header-to: rgba(0, 77, 156, 0.95);
+  }
+
+  [data-theme="orange"] {
+    --theme-primary: #ea580c;
+    --theme-primary-hover: #c2410c;
+    --theme-primary-light: #ffedd5;
+    --theme-primary-light-hover: #fed7aa;
+    --theme-header-from: rgba(194, 65, 12, 0.95);
+    --theme-header-to: rgba(234, 88, 12, 0.95);
+  }
+
+  [data-theme="purple"] {
+    --theme-primary: #7e22ce;
+    --theme-primary-hover: #6b21a8;
+    --theme-primary-light: #f3e8ff;
+    --theme-primary-light-hover: #e9d5ff;
+    --theme-header-from: rgba(107, 33, 168, 0.95);
+    --theme-header-to: rgba(126, 34, 206, 0.95);
+  }
+
+  [data-theme="slate"] {
+    --theme-primary: #475569;
+    --theme-primary-hover: #334155;
+    --theme-primary-light: #f1f5f9;
+    --theme-primary-light-hover: #e2e8f0;
+    --theme-header-from: rgba(51, 65, 85, 0.95);
+    --theme-header-to: rgba(71, 85, 105, 0.95);
+  }
+
+  [data-theme="green"] {
+    --theme-primary: #16a34a;
+    --theme-primary-hover: #15803d;
+    --theme-primary-light: #dcfce7;
+    --theme-primary-light-hover: #bbf7d0;
+    --theme-header-from: rgba(21, 128, 61, 0.95);
+    --theme-header-to: rgba(22, 163, 74, 0.95);
+  }
 }
 
 @media (prefers-color-scheme: dark) {

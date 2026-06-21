@@ -21,11 +21,11 @@ body {
 .orb-1 { top: -100px; left: -100px; width: 400px; height: 400px; background: rgba(0, 240, 255, 0.15); }
 .orb-2 { bottom: 10%; right: -50px; width: 300px; height: 300px; background: rgba(0, 255, 136, 0.1); }
 
-.dashboard-container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+.dashboard-container { max-width: 1200px; margin: 0 auto; padding: 20px 15px; }
 
 /* Header */
 header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;
 }
 .branding h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: 2px; white-space: nowrap; }
 .branding span { color: var(--accent-color); padding-left: 2px;}
@@ -40,7 +40,7 @@ header {
 
 /* Grid Layout */
 .grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 24px;
 }
 .panel-wide { grid-column: 1 / -1; }
 .chart-container { height: 500px; padding: 20px; overflow: hidden; }

@@ -1001,7 +1001,7 @@ body.theme-birthday {
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid #c5a059;
   border-radius: 4px;
-  overflow: hidden;
+  /* overflow: hidden; removed to show box-shadow */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1011,6 +1011,7 @@ body.theme-birthday {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 3px;
 }
 
 .locked-wrapper {
@@ -1131,7 +1132,397 @@ body.theme-birthday {
   text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
 }
 
+.nav-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  transition: all 0.3s;
+  mix-blend-mode: screen; /* 紺色の背景を透過して光だけを残す */
+  filter: contrast(1.2) brightness(0.9); /* 青みを抑えて黒に近づける */
+  -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 65%); /* 黒のグラデーションで徐々に消える効果 */
+  mask-image: radial-gradient(circle at center, black 30%, transparent 65%);
+}
+
+/* Adjust individual icon scales to match visual sizes */
+.nav-img-home { transform: translateY(6px) scale(2.2); }
+.nav-img-schedule { transform: translateY(4px) scale(2.1); }
+.nav-img-tarot { transform: translateY(2px) scale(2.0); }
+.nav-img-access { transform: translateY(1px) scale(1.7); }
+
+/* Hover/Active states for images (Make them pop up and ~1.2x larger) */
+.nav-item.active .nav-img {
+  filter: contrast(1.2) brightness(0.9) drop-shadow(0 0 12px rgba(197, 160, 89, 1.0));
+  z-index: 10;
+}
+
+.nav-item.active .nav-img-home { transform: translateY(1px) scale(2.6); }
+.nav-item.active .nav-img-schedule { transform: translateY(-1px) scale(2.5); }
+.nav-item.active .nav-img-tarot { transform: translateY(-2px) scale(2.4); }
+.nav-item.active .nav-img-access { transform: translateY(-3px) scale(2.0); }
+
 /* Padding to prevent content from hiding behind bottom nav */
 body {
   padding-bottom: 70px;
+}
+
+/* Card Glow Effects (Front Layer Edition) */
+.glow-weak {
+  position: relative;
+  animation: back-glow-weak 9s ease-in-out infinite alternate;
+}
+@keyframes back-glow-weak {
+  0% { box-shadow: 0 0 10px rgba(197, 160, 89, 0.2); }
+  100% { box-shadow: 0 0 25px rgba(197, 160, 89, 0.7), 0 0 10px rgba(197, 160, 89, 0.5); }
+}
+.glow-weak::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 10;
+  mix-blend-mode: screen;
+  background: linear-gradient(45deg, rgba(160, 110, 40, 0) 0%, rgba(160, 110, 40, 0.3) 50%, rgba(160, 110, 40, 0) 100%);
+  background-size: 200% 200%;
+  box-shadow: inset 0 0 10px rgba(160, 110, 40, 0.6);
+  pointer-events: none;
+  animation: gold-shine-front 9s linear infinite;
+}
+
+.glow-strong {
+  position: relative;
+  animation: back-glow-strong 7.5s ease-in-out infinite alternate;
+}
+@keyframes back-glow-strong {
+  0% { box-shadow: 0 0 15px rgba(197, 160, 89, 0.4); }
+  100% { box-shadow: 0 0 35px rgba(197, 160, 89, 0.9), 0 0 15px rgba(197, 160, 89, 0.6); }
+}
+.glow-strong::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 10;
+  mix-blend-mode: screen;
+  background: linear-gradient(45deg, rgba(160, 110, 40, 0) 0%, rgba(160, 110, 40, 0.5) 50%, rgba(160, 110, 40, 0) 100%);
+  background-size: 200% 200%;
+  box-shadow: inset 0 0 15px rgba(160, 110, 40, 0.8), 0 0 5px rgba(160, 110, 40, 0.4);
+  pointer-events: none;
+  animation: gold-shine-front 7.5s linear infinite;
+}
+
+.glow-gold {
+  position: relative;
+  animation: back-glow-gold 6s ease-in-out infinite alternate;
+}
+@keyframes back-glow-gold {
+  0% { box-shadow: 0 0 20px rgba(197, 160, 89, 0.6); }
+  100% { box-shadow: 0 0 50px rgba(197, 160, 89, 1), 0 0 20px rgba(197, 160, 89, 0.8); }
+}
+.glow-gold::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 10;
+  mix-blend-mode: screen;
+  background: linear-gradient(45deg, rgba(130, 80, 10, 0) 0%, rgba(130, 80, 10, 0.8) 50%, rgba(130, 80, 10, 0) 100%);
+  background-size: 200% 200%;
+  box-shadow: inset 0 0 25px rgba(180, 120, 30, 1), 0 0 10px rgba(180, 120, 30, 0.6);
+  pointer-events: none;
+  animation: gold-shine-front 6s linear infinite;
+}
+/* 10回(女教皇)専用の光の粒(パーティクル)エフェクト */
+.glow-gold::after {
+  content: ""; position: absolute; inset: -5px; border-radius: inherit; z-index: 20;
+  pointer-events: none; mix-blend-mode: color-dodge;
+  background-image: 
+    /* 小さな粒（奥） */
+    radial-gradient(1px 1px at 15% 25%, #fff 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 15%, rgba(197, 160, 89, 0.8) 50%, transparent 100%),
+    radial-gradient(1px 1px at 5% 55%, #fff 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 5%, rgba(197, 160, 89, 0.8) 50%, transparent 100%),
+    
+    /* 中くらいの粒 */
+    radial-gradient(2.5px 2.5px at 45% 75%, #fff 50%, transparent 100%),
+    radial-gradient(3px 3px at 25% 95%, rgba(197, 160, 89, 1) 50%, transparent 100%),
+    radial-gradient(2px 2px at 65% 35%, #fff 50%, transparent 100%),
+    radial-gradient(3px 3px at 35% 45%, rgba(197, 160, 89, 1) 50%, transparent 100%),
+    
+    /* 大きくて少しぼんやりした粒（手前） */
+    radial-gradient(4.5px 4.5px at 85% 85%, rgba(255, 255, 255, 0.7) 40%, transparent 100%),
+    radial-gradient(5px 5px at 95% 45%, rgba(197, 160, 89, 0.8) 40%, transparent 100%);
+  background-size: 150% 150%;
+  animation: gold-particles 12s linear infinite;
+  filter: blur(0.5px);
+}
+
+/* フルスクリーン最大化時は粒のサイズを3倍に拡大 */
+#fullscreen-wrapper.glow-gold::after {
+  background-image: 
+    radial-gradient(3px 3px at 15% 25%, #fff 50%, transparent 100%),
+    radial-gradient(4.5px 4.5px at 75% 15%, rgba(197, 160, 89, 0.8) 50%, transparent 100%),
+    radial-gradient(3px 3px at 5% 55%, #fff 50%, transparent 100%),
+    radial-gradient(4.5px 4.5px at 55% 5%, rgba(197, 160, 89, 0.8) 50%, transparent 100%),
+    
+    radial-gradient(7.5px 7.5px at 45% 75%, #fff 50%, transparent 100%),
+    radial-gradient(9px 9px at 25% 95%, rgba(197, 160, 89, 1) 50%, transparent 100%),
+    radial-gradient(6px 6px at 65% 35%, #fff 50%, transparent 100%),
+    radial-gradient(9px 9px at 35% 45%, rgba(197, 160, 89, 1) 50%, transparent 100%),
+    
+    radial-gradient(13.5px 13.5px at 85% 85%, rgba(255, 255, 255, 0.7) 40%, transparent 100%),
+    radial-gradient(15px 15px at 95% 45%, rgba(197, 160, 89, 0.8) 40%, transparent 100%);
+}
+
+@keyframes gold-particles {
+  0% { background-position: 0% 0%; opacity: 0; }
+  5% { opacity: 0.4; }
+  15% { opacity: 0.9; }
+  30% { opacity: 0.4; }
+  45% { opacity: 0.8; }
+  60% { opacity: 0.5; }
+  85% { opacity: 0.9; }
+  95% { opacity: 0.4; }
+  100% { background-position: 0% 100%; opacity: 0; }
+}
+
+@keyframes gold-shine-front {
+  0% { background-position: 0% 0%; opacity: 0; }
+  5% { opacity: 0.3; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  95% { opacity: 0.3; }
+  100% { background-position: 0% 100%; opacity: 0; }
+}
+
+.glow-rainbow {
+  position: relative;
+  animation: back-glow-rainbow 9s ease-in-out infinite alternate;
+}
+@keyframes back-glow-rainbow {
+  0% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 10px rgba(255, 105, 180, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.9), 0 0 20px rgba(0, 255, 255, 0.6); }
+  100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 10px rgba(255, 255, 0, 0.3); }
+}
+
+/* 表面の光の帯（レインボー）＋後光 */
+.glow-rainbow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 10;
+  mix-blend-mode: screen;
+  background-repeat: no-repeat;
+  background-image: 
+    linear-gradient(45deg, 
+      rgba(255,255,255,0) 0%, rgba(255,0,0,0.4) 20%, rgba(255,165,0,0.4) 30%, 
+      rgba(255,255,0,0.4) 40%, rgba(0,255,0,0.4) 50%, rgba(0,128,255,0.4) 60%, 
+      rgba(75,0,130,0.4) 70%, rgba(238,130,238,0.4) 80%, rgba(255,255,255,0) 100%
+    ),
+    radial-gradient(ellipse 20% 100% at 50% 50%, rgba(255, 255, 255, 0.5) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 20% at 50% 50%, rgba(255, 255, 255, 0.5) 0%, transparent 60%);
+  background-size: 200% 200%, 150% 150%, 150% 150%;
+  box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.5), 0 0 15px rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  animation: rainbow-shine-front 9s linear infinite;
+}
+
+/* 20回(女帝)専用の溢れる光の粒 */
+.glow-rainbow::after {
+  content: ""; position: absolute; inset: -40px; border-radius: inherit; z-index: 20;
+  pointer-events: none; mix-blend-mode: color-dodge;
+  background-repeat: no-repeat;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
+  background-image: 
+    radial-gradient(1px 1px at 15% 25%, #fff 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 15%, rgba(0, 255, 255, 0.9) 50%, transparent 100%),
+    radial-gradient(1px 1px at 5% 55%, #fff 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 5%, rgba(255, 105, 180, 0.9) 50%, transparent 100%),
+    radial-gradient(2.5px 2.5px at 45% 75%, #fff 50%, transparent 100%),
+    radial-gradient(3px 3px at 25% 95%, rgba(255, 255, 0, 1) 50%, transparent 100%),
+    radial-gradient(2px 2px at 65% 35%, #fff 50%, transparent 100%),
+    radial-gradient(3px 3px at 35% 45%, rgba(0, 255, 0, 1) 50%, transparent 100%),
+    radial-gradient(4.5px 4.5px at 85% 85%, rgba(255, 255, 255, 0.8) 40%, transparent 100%),
+    radial-gradient(5px 5px at 95% 45%, rgba(138, 43, 226, 0.9) 40%, transparent 100%);
+  background-size: 150% 150%;
+  animation: rainbow-particles 12s linear infinite;
+  filter: blur(0.5px);
+}
+
+/* フルスクリーン最大化時はレインボー粒も3倍に拡大し、溢れる範囲も拡大 */
+#fullscreen-wrapper.glow-rainbow::after {
+  inset: -100px;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 50%, transparent 80%);
+  mask-image: radial-gradient(ellipse at center, black 50%, transparent 80%);
+  background-image: 
+    radial-gradient(3px 3px at 15% 25%, #fff 50%, transparent 100%),
+    radial-gradient(4.5px 4.5px at 75% 15%, rgba(0, 255, 255, 0.9) 50%, transparent 100%),
+    radial-gradient(3px 3px at 5% 55%, #fff 50%, transparent 100%),
+    radial-gradient(4.5px 4.5px at 55% 5%, rgba(255, 105, 180, 0.9) 50%, transparent 100%),
+    radial-gradient(7.5px 7.5px at 45% 75%, #fff 50%, transparent 100%),
+    radial-gradient(9px 9px at 25% 95%, rgba(255, 255, 0, 1) 50%, transparent 100%),
+    radial-gradient(6px 6px at 65% 35%, #fff 50%, transparent 100%),
+    radial-gradient(9px 9px at 35% 45%, rgba(0, 255, 0, 1) 50%, transparent 100%),
+    radial-gradient(13.5px 13.5px at 85% 85%, rgba(255, 255, 255, 0.8) 40%, transparent 100%),
+    radial-gradient(15px 15px at 95% 45%, rgba(138, 43, 226, 0.9) 40%, transparent 100%);
+}
+
+@keyframes rainbow-shine-front {
+  0% { background-position: 0% 0%, 50% 50%, 50% 50%; opacity: 0; }
+  5% { opacity: 0.2; }
+  15% { opacity: 0.6; }
+  30% { opacity: 0.3; }
+  45% { opacity: 0.6; }
+  60% { opacity: 0.3; }
+  85% { opacity: 0.6; }
+  95% { opacity: 0.2; }
+  100% { background-position: 0% 100%, 50% 50%, 50% 50%; opacity: 0; }
+}
+
+@keyframes rainbow-particles {
+  0% { background-position: 0% 0%; opacity: 0; }
+  5% { opacity: 0.3; }
+  15% { opacity: 0.8; }
+  30% { opacity: 0.4; }
+  45% { opacity: 0.7; }
+  60% { opacity: 0.4; }
+  85% { opacity: 0.8; }
+  95% { opacity: 0.3; }
+  100% { background-position: 0% 100%; opacity: 0; }
+}
+
+/* 動的生成されるパーティクル用のクロスフレア */
+.js-cross-flare {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 30; /* 既存の光粒より少し手前 */
+  background-image: 
+    radial-gradient(ellipse 2px 30px at center, var(--flare-color) 0%, transparent 100%),
+    radial-gradient(ellipse 30px 2px at center, var(--flare-color) 0%, transparent 100%);
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0;
+  mix-blend-mode: screen;
+  /* 拡大率や速度はランダム */
+  animation: flare-anim 2.5s ease-in-out forwards;
+}
+
+@keyframes flare-anim {
+  0% { opacity: 0; transform: translateY(10px) scale(0); }
+  50% { opacity: 1; transform: translateY(-10px) scale(var(--flare-scale, 1)); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0); }
+}
+
+/* インタラクティブ波紋エフェクト */
+.js-ripple {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  z-index: 40; /* 既存のエフェクトよりも上に表示 */
+  animation: ripple-anim 1.5s ease-out forwards; /* 遅くフワーッと広がるように変更 */
+  mix-blend-mode: screen;
+}
+
+/* ゴールド波紋 */
+.ripple-gold {
+  box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.8), inset 0 0 15px 5px rgba(255, 215, 0, 0.8);
+  border: 2px solid rgba(255, 215, 0, 1);
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+}
+
+/* レインボー波紋 - 白っぽさを抑え、フワーッと優しく広がるオーロラ波紋 */
+.ripple-rainbow {
+  box-shadow: 
+    0 0 15px 5px rgba(0, 255, 255, 0.7),
+    0 0 30px 10px rgba(255, 105, 180, 0.6),
+    0 0 50px 15px rgba(255, 255, 0, 0.4),
+    inset 0 0 15px 5px rgba(0, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3); /* 白い枠線を極力薄く */
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%); /* 中心の白飛びを抑制 */
+  animation: ripple-rainbow-anim 1.5s ease-out forwards; /* よりゆっくりフワーッと */
+}
+
+@keyframes ripple-anim {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
+@keyframes ripple-rainbow-anim {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; filter: hue-rotate(0deg); }
+  20% { opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; filter: hue-rotate(90deg); }
+}
+
+/* 波紋時に散るクロスフレア（弾けるアニメーション用） */
+.js-burst-flare {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  pointer-events: none;
+  z-index: 50; /* 確実に最前面へ */
+  background-image: 
+    radial-gradient(circle 5px at center, #fff 0%, transparent 100%), /* コアの強い光 */
+    radial-gradient(ellipse 3px 40px at center, var(--flare-color) 0%, transparent 100%),
+    radial-gradient(ellipse 40px 3px at center, var(--flare-color) 0%, transparent 100%);
+  background-repeat: no-repeat;
+  background-position: center;
+  mix-blend-mode: color-dodge; /* screenより白く強く光る */
+  transform: translate(-50%, -50%) scale(0);
+  animation: burst-anim 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+@keyframes burst-anim {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+  20% { transform: translate(calc(-50% + var(--vx) * 0.2), calc(-50% + var(--vy) * 0.2)) scale(var(--flare-scale, 1)); opacity: 1; }
+  100% { 
+    transform: translate(calc(-50% + var(--vx)), calc(-50% + var(--vy))) scale(0); 
+    opacity: 0; 
+  }
+}
+
+/* === マウス追従エフェクト（Mouse Trailing Effect） === */
+.js-trail-orb {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 35; /* 波紋よりは下、カードよりは上 */
+  transform: translate(-50%, -50%) scale(1);
+  mix-blend-mode: screen;
+  animation: trail-orb-anim 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.trail-gold {
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.9) 0%, rgba(255, 215, 0, 0) 70%);
+  box-shadow: 0 0 10px 2px rgba(255, 215, 0, 0.6);
+}
+
+.trail-rainbow {
+  /* JS側でセットする --trail-color を使用 */
+  background: radial-gradient(circle, var(--trail-color, rgba(255,255,255,0.8)) 0%, transparent 70%);
+  box-shadow: 0 0 10px 2px var(--trail-color, rgba(255,255,255,0.8));
+}
+
+@keyframes trail-orb-anim {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+  100% { transform: translate(-50%, calc(-50% - 40px)) scale(0); opacity: 0; }
+}
+
+/* マウス追従時に飛び散るキラキラ（女帝専用） */
+.js-trail-sparkle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 36;
+  background-image: 
+    radial-gradient(ellipse 1px 15px at center, #fff 0%, transparent 100%),
+    radial-gradient(ellipse 15px 1px at center, #fff 0%, transparent 100%);
+  background-repeat: no-repeat;
+  background-position: center;
+  mix-blend-mode: color-dodge;
+  transform: translate(-50%, -50%) scale(0) rotate(var(--rot, 0deg));
+  animation: trail-sparkle-anim 0.6s ease-out forwards;
+}
+
+@keyframes trail-sparkle-anim {
+  0% { transform: translate(-50%, -50%) scale(0) rotate(var(--rot, 0deg)); opacity: 1; }
+  20% { transform: translate(calc(-50% + var(--vx) * 0.2), calc(-50% + var(--vy) * 0.2)) scale(var(--flare-scale)) rotate(var(--rot, 0deg)); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--vx)), calc(-50% + var(--vy))) scale(0) rotate(var(--rot, 0deg)); opacity: 0; }
 }

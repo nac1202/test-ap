@@ -18,7 +18,8 @@ export default function GuidePage() {
         const excludedCategories = [
             'security', 'fraud', 'cyber', // Security Page
             'defense',                    // Security Page (Defense Tab)
-            'firstaid', 'heatstroke'      // First Aid Page
+            'firstaid', 'heatstroke',     // First Aid Page
+            'car'                         // Drive Page
         ];
         return !excludedCategories.includes(g.category);
     });

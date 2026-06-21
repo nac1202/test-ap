@@ -174,6 +174,7 @@ bot_state = {
     "positions": {},
     "watch_symbols": [],
     "logs": [],
+    "latest_action": {},
     "trailing": {
         "margin_long_active": False,
         "margin_short_active": False,

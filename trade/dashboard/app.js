@@ -74,6 +74,15 @@ function initEquityChart() {
     });
 }
 let currentTotalAssets = 0;
+let hasUnsavedChanges = false;
+
+function markUnsavedChanges() {
+    hasUnsavedChanges = true;
+    const warningEl = document.getElementById('unsaved-warning');
+    if (warningEl) {
+        warningEl.style.display = 'block';
+    }
+}
 
 function updateDashboard() {
     fetch('/api/status')
@@ -84,6 +93,39 @@ function updateDashboard() {
             
             const now = new Date();
             document.getElementById('last-update').innerText = `最終更新: ${now.toLocaleTimeString()}`;
+
+            // 🧪 DRY RUN Badge
+            const dryRunBadge = document.getElementById('status-dry-run');
+            if (dryRunBadge && data.settings) {
+                const isDryRun = data.settings.dry_run;
+                const isLive = data.settings.live_trading_enabled;
+                if (isDryRun || !isLive) {
+                    dryRunBadge.style.display = 'block';
+                    dryRunBadge.innerText = '🧪 DRY RUN中：実注文なし';
+                    dryRunBadge.style.color = '#00ff88';
+                    dryRunBadge.style.background = 'rgba(0,255,136,0.15)';
+                    dryRunBadge.style.borderColor = 'rgba(0,255,136,0.5)';
+                    dryRunBadge.style.boxShadow = '0 0 10px rgba(0,255,136,0.3)';
+                } else {
+                    dryRunBadge.style.display = 'block';
+                    dryRunBadge.innerText = '⚠️ 本番売買ON：実注文あり';
+                    dryRunBadge.style.color = '#ff3366';
+                    dryRunBadge.style.background = 'rgba(255,51,102,0.15)';
+                    dryRunBadge.style.borderColor = 'rgba(255,51,102,0.5)';
+                    dryRunBadge.style.boxShadow = '0 0 10px rgba(255,51,102,0.5)';
+                }
+            }
+            
+            // 📋 Audit Stats
+            if (data.audit_stats) {
+                if(document.getElementById('stat-dry-count')) document.getElementById('stat-dry-count').innerText = `${data.audit_stats.today_dry_run_count} 回`;
+                if(document.getElementById('stat-dry-time')) document.getElementById('stat-dry-time').innerText = data.audit_stats.last_dry_run_block;
+                
+                if(document.getElementById('stat-safety-count')) document.getElementById('stat-safety-count').innerText = `${data.audit_stats.today_safety_block_count} 回`;
+                if(document.getElementById('stat-safety-time')) document.getElementById('stat-safety-time').innerText = data.audit_stats.last_safety_block;
+                
+                if(document.getElementById('stat-real-count')) document.getElementById('stat-real-count').innerText = `${data.audit_stats.today_possible_live_order_count} 回`;
+            }
 
             // 🟢 Update Spot Assets
             const spotJpy = data.balance.jpy;
@@ -117,7 +159,14 @@ function updateDashboard() {
             currentTotalAssets = totalAssets;
             document.getElementById('total-assets').innerText = totalAssets.toLocaleString();
             
-            document.getElementById('btc-price').innerText = Math.floor(data.market.btc_price).toLocaleString();
+            const currentPrice = Math.floor(data.market.btc_price);
+            if (currentPrice <= 0) {
+                document.getElementById('btc-price').innerText = "API取得待機中...";
+                document.getElementById('btc-price').style.fontSize = "0.5em";
+            } else {
+                document.getElementById('btc-price').innerText = currentPrice.toLocaleString();
+                document.getElementById('btc-price').style.fontSize = "";
+            }
             
             // 24h Range Bar 更新
             if (data.market.high && data.market.low) {
@@ -203,6 +252,35 @@ function updateDashboard() {
                 logContainer.scrollTop = logContainer.scrollHeight;
             }
 
+            const autoShiftBadge = document.getElementById('auto-shift-badge');
+            if (autoShiftBadge && data.indicators) {
+                const shiftLevel = data.indicators.shift_level || 0;
+                const shiftStatus = data.indicators.auto_shift_status || "NONE";
+                
+                if (shiftLevel > 0) {
+                    autoShiftBadge.style.display = 'block';
+                    autoShiftBadge.innerText = `🚀 AUTO GEAR: ギア${shiftLevel} (${shiftStatus === "UP" ? "現物買い攻勢" : "FX空売り攻勢"})`;
+                    
+                    if (shiftLevel === 3) {
+                        autoShiftBadge.style.background = 'rgba(255,51,102,0.15)';
+                        autoShiftBadge.style.borderColor = 'rgba(255,51,102,0.5)';
+                        autoShiftBadge.style.color = '#ff3366';
+                        autoShiftBadge.style.boxShadow = '0 0 15px rgba(255,51,102,0.5)';
+                    } else if (shiftLevel === 2) {
+                        autoShiftBadge.style.background = 'rgba(255,170,0,0.15)';
+                        autoShiftBadge.style.borderColor = 'rgba(255,170,0,0.5)';
+                        autoShiftBadge.style.color = '#ffaa00';
+                        autoShiftBadge.style.boxShadow = '0 0 10px rgba(255,170,0,0.4)';
+                    } else {
+                        autoShiftBadge.style.background = 'rgba(255,221,87,0.1)';
+                        autoShiftBadge.style.borderColor = 'rgba(255,221,87,0.4)';
+                        autoShiftBadge.style.color = '#ffdd57';
+                        autoShiftBadge.style.boxShadow = '0 0 5px rgba(255,221,87,0.2)';
+                    }
+                } else {
+                    autoShiftBadge.style.display = 'none';
+                }
+            }
 
         })
         .catch(error => {
@@ -312,6 +390,25 @@ function renderHistoryChart() {
 fetchHistory();
 setInterval(fetchHistory, 60000);
 
+function resetEquityHistory() {
+    if (confirm("過去の評価額グラフ履歴をリセットします。\n現在の履歴はバックアップされます。\n実行してよろしいですか？")) {
+        fetch('/api/reset_equity_history', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert("履歴のリセットが完了しました。グラフを再描画します。");
+                    fetchHistory();
+                } else {
+                    alert("リセットに失敗しました: " + (data.message || ""));
+                }
+            })
+            .catch(err => {
+                console.error("リセット処理中にエラー:", err);
+                alert("サーバーとの通信に失敗しました。");
+            });
+    }
+}
+
 // トグルボタンのイベント
 document.querySelectorAll('.btn-timeframe').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -377,6 +474,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         applyTabVisibility();
+        
+        // 設定タブを開いた時、保存されていない変更を破棄して自動的に最新状態にリロードする
+        if (btn.dataset.target === 'settings') {
+            if (typeof forceReloadSettings === 'function') {
+                forceReloadSettings(true); 
+            }
+        }
     });
 });
 
@@ -397,11 +501,11 @@ function initSettings() {
             document.getElementById('input-limit').value = data.trade_amount_limit;
             if(document.getElementById('input-margin-limit')) {
                 document.getElementById('input-margin-limit').value = data.margin_trade_amount_limit || 200000;
-                updateVal('margin-limit', data.margin_trade_amount_limit || 200000);
+                updateVal('margin-limit', data.margin_trade_amount_limit || 200000, false);
             }
             if(document.getElementById('input-reserved-margin')) {
                 document.getElementById('input-reserved-margin').value = data.reserved_margin_jpy !== undefined ? data.reserved_margin_jpy : 500000;
-                updateVal('reserved-margin', data.reserved_margin_jpy !== undefined ? data.reserved_margin_jpy : 500000);
+                updateVal('reserved-margin', data.reserved_margin_jpy !== undefined ? data.reserved_margin_jpy : 500000, false);
             }
             document.getElementById('input-entry').value = data.entry_size_percent;
             document.getElementById('input-full').value = data.full_position_percent;
@@ -417,23 +521,30 @@ function initSettings() {
             document.getElementById('input-trailing-stop').value = data.trailing_stop_percent || 1.0;
             document.getElementById('input-panic-buy-rsi').value = data.panic_buy_rsi || 20;
             
-            updateVal('limit', data.trade_amount_limit);
-            updateVal('entry', data.entry_size_percent);
-            updateVal('full', data.full_position_percent);
-            updateVal('rsi-buy', data.rsi_buy_threshold);
-            updateVal('rsi-sell', data.rsi_sell_threshold);
-            updateVal('fng', data.fng_stopper);
-            updateVal('loss-cut', data.loss_cut_percent || 5);
-            updateVal('margin-rsi-short', data.margin_rsi_short || 60);
-            updateVal('cooldown', data.cooldown_minutes || 60);
-            updateVal('fx-cooldown', data.fx_cooldown_minutes || 15);
-            updateVal('price-drop', data.price_drop_percent || 1.5);
-            updateVal('fx-price-drop', data.fx_price_drop_percent || 0.5);
-            updateVal('panic-buy-rsi', data.panic_buy_rsi || 20);
+            updateVal('limit', data.trade_amount_limit, false);
+            updateVal('entry', data.entry_size_percent, false);
+            updateVal('full', data.full_position_percent, false);
+            updateVal('rsi-buy', data.rsi_buy_threshold, false);
+            updateVal('rsi-sell', data.rsi_sell_threshold, false);
+            updateVal('fng', data.fng_stopper, false);
+            updateVal('loss-cut', data.loss_cut_percent || 5, false);
+            updateVal('margin-rsi-short', data.margin_rsi_short || 60, false);
+            updateVal('cooldown', data.cooldown_minutes || 60, false);
+            updateVal('fx-cooldown', data.fx_cooldown_minutes || 15, false);
+            updateVal('price-drop', data.price_drop_percent || 1.5, false);
+            updateVal('fx-price-drop', data.fx_price_drop_percent || 0.5, false);
+            updateVal('panic-buy-rsi', data.panic_buy_rsi || 20, false);
             
             // AUTOモードの初期化
             currentAutoBudgetMode = data.auto_budget_mode || 'manual';
             updateAutoBudgetUI();
+            
+            // オートシフトの初期化
+            currentAutoShiftEnabled = data.auto_shift_enabled || false;
+            updateAutoShiftUI();
+
+            currentFxShortEnabled = data.fx_short_enabled !== undefined ? data.fx_short_enabled : true;
+            updateFxShortUI();
             
             // 初回読み込み時にモードを判定表示する
             setTimeout(analyzeCurrentMode, 100);
@@ -450,7 +561,7 @@ function setAutoBudget(isAuto) {
         currentAutoBudgetMode = 'manual';
     }
     updateAutoBudgetUI();
-    saveSettings(); // AUTO/MANUAL切替を即時保存
+    markUnsavedChanges();
 }
 
 function updateAutoBudgetUI() {
@@ -474,6 +585,123 @@ function updateAutoBudgetUI() {
         btnManual.style.borderColor = '#ff3366';
         btnManual.style.color = '#ff3366';
     }
+    
+    const badgeAutoBudget = document.getElementById('status-auto-budget');
+    if (badgeAutoBudget) {
+        if (currentAutoBudgetMode !== 'manual') {
+            badgeAutoBudget.innerText = '🔄 予算追従: ON';
+            badgeAutoBudget.style.color = '#00f0ff';
+            badgeAutoBudget.style.borderColor = '#00f0ff';
+            badgeAutoBudget.style.background = 'rgba(0,240,255,0.1)';
+        } else {
+            badgeAutoBudget.innerText = '🔄 予算追従: OFF';
+            badgeAutoBudget.style.color = '#aaa';
+            badgeAutoBudget.style.borderColor = 'rgba(255,255,255,0.2)';
+            badgeAutoBudget.style.background = 'rgba(0,0,0,0.5)';
+        }
+    }
+}
+
+let currentAutoShiftEnabled = false;
+
+function setAutoShift(isOn) {
+    currentAutoShiftEnabled = isOn;
+    updateAutoShiftUI();
+    markUnsavedChanges();
+}
+
+function updateAutoShiftUI() {
+    const btnOn = document.getElementById('btn-auto-shift-on');
+    const btnOff = document.getElementById('btn-auto-shift-off');
+    
+    if (btnOn && btnOff) {
+        if (currentAutoShiftEnabled) {
+            btnOn.style.background = 'rgba(255,170,0,0.2)';
+            btnOn.style.borderColor = '#ffaa00';
+            btnOn.style.color = '#ffdd57';
+            
+            btnOff.style.background = 'rgba(255,255,255,0.05)';
+            btnOff.style.borderColor = 'rgba(255,255,255,0.2)';
+            btnOff.style.color = '#aaa';
+        } else {
+            btnOn.style.background = 'rgba(255,255,255,0.05)';
+            btnOn.style.borderColor = 'rgba(255,255,255,0.2)';
+            btnOn.style.color = '#aaa';
+            
+            btnOff.style.background = 'rgba(255,255,255,0.05)';
+            btnOff.style.borderColor = 'rgba(255,255,255,0.3)';
+            btnOff.style.color = '#ccc';
+        }
+    }
+    
+    const badgeAutoShift = document.getElementById('status-auto-shift');
+    if (badgeAutoShift) {
+        if (currentAutoShiftEnabled) {
+            badgeAutoShift.innerText = '🤖 オートシフト: ON';
+            badgeAutoShift.style.color = '#ffdd57';
+            badgeAutoShift.style.borderColor = '#ffaa00';
+            badgeAutoShift.style.background = 'rgba(255,170,0,0.1)';
+        } else {
+            badgeAutoShift.innerText = '🤖 オートシフト: OFF';
+            badgeAutoShift.style.color = '#aaa';
+            badgeAutoShift.style.borderColor = 'rgba(255,255,255,0.2)';
+            badgeAutoShift.style.background = 'rgba(0,0,0,0.5)';
+        }
+    }
+}
+
+let currentFxShortEnabled = true;
+
+function setFxShortEnabled(isOn) {
+    currentFxShortEnabled = isOn;
+    updateFxShortUI();
+    markUnsavedChanges();
+}
+
+function updateFxShortUI() {
+    const btnOn = document.getElementById('btn-fx-short-on');
+    const btnOff = document.getElementById('btn-fx-short-off');
+    
+    if (btnOn && btnOff) {
+        if (currentFxShortEnabled) {
+            btnOn.style.background = 'rgba(255,51,102,0.2)';
+            btnOn.style.borderColor = '#ff3366';
+            btnOn.style.color = '#ffb3c6';
+            
+            btnOff.style.background = 'rgba(255,255,255,0.05)';
+            btnOff.style.borderColor = 'rgba(255,255,255,0.2)';
+            btnOff.style.color = '#aaa';
+        } else {
+            btnOn.style.background = 'rgba(255,255,255,0.05)';
+            btnOn.style.borderColor = 'rgba(255,255,255,0.2)';
+            btnOn.style.color = '#aaa';
+            
+            btnOff.style.background = 'rgba(255,255,255,0.05)';
+            btnOff.style.borderColor = 'rgba(255,255,255,0.3)';
+            btnOff.style.color = '#ccc';
+        }
+    }
+    
+    // FX予算枠ラベルのステータスバッジ更新
+    const statusReserved = document.getElementById('status-reserved-margin');
+    const statusMargin = document.getElementById('status-margin-limit');
+    
+    if (statusReserved && statusMargin) {
+        if (!currentFxShortEnabled) {
+            statusReserved.style.display = 'inline-block';
+            statusReserved.innerText = '停止中';
+            statusReserved.style.background = 'rgba(255,255,255,0.2)';
+            statusReserved.style.color = '#aaa';
+            
+            statusMargin.style.display = 'inline-block';
+            statusMargin.innerText = '停止中 (実注文なし)';
+            statusMargin.style.background = 'rgba(255,255,255,0.2)';
+            statusMargin.style.color = '#aaa';
+        } else {
+            statusReserved.style.display = 'none';
+            statusMargin.style.display = 'none';
+        }
+    }
 }
 
 // 予算スライダーが手動で動かされたらMANUALモードに切り替える
@@ -482,10 +710,14 @@ document.getElementById('input-margin-limit').addEventListener('input', () => { 
 document.getElementById('input-reserved-margin').addEventListener('input', () => { if(currentAutoBudgetMode !== 'manual') setAutoBudget(false); });
 
 
-function updateVal(id, value) {
+function updateVal(id, value, isUserInput = true) {
     let displayValue = value;
     if (id === 'limit' || id === 'reserved-margin' || id === 'margin-limit') displayValue = Number(value).toLocaleString();
     document.getElementById(`val-${id}`).innerText = displayValue;
+    
+    if (isUserInput) {
+        markUnsavedChanges();
+    }
     
     // スライダーが動くたびにリアルタイムでAIの思考モードを判定する
     analyzeCurrentMode();
@@ -498,12 +730,12 @@ function analyzeCurrentMode() {
     
     let riskScore = 0;
     // 買いの予算割合によるリスク判定
-    if (entry <= 15) riskScore += 1;
+    if (entry < 15) riskScore += 1;
     else if (entry <= 25) riskScore += 2;
     else riskScore += 3;
     
     // RSI買い基準によるリスク判定（数値が高いほどすぐ買う＝高頻度ハイリスク）
-    if (rbuy <= 40) riskScore += 1;
+    if (rbuy < 40) riskScore += 1;
     else if (rbuy <= 49) riskScore += 2;
     else riskScore += 3;
     
@@ -515,7 +747,7 @@ function analyzeCurrentMode() {
     const settingBadge = document.getElementById('current-mode-badge');
     const headerBadge = document.getElementById('header-mode-badge');
     
-    let text = "⚖️ 標準 (ミドルリスク)";
+    let text = "⚖️ バランス運用 (ミドルリスク)";
     let color = "#ffdd57";
     let bg = "rgba(255, 221, 87, 0.1)";
     
@@ -547,6 +779,7 @@ function analyzeCurrentMode() {
 
 // サーバーで自動更新された予算設定をUIに同期する
 function syncSettingsFromBackend() {
+    if (hasUnsavedChanges) return;
     if (currentAutoBudgetMode !== 'manual') {
         fetch('/api/settings')
             .then(res => res.json())
@@ -559,9 +792,9 @@ function syncSettingsFromBackend() {
                     document.getElementById('input-margin-limit').value = data.margin_trade_amount_limit;
                     document.getElementById('input-reserved-margin').value = data.reserved_margin_jpy;
                     
-                    updateVal('limit', data.trade_amount_limit);
-                    updateVal('margin-limit', data.margin_trade_amount_limit);
-                    updateVal('reserved-margin', data.reserved_margin_jpy);
+                    updateVal('limit', data.trade_amount_limit, false);
+                    updateVal('margin-limit', data.margin_trade_amount_limit, false);
+                    updateVal('reserved-margin', data.reserved_margin_jpy, false);
                 }
             });
     }
@@ -572,8 +805,9 @@ setInterval(syncSettingsFromBackend, 10000);
 function applyPreset(type) {
     const behavior = {
         'safe': { entry: 10, full: 70, rbuy: 35, rsell: 65, fng: 60, loss: 4, mar_rsi: 70, cool: 180, pdrop: 3.0, fxcool: 60, fxpdrop: 1.5, tstop: 2.0, prsi: 15 },
-        'normal': { entry: 20, full: 85, rbuy: 45, rsell: 70, fng: 75, loss: 5, mar_rsi: 65, cool: 60, pdrop: 1.5, fxcool: 30, fxpdrop: 1.0, tstop: 1.5, prsi: 20 },
-        'aggressive': { entry: 30, full: 100, rbuy: 55, rsell: 85, fng: 85, loss: 7, mar_rsi: 60, cool: 30, pdrop: 1.0, fxcool: 15, fxpdrop: 0.5, tstop: 1.0, prsi: 25 }
+        'normal': { entry: 15, full: 80, rbuy: 40, rsell: 70, fng: 75, loss: 5, mar_rsi: 65, cool: 60, pdrop: 2.0, fxcool: 30, fxpdrop: 1.0, tstop: 1.5, prsi: 20 },
+        'aggressive': { entry: 30, full: 100, rbuy: 55, rsell: 85, fng: 85, loss: 7, mar_rsi: 60, cool: 30, pdrop: 1.0, fxcool: 15, fxpdrop: 0.5, tstop: 1.0, prsi: 25 },
+        'scalp': { entry: 15, full: 90, rbuy: 55, rsell: 60, fng: 80, loss: 5, mar_rsi: 75, cool: 15, pdrop: 0.8, fxcool: 30, fxpdrop: 1.0, tstop: 0.5, prsi: 30 }
     };
     
     // 現在の総資産を取得（不明な場合は安全に100万円とする）
@@ -587,19 +821,27 @@ function applyPreset(type) {
         p_mlimit = Math.max(minMarginLimit, total * 0.15); 
         p_reserved = total * 0.45;
     } else if (type === 'normal') {
-        p_limit = total * 0.60;
-        p_mlimit = Math.max(minMarginLimit, total * 0.25);
-        p_reserved = total * 0.15;
+        p_limit = total * 0.50;
+        p_mlimit = Math.max(minMarginLimit, total * 0.30);
+        p_reserved = total * 0.20;
     } else if (type === 'aggressive') {
-        p_limit = total * 0.85;
+        p_limit = total * 0.80;
         p_mlimit = Math.max(minMarginLimit, total * 0.40);
         p_reserved = 0;
+    } else if (type === 'scalp') {
+        p_limit = total * 0.80;      // 現物に80%の資金を割り当て
+        p_mlimit = minMarginLimit;    // FXは最低限の証拠金のみ
+        p_reserved = total * 0.15;   // 現金は15%だけ持たせる
     }
     
     // 1万円単位で切り捨て
     p_limit = Math.floor(p_limit / 10000) * 10000;
     p_mlimit = Math.floor(p_mlimit / 10000) * 10000;
     p_reserved = Math.floor(p_reserved / 10000) * 10000;
+    
+    // 下限ガード（総資産が10万円等の少額の場合に10万円を超えないように上限クリップも入れる）
+    p_limit = Math.max(10000, p_limit);
+    if (p_limit > total) p_limit = total;
     
     // 下限ガード
     p_limit = Math.max(10000, p_limit);
@@ -656,11 +898,14 @@ function applyPreset(type) {
     currentAutoBudgetMode = type;
     updateAutoBudgetUI();
     
+    markUnsavedChanges();
+    
     const toast = document.getElementById('save-toast');
-    toast.innerText = "💡 現在の資産額に合わせて予算と設定がセットされました！下にスクロールして「保存」を押して適用してください";
-    toast.style.color = '#ffdd57';
-    toast.style.background = 'rgba(255, 221, 87, 0.1)';
+    toast.innerText = "⚠️ プリセットを適用しました。「保存・適用する」を押すまで反映されません。";
+    toast.style.color = '#ffaa00';
+    toast.style.background = 'rgba(255, 170, 0, 0.1)';
     toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 5000);
 }
 
 function saveSettings() {
@@ -681,7 +926,9 @@ function saveSettings() {
         "fx_price_drop_percent": parseFloat(document.getElementById('input-fx-price-drop').value),
         "trailing_stop_percent": parseFloat(document.getElementById('input-trailing-stop').value),
         "panic_buy_rsi": parseInt(document.getElementById('input-panic-buy-rsi').value),
-        "auto_budget_mode": currentAutoBudgetMode
+        "auto_budget_mode": currentAutoBudgetMode,
+        "auto_shift_enabled": currentAutoShiftEnabled,
+        "fx_short_enabled": currentFxShortEnabled
     };
     
     fetch('/api/settings', {
@@ -691,14 +938,38 @@ function saveSettings() {
     })
     .then(res => res.json())
     .then(data => {
+        hasUnsavedChanges = false;
+        const warningEl = document.getElementById('unsaved-warning');
+        if (warningEl) warningEl.style.display = 'none';
+        
         const toast = document.getElementById('save-toast');
-        toast.innerText = "✅ 保存完了！AIのロジックが即座に切り替わりました";
+        toast.innerText = "✅ 保存完了！設定をシステムに反映しました";
         toast.style.color = '#00ff88';
         toast.style.background = 'rgba(0, 255, 136, 0.1)';
         toast.style.display = 'block';
         setTimeout(() => { toast.style.display = 'none'; }, 5000);
     });
 }
+
+function forceReloadSettings(silent = false) {
+    initSettings(); // サーバーから再取得して画面を上書きする
+    
+    hasUnsavedChanges = false;
+    const warningEl = document.getElementById('unsaved-warning');
+    if (warningEl) {
+        warningEl.style.display = 'none';
+    }
+    
+    if (!silent) {
+        const toast = document.getElementById('save-toast');
+        toast.innerText = "🔄 変更を破棄し、保存済みの設定にリセットしました";
+        toast.style.color = '#ccc';
+        toast.style.background = 'rgba(255, 255, 255, 0.1)';
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 5000);
+    }
+}
+
 
 setTimeout(initSettings, 1000);
 
@@ -773,6 +1044,8 @@ function closeGlossary() {
     setTimeout(() => { overlay.style.display = 'none'; }, 300);
 }
 
+
+
 // Ensure clicking outside the modal content closes it
 document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('glossary-modal');
@@ -781,4 +1054,100 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === overlay) closeGlossary();
         });
     }
+
+    // すべての val-xx スパンをクリック可能にして手入力ダイアログを出す
+    document.querySelectorAll('span[id^="val-"]').forEach(span => {
+        // UIをクリッカブルっぽく装飾
+        span.style.cursor = 'pointer';
+        span.style.borderBottom = '1px dashed rgba(255,255,255,0.4)';
+        span.title = 'クリックして数値を直接手入力';
+        
+        span.addEventListener('mouseenter', () => span.style.color = '#00f0ff');
+        span.addEventListener('mouseleave', () => span.style.color = '');
+        
+        span.addEventListener('click', function() {
+            const id = this.id.replace('val-', '');
+            const slider = document.getElementById('input-' + id);
+            if (!slider) return;
+            
+            // ラベルのテキストを取得してプロンプトに出す
+            let labelText = this.parentElement.innerText.split(':')[0].trim();
+            // 絵文字などを除外して綺麗にする処理
+            labelText = labelText.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF]/g, '').trim();
+            
+            const currentVal = slider.value;
+            const newVal = prompt(labelText + " の数値を半角数字で手入力してください:", currentVal);
+            
+            if (newVal !== null && newVal.trim() !== "" && !isNaN(newVal)) {
+                let numVal = Number(newVal);
+                
+                // 入力値がスライダーの最大・最小を超えていたらスライダー枠を拡張する
+                if (numVal > Number(slider.max)) {
+                    slider.max = numVal * 1.5;
+                }
+                if (numVal < Number(slider.min)) {
+                    slider.min = 0;
+                }
+                
+                slider.value = numVal;
+                updateVal(id, numVal);
+                
+                // 手動変更扱いにするためAUTOモードをOFFにする
+                if (typeof setAutoBudget === 'function') {
+                    setAutoBudget(false);
+                }
+            }
+        });
+    });
 });
+
+// ==========================================
+// スクリーンショット機能
+// ==========================================
+function takeScreenshot() {
+    const btn = document.getElementById('btn-screenshot');
+    if (!btn) return;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ 撮影中...';
+    btn.disabled = true;
+
+    html2canvas(document.querySelector('.dashboard-container') || document.body, {
+        backgroundColor: '#050b14',
+        scale: 2,
+        useCORS: true
+    }).then(canvas => {
+        const base64image = canvas.toDataURL('image/png');
+        
+        fetch('/api/save_screenshot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64image })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                btn.innerHTML = '✅ 撮影完了!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 3000);
+            } else {
+                alert('スクショ保存に失敗しました: ' + data.message);
+                btn.innerHTML = '❌ エラー';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 3000);
+            }
+        })
+        .catch(err => {
+            alert('通信エラーが発生しました');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }).catch(err => {
+        alert('スクショの生成に失敗しました');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}

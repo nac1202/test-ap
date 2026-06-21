@@ -3,6 +3,8 @@ import json
 import threading
 import time
 import datetime
+import shutil
+import logging_manager
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from fetchers.market_data import GMOCoinAPI
@@ -39,7 +41,11 @@ default_settings = {
     "price_drop_percent": 1.5,      # 現物ナンピン下落幅(%)
     "fx_price_drop_percent": 0.5,   # FXナンピン上昇幅(%)
     "trailing_stop_percent": 1.0,   # トレイリングストップ発動幅(%)
-    "panic_buy_rsi": 20             # セリクラ逆張り用RSI閾値
+    "panic_buy_rsi": 20,            # セリクラ逆張り用RSI閾値
+    "auto_shift_enabled": False,    # 相場環境連動ギア(オートシフト)
+    "fx_short_enabled": False,      # FX空売り稼働(安全のためデフォ停止)
+    "dry_run": True,                # DRY RUNモード(デフォON)
+    "live_trading_enabled": False   # 本番売買許可(デフォOFF)
 }
 
 def load_settings():
@@ -85,7 +91,7 @@ bot_state = {
     "margin": {"actual_profit_loss": 0, "available_amount": 0, "margin_ratio": 0, "unrealized_pnl": 0},
     "positions": {"long_size": 0.0, "short_size": 0.0},
     "market": {"btc_price": 0, "high": 0, "low": 0},
-    "indicators": {"rsi": 50.0, "macd_hist": 0.0, "fng": 50},
+    "indicators": {"rsi": 50.0, "macd_hist": 0.0, "fng": 50, "auto_shift_status": "NONE", "shift_level": 0},
     "logs": [
         f"[{datetime.datetime.now().strftime('%m/%d %H:%M:%S')}] 取引所APIとの通信を確立しました",
         f"[{datetime.datetime.now().strftime('%m/%d %H:%M:%S')}] 🟢🔴デュアルエンジン自動売買システム監視開始"
@@ -99,6 +105,13 @@ bot_state = {
         "spot_max_price": 0,
         "margin_active": False,
         "margin_min_price": 0
+    },
+    "audit_stats": {
+        "last_dry_run_block": "-",
+        "last_safety_block": "-",
+        "today_dry_run_count": 0,
+        "today_safety_block_count": 0,
+        "today_possible_live_order_count": 0
     }
 }
 
@@ -107,6 +120,66 @@ def add_log(msg):
     bot_state["logs"].append(f"[{timestamp}] {msg}")
     if len(bot_state["logs"]) > 20:
         bot_state["logs"].pop(0)
+
+def handle_audit_logging(action, res, price, size=0, amount=0):
+    if not res: return
+    msg = res.get("message", "")
+    status = res.get("status", "")
+    reason = res.get("reason", "")
+    
+    is_dry_run = bot_settings.get("dry_run", True)
+    is_live = bot_settings.get("live_trading_enabled", False)
+    is_fx = bot_settings.get("fx_short_enabled", False)
+    
+    blocked = False
+    block_reason = reason
+    possible_live_order_success = False
+    
+    if "SAFETY BLOCK" in msg or status == "error":
+        blocked = True
+        if "DRY RUN" in msg:
+            block_reason = "dry_run"
+        elif "LIVE BLOCKED" in msg:
+            block_reason = "live_blocked"
+        
+        if "DRY RUN" in msg:
+            bot_state["audit_stats"]["today_dry_run_count"] += 1
+            bot_state["audit_stats"]["last_dry_run_block"] = datetime.datetime.now().strftime('%H:%M:%S')
+        else:
+            bot_state["audit_stats"]["today_safety_block_count"] += 1
+            bot_state["audit_stats"]["last_safety_block"] = datetime.datetime.now().strftime('%H:%M:%S')
+            
+    elif status == "success" and "DRY RUN" in msg:
+        blocked = True
+        block_reason = "dry_run"
+        bot_state["audit_stats"]["today_dry_run_count"] += 1
+        bot_state["audit_stats"]["last_dry_run_block"] = datetime.datetime.now().strftime('%H:%M:%S')
+        
+    elif status == "success" and "[SKIPPED]" in msg:
+        blocked = True
+        block_reason = "skipped"
+        bot_state["audit_stats"]["today_safety_block_count"] += 1
+        bot_state["audit_stats"]["last_safety_block"] = datetime.datetime.now().strftime('%H:%M:%S')
+        
+    elif status == "success":
+        possible_live_order_success = True
+        bot_state["audit_stats"]["today_possible_live_order_count"] += 1
+        
+    log_data = {
+        "action": action,
+        "price": price,
+        "size": size,
+        "amount": amount,
+        "dry_run": is_dry_run,
+        "live_trading_enabled": is_live,
+        "fx_short_enabled": is_fx,
+        "blocked": blocked,
+        "block_reason": block_reason,
+        "possible_live_order_success": possible_live_order_success,
+        "message": msg
+    }
+    logging_manager.log_safety_audit(log_data)
+
 
 def bg_updater():
     global last_history_time
@@ -199,7 +272,7 @@ def bg_updater():
             
             # --- AUTO BUDGET ADJUSTMENT ---
             auto_mode = bot_settings.get("auto_budget_mode", "manual")
-            if auto_mode in ["safe", "normal", "aggressive"]:
+            if auto_mode in ["safe", "normal", "aggressive", "scalp"]:
                 total_for_calc = total_val if total_val > 0 else 1000000
                 minMarginLimit = 150000
                 
@@ -207,16 +280,25 @@ def bg_updater():
                     p_limit, p_mlimit, p_reserved = total_for_calc * 0.40, max(minMarginLimit, total_for_calc * 0.15), total_for_calc * 0.45
                 elif auto_mode == "normal":
                     p_limit, p_mlimit, p_reserved = total_for_calc * 0.60, max(minMarginLimit, total_for_calc * 0.25), total_for_calc * 0.15
-                else: # aggressive
+                elif auto_mode == "aggressive":
                     p_limit, p_mlimit, p_reserved = total_for_calc * 0.85, max(minMarginLimit, total_for_calc * 0.40), 0
+                elif auto_mode == "scalp":
+                    p_limit, p_mlimit, p_reserved = total_for_calc * 0.85, minMarginLimit, total_for_calc * 0.15
                 
                 p_limit = max(10000, int((p_limit // 10000) * 10000))
                 p_mlimit = int((p_mlimit // 10000) * 10000)
                 p_reserved = int((p_reserved // 10000) * 10000)
                 
-                if (bot_settings.get("trade_amount_limit") != p_limit or 
-                    bot_settings.get("margin_trade_amount_limit") != p_mlimit or 
-                    bot_settings.get("reserved_margin_jpy") != p_reserved):
+                current_limit = bot_settings.get("trade_amount_limit", 0)
+                current_mlimit = bot_settings.get("margin_trade_amount_limit", 0)
+                current_reserved = bot_settings.get("reserved_margin_jpy", 0)
+                
+                # 頻繁な予算調整（ログの連投）を防ぐための閾値設定（最小2万円、最大5万円）
+                threshold = max(20000, min(50000, int(total_for_calc * 0.01)))
+                
+                if (abs(current_limit - p_limit) >= threshold or 
+                    abs(current_mlimit - p_mlimit) >= threshold or 
+                    abs(current_reserved - p_reserved) >= threshold):
                     bot_settings["trade_amount_limit"] = p_limit
                     bot_settings["margin_trade_amount_limit"] = p_mlimit
                     bot_settings["reserved_margin_jpy"] = p_reserved
@@ -225,20 +307,36 @@ def bg_updater():
 
             current_time = time.time()
             if current_time - last_history_time >= 900:  
-                last_history_time = current_time
-                timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-                
+                # API取得失敗時（price<=0）や、残高がマイナスなどの異常値は履歴に保存しない
                 display_spot_val = bot_state['balance']['jpy_display'] + bot_state['balance']['btc_value']
                 
-                equity_history.append({
-                    "time": timestamp, 
-                    "total": total_val,
-                    "spot": display_spot_val,
-                    "margin": fx_val
-                })
-                
-                # 履歴上限を撤廃し無期限に蓄積
-                save_history(equity_history)
+                if total_val > 0 and price > 0 and display_spot_val >= 0:
+                    last_history_time = current_time
+                    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+                    
+                    equity_history.append({
+                        "time": timestamp, 
+                        "total": total_val,
+                        "spot": display_spot_val,
+                        "margin": fx_val
+                    })
+                    
+                    # 履歴上限を撤廃し無期限に蓄積
+                    save_history(equity_history)
+                    
+                    # 15分ごとのシステム定期ログ
+                    logging_manager.log_system_event({
+                        "event_type": "HEARTBEAT",
+                        "btc_price": price,
+                        "api_status": "OK" if price > 0 else "ERROR",
+                        "dry_run": bot_settings.get("dry_run", True),
+                        "live_trading_enabled": bot_settings.get("live_trading_enabled", False),
+                        "fx_short_enabled": bot_settings.get("fx_short_enabled", False),
+                        "mode": bot_settings.get("auto_budget_mode", "manual"),
+                        "message": "定期システムステータス記録"
+                    })
+                else:
+                    print(f"Skipped history save due to invalid data: price={price}, total={total_val}, spot={display_spot_val}")
             
             klines_resp = exchange.get_klines(symbol='BTC_JPY', interval='5min')
             data_list = []
@@ -318,6 +416,26 @@ def bg_updater():
                 close_prices
             )
             
+            bot_state['indicators']['auto_shift_status'] = signals.get("auto_shift_status", "NONE")
+            bot_state['indicators']['shift_level'] = signals.get("shift_level", 0)
+            
+            # --- ログ出力 ---
+            logging_manager.log_trade_decision({
+                "btc_price": price,
+                "rsi": bot_state['indicators']['rsi'],
+                "macd_hist": bot_state['indicators']['macd_hist'],
+                "fng": fng_score,
+                "macro_trend": macro_trend,
+                "spot_signal": signals.get("spot"),
+                "margin_signal": signals.get("margin"),
+                "auto_budget_mode": bot_settings.get("auto_budget_mode"),
+                "trade_amount_limit": bot_settings.get("trade_amount_limit"),
+                "margin_trade_amount_limit": bot_settings.get("margin_trade_amount_limit"),
+                "reserved_margin_jpy": bot_settings.get("reserved_margin_jpy"),
+                "jpy_balance": bot_state['balance']['jpy'],
+                "short_size": positions_info.get("short_size", 0)
+            })
+            
             # --- 🟢 現物エンジンの処理 ---
             spot_signal = signals.get("spot", {"action": "HOLD"})
             if spot_signal["action"] != "HOLD":
@@ -329,6 +447,8 @@ def bg_updater():
                     bot_state["trailing"]["spot_max_price"] = spot_signal["price"]
                 else:
                     spot_res = order_manager.execute_spot_signal(spot_signal, price, bot_state['balance'], bot_settings)
+                    handle_audit_logging(spot_signal["action"], spot_res, price)
+                    
                     if spot_res.get("status") == "success":
                         add_log(spot_res["message"])
                         if spot_signal["action"] == "BUY_SPOT":
@@ -358,6 +478,8 @@ def bg_updater():
                     bot_state["trailing"]["margin_min_price"] = margin_signal["price"]
                 else:
                     margin_res = order_manager.execute_margin_signal(margin_signal, price, available_amount, positions_info, bot_settings)
+                    handle_audit_logging(margin_signal["action"], margin_res, price)
+                    
                     if margin_res.get("status") == "success":
                         add_log(margin_res["message"])
                         if margin_signal["action"] == "OPEN_SHORT":
@@ -388,11 +510,83 @@ def bg_updater():
 
 @app.route('/api/status', methods=['GET'])
 def get_status():
-    return jsonify(bot_state)
+    response_data = bot_state.copy()
+    response_data['settings'] = bot_settings
+    return jsonify(response_data)
 
 @app.route('/api/history', methods=['GET'])
 def get_history():
     return jsonify(equity_history)
+
+@app.route('/api/reset_equity_history', methods=['POST'])
+def reset_equity_history():
+    global equity_history
+    
+    backup_file = None
+    if os.path.exists(HISTORY_FILE):
+        backup_dir = 'data/backups'
+        os.makedirs(backup_dir, exist_ok=True)
+        backup_filename = f"equity_history_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        backup_file = os.path.join(backup_dir, backup_filename)
+        shutil.copy(HISTORY_FILE, backup_file)
+        
+    real_spot_val = bot_state['balance']['jpy_display'] + bot_state['balance']['btc_value']
+    fx_val = bot_state['margin']['unrealized_pnl']
+    total_val = real_spot_val + fx_val
+    if total_val <= 0:
+        total_val = 100000
+        real_spot_val = 100000
+        fx_val = 0
+        
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+    equity_history = [{
+        "time": timestamp,
+        "total": total_val,
+        "spot": real_spot_val,
+        "margin": fx_val
+    }]
+    
+    save_history(equity_history)
+    
+    logging_manager.log_system_event({
+        "event_type": "EQUITY_HISTORY_RESET",
+        "backup_file": backup_file,
+        "reset_time": timestamp,
+        "current_total_asset": total_val,
+        "message": "評価額グラフ履歴がリセットされました"
+    })
+    
+    return jsonify({
+        "success": True,
+        "message": "評価額履歴をリセットしました",
+        "backup_file": backup_file
+    })
+
+@app.route('/api/save_screenshot', methods=['POST'])
+def save_screenshot():
+    data = request.json
+    image_data = data.get('image', '')
+    if image_data.startswith('data:image/png;base64,'):
+        image_data = image_data.replace('data:image/png;base64,', '')
+    
+    try:
+        import base64
+        import os
+        from datetime import datetime
+        
+        save_dir = os.path.join(os.getcwd(), 'screenshots')
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+            
+        filename = f"CryptoKun_Snapshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+        filepath = os.path.join(save_dir, filename)
+        
+        with open(filepath, 'wb') as f:
+            f.write(base64.b64decode(image_data))
+            
+        return jsonify({"status": "success", "path": os.path.abspath(filepath)})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/api/settings', methods=['GET'])
 def get_bot_settings():
@@ -408,6 +602,8 @@ def update_bot_settings():
                 bot_settings[key] = float(data[key])
             elif key == "auto_budget_mode":
                 bot_settings[key] = str(data[key])
+            elif key in ["auto_shift_enabled", "fx_short_enabled", "dry_run", "live_trading_enabled"]:
+                bot_settings[key] = bool(data[key])
             else:
                 bot_settings[key] = int(data[key])
                 

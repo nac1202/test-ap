@@ -12,6 +12,10 @@ export default function Profile() {
     const router = useRouter();
 
     const [displayName, setDisplayName] = useState('');
+    const [privacyMode, setPrivacyMode] = useState<'fuzzy' | 'hidden'>('fuzzy');
+    const [autoShareDisaster, setAutoShareDisaster] = useState(true);
+    const [forceExactLocation, setForceExactLocation] = useState(false);
+    
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -31,12 +35,15 @@ export default function Profile() {
             const loadProfile = async () => {
                 const { data, error } = await supabase
                     .from('users')
-                    .select('display_name')
+                    .select('display_name, privacy_mode, auto_share_disaster, force_exact_location')
                     .eq('id', user.id)
                     .single();
 
-                if (data && data.display_name) {
-                    setDisplayName(data.display_name);
+                if (data) {
+                    if (data.display_name) setDisplayName(data.display_name);
+                    if (data.privacy_mode) setPrivacyMode(data.privacy_mode);
+                    if (data.auto_share_disaster !== null) setAutoShareDisaster(data.auto_share_disaster);
+                    if (data.force_exact_location !== null) setForceExactLocation(data.force_exact_location);
                 }
             };
             loadProfile();
@@ -63,13 +70,16 @@ export default function Profile() {
             .upsert({
                 id: user.id,
                 display_name: displayName,
+                privacy_mode: privacyMode,
+                auto_share_disaster: autoShareDisaster,
+                force_exact_location: forceExactLocation,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'id' });
 
         if (error) {
-            setMessage({ text: 'プロフィールの保存に失敗しました。', type: 'error' });
+            setMessage({ text: '設定の保存に失敗しました。', type: 'error' });
         } else {
-            setMessage({ text: 'プロフィールを保存しました。', type: 'success' });
+            setMessage({ text: '設定を保存しました。', type: 'success' });
         }
         setSaving(false);
     };
@@ -122,6 +132,61 @@ export default function Profile() {
                             className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
                             required
                         />
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200">
+                        <h3 className="font-semibold text-slate-800 mb-3">位置情報のプライバシー設定</h3>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    平常時のマップ公開範囲
+                                </label>
+                                <select
+                                    value={privacyMode}
+                                    onChange={(e) => setPrivacyMode(e.target.value as 'fuzzy' | 'hidden')}
+                                    disabled={forceExactLocation}
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <option value="fuzzy">あいまいな位置（市町村レベル）を公開</option>
+                                    <option value="hidden">完全に非公開</option>
+                                </select>
+                            </div>
+
+                            {/* Emergency Auto Share */}
+                            <label className={`flex items-start p-4 border rounded-xl cursor-pointer transition-all ${forceExactLocation ? 'bg-slate-50 border-slate-200 opacity-50 cursor-not-allowed' : (autoShareDisaster ? 'bg-blue-50/50 border-blue-200' : 'bg-slate-50 border-slate-200')}`}>
+                                <div className="flex items-center h-5 mt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        checked={autoShareDisaster}
+                                        onChange={(e) => setAutoShareDisaster(e.target.checked)}
+                                        disabled={forceExactLocation}
+                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:cursor-not-allowed"
+                                    />
+                                </div>
+                                <div className="ml-3 text-sm">
+                                    <span className="font-bold text-slate-800">緊急時オートシェア</span>
+                                    <p className="text-slate-500 mt-1 text-xs">災害発生時やSOS時に自動で詳細な位置を公開します（推奨）</p>
+                                    {forceExactLocation && <p className="text-red-500 font-bold mt-1 text-xs">※強制ONのため無効化されています</p>}
+                                </div>
+                            </label>
+
+                            {/* Force Exact Location */}
+                            <label className={`flex items-start p-4 border rounded-xl cursor-pointer transition-all ${forceExactLocation ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
+                                <div className="flex items-center h-5 mt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        checked={forceExactLocation}
+                                        onChange={(e) => setForceExactLocation(e.target.checked)}
+                                        className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                                    />
+                                </div>
+                                <div className="ml-3 text-sm">
+                                    <span className="font-bold text-red-700">常に詳細な位置を公開 (強制ON)</span>
+                                    <p className="text-red-600/80 mt-1 text-xs">平常時でもグループメンバーに正確なGPS位置を共有します。自己責任でONにしてください。</p>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
                     {message && (

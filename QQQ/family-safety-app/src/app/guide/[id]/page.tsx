@@ -3,7 +3,7 @@ import Image from "next/image";
 import guides from "@/data/disaster_guide.json";
 import { GuideItem } from "@/types/guide";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Validate data type
 const guideData = guides as GuideItem[];
@@ -37,6 +37,20 @@ export default async function GuideDetailPage({ params }: PageProps) {
         ['firstaid', 'heatstroke'].includes(guide.category) ? '/firstaid' :
             '/guide';
 
+    // 同じ大きなグループ（防災・防犯・救護）内で前後の記事を取得
+    const getGroup = (cat: string) => {
+        if (['defense', 'security', 'fraud', 'cyber'].includes(cat)) return 'security';
+        if (['firstaid', 'heatstroke'].includes(cat)) return 'firstaid';
+        return 'disaster';
+    };
+
+    const currentGroup = getGroup(guide.category);
+    const relatedGuides = guideData.filter(g => getGroup(g.category) === currentGroup);
+    const currentIndex = relatedGuides.findIndex(g => g.id === guide.id);
+    
+    const prevGuide = currentIndex > 0 ? relatedGuides[currentIndex - 1] : null;
+    const nextGuide = currentIndex < relatedGuides.length - 1 ? relatedGuides[currentIndex + 1] : null;
+
     return (
         <div className="p-4 max-w-2xl mx-auto pb-24">
             <Link href={backLink} className="flex items-center text-gray-500 dark:text-gray-400 mb-4 hover:text-gray-900 dark:hover:text-gray-100">
@@ -46,7 +60,7 @@ export default async function GuideDetailPage({ params }: PageProps) {
 
             <article className="prose prose-blue dark:prose-invert max-w-none">
                 {guide.imageUrl && (
-                    <div className="relative w-full h-64 mb-6 rounded-xl overflow-hidden shadow-sm">
+                    <div className="relative w-full max-w-[500px] mx-auto aspect-square mb-6 rounded-xl overflow-hidden shadow-sm">
                         <Image
                             src={guide.imageUrl}
                             alt={guide.title}
@@ -73,9 +87,34 @@ export default async function GuideDetailPage({ params }: PageProps) {
                     <span>更新: {guide.updatedAt}</span>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3 mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
+                    {prevGuide ? (
+                        <Link href={`/guide/${prevGuide.id}`} className="flex flex-col p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-brand-light/30 dark:hover:bg-slate-800 transition-all border border-slate-100 dark:border-slate-700 hover:border-brand-primary/30 hover:shadow-sm group">
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 mb-1.5 flex items-center">
+                                <ChevronLeft className="w-3 h-3 mr-0.5 group-hover:-translate-x-0.5 transition-transform" /> 前の記事
+                            </span>
+                            <span className="text-xs sm:text-sm font-bold text-brand-primary line-clamp-2 leading-snug">
+                                {prevGuide.title}
+                            </span>
+                        </Link>
+                    ) : <div></div>}
+                    
+                    {nextGuide ? (
+                        <Link href={`/guide/${nextGuide.id}`} className="flex flex-col p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-brand-light/30 dark:hover:bg-slate-800 transition-all border border-slate-100 dark:border-slate-700 hover:border-brand-primary/30 hover:shadow-sm text-right group">
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 mb-1.5 flex items-center justify-end">
+                                次の記事 <ChevronRight className="w-3 h-3 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
+                            </span>
+                            <span className="text-xs sm:text-sm font-bold text-brand-primary line-clamp-2 leading-snug">
+                                {nextGuide.title}
+                            </span>
+                        </Link>
+                    ) : <div></div>}
+                </div>
+
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-slate-700 text-slate-800 dark:text-slate-200">
                     <ReactMarkdown>{guide.content}</ReactMarkdown>
                 </div>
+
             </article>
         </div>
     );

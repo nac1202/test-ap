@@ -26,9 +26,61 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
         recent_5 = close_prices[-5:]
         short_sma = sum(recent_5) / len(recent_5)
 
+    # ------------------------------------------
+    # オートシフト（ダイナミック・ブレンド）ロジック
+    # ------------------------------------------
+    auto_shift_status = "NONE"
+    shift_level = 0
+    
+    # ベースの取得
+    auto_budget_mode = settings.get("auto_budget_mode", "manual")
     trade_limit = settings.get("trade_amount_limit", 100000)
+    margin_trade_limit = settings.get("margin_trade_amount_limit", 200000)
+    entry_size_percent = settings.get("entry_size_percent", 20)
+    full_position_percent = settings.get("full_position_percent", 85)
     rsi_buy = settings.get("rsi_buy_threshold", 45)
     rsi_sell = settings.get("rsi_sell_threshold", 70)
+    margin_rsi_short = settings.get("margin_rsi_short", 60)
+    
+    # 強気相場/弱気相場への自動適応（大局トレンドによる基礎値のチューニング）
+    if macro_trend == "UP":
+        rsi_buy = min(90, rsi_buy + 10)  # 買い基準を緩和 (押し目でなくても買いやすくする)
+        margin_rsi_short = min(90, margin_rsi_short + 15)  # 空売り基準を厳しく (上昇トレンド中の安易な空売り防止)
+    elif macro_trend == "DOWN":
+        rsi_buy = max(20, rsi_buy - 5)
+        margin_rsi_short = max(20, margin_rsi_short - 5)
+        
+    if settings.get("auto_shift_enabled", False) and auto_budget_mode != "safe":
+        abs_macd = abs(macd_hist)
+        shift_ratio = 0.0
+        
+        if abs_macd >= 1000:
+            shift_ratio = 1.0
+            shift_level = 3
+        elif abs_macd >= 500:
+            shift_ratio = 0.6
+            shift_level = 2
+        elif abs_macd >= 200:
+            shift_ratio = 0.3
+            shift_level = 1
+            
+        if shift_ratio > 0:
+            agg_entry = 30
+            agg_full = 100
+            agg_rbuy = 55
+            agg_mar_rsi = 60
+            
+            if macro_trend == "UP" and macd_hist > 0:
+                auto_shift_status = "UP"
+                entry_size_percent = int(entry_size_percent + (agg_entry - entry_size_percent) * shift_ratio)
+                full_position_percent = int(full_position_percent + (agg_full - full_position_percent) * shift_ratio)
+                rsi_buy = int(rsi_buy + (agg_rbuy - rsi_buy) * shift_ratio)
+            elif macro_trend == "DOWN" and macd_hist < 0:
+                auto_shift_status = "DOWN"
+                entry_size_percent = int(entry_size_percent + (agg_entry - entry_size_percent) * shift_ratio)
+                full_position_percent = int(full_position_percent + (agg_full - full_position_percent) * shift_ratio)
+                margin_rsi_short = int(margin_rsi_short + (agg_mar_rsi - margin_rsi_short) * shift_ratio)
+
     fng_stopper = settings.get("fng_stopper", 75)
     trailing_percent = settings.get("trailing_stop_percent", 1.0) / 100.0
     
@@ -38,7 +90,7 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
     current_time = __import__('time').time()
 
     if current_price <= 0:
-        return {"spot": {"action": "HOLD", "reason": "待機"}, "margin": {"action": "HOLD", "reason": "待機"}}
+        return {"spot": {"action": "HOLD", "reason": "待機"}, "margin": {"action": "HOLD", "reason": "待機"}, "auto_shift_status": auto_shift_status, "shift_level": shift_level}
 
     # ==========================================
     # 1. 🟢 現物 (SPOT) チーム判定 (ロング・利確)
@@ -48,7 +100,7 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
     current_jpy = spot_balance.get("jpy", 0)
     current_spot_value = current_btc * current_price
     
-    is_spot_full = current_spot_value >= (trade_limit * (settings.get("full_position_percent", 85) / 100.0))
+    is_spot_full = current_spot_value >= (trade_limit * (full_position_percent / 100.0))
 
     # --- 🟢 現物 トレイリングストップ処理 ---
     if current_btc >= 0.0001:
@@ -79,11 +131,19 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
         sma_diff = (short_sma - current_price) / short_sma * 100
         is_sma_ok = current_price > short_sma or sma_diff <= 0.5
         
-        if is_panic_buy or (rsi <= rsi_buy and macd_hist > 0 and is_dropped_enough and is_sma_ok):
+        # --- 🌟 上昇トレンド参加モード (スターター買い) の判定 ---
+        spot_limit = trade_limit * (full_position_percent / 100.0)
+        is_low_position = current_spot_value < (spot_limit * 0.20)  # 保有量が上限の20%未満
+        is_strong_trend = macro_trend == "UP" and (macd_hist >= 200 or shift_level >= 1)
+        is_starter_rsi = 65 <= rsi <= 80
+        
+        is_trend_starter = is_low_position and is_strong_trend and is_starter_rsi
+        
+        if is_panic_buy or is_trend_starter or (rsi <= rsi_buy and macd_hist > 0 and is_dropped_enough and is_sma_ok):
             if is_panic_buy:
                 # パニック買い時は大局トレンドや過熱感チェックをパスする
                 pass
-            elif macro_trend == "DOWN":
+            elif macro_trend == "DOWN" and not is_trend_starter:
                 spot_signal = {"action": "HOLD", "reason": f"MTF警戒: 1時間足が下落トレンドのため現物買い見送り"}
             elif sentiment_score >= fng_stopper:
                 spot_signal = {"action": "HOLD", "reason": f"バブル警戒域(心理:{sentiment_score})のため現物買い一時停止"}
@@ -92,7 +152,12 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
                 if is_spot_full:
                     spot_signal = {"action": "HOLD", "reason": f"現物買いシグナルですが予算上限のため待機。"}
                 else:
-                    invest_amount = trade_limit * (settings.get("entry_size_percent", 20) / 100.0)
+                    # エントリーサイズの決定 (スターター買いは通常の40%)
+                    actual_entry_percent = entry_size_percent
+                    if is_trend_starter and not is_panic_buy and rsi > rsi_buy:
+                        actual_entry_percent = entry_size_percent * 0.40
+                        
+                    invest_amount = trade_limit * (actual_entry_percent / 100.0)
                     reserved_jpy = settings.get("reserved_margin_jpy", 500000)
                     available_for_spot = max(0, current_jpy - reserved_jpy)
                     max_usable_jpy = available_for_spot * 0.90
@@ -112,6 +177,13 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
                         else:
                             if is_panic_buy:
                                 spot_signal = {"action": "BUY_SPOT", "reason": f"【セリクラ逆張り】大暴落パニック時の超底値拾いを発動！ (RSI={rsi:.1f})"}
+                            elif is_trend_starter and rsi > rsi_buy:
+                                spot_signal = {
+                                    "action": "BUY_SPOT",
+                                    "reason": f"📈 [TREND_STARTER] 強い上昇トレンドを確認。機会損失を防ぐため少額のスターター買いを実行します。",
+                                    "size_percent": actual_entry_percent,
+                                    "signal_type": "TREND_STARTER"
+                                }
                             else:
                                 spot_signal = {"action": "BUY_SPOT", "reason": f"RSI低水準({rsi:.1f})＋MACD陽転。底値と判定し現物を手堅く買い集めます。"}
 
@@ -124,7 +196,7 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
     current_short_value = short_size * current_price
     
     margin_trade_limit = settings.get("margin_trade_amount_limit", 200000)
-    is_margin_full = current_short_value >= (margin_trade_limit * (settings.get("full_position_percent", 85) / 100.0))
+    is_margin_full = current_short_value >= (margin_trade_limit * (full_position_percent / 100.0))
     
     # 【最優先】絶対防衛ライン・強制損切りチェック
     loss_cut_percent = settings.get("loss_cut_percent", 5) / 100.0
@@ -132,8 +204,6 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
     if unrealized_pnl < -loss_cut_jpy and short_size > 0:
         margin_signal = {"action": "CLOSE_ALL", "reason": f"【絶対防衛ライン】含み損が最大許容範囲を超過。破産防止のためFX空売り建玉を緊急成行決済します！"}
     else:
-        margin_rsi_short = settings.get("margin_rsi_short", 60)
-        
         # --- 🔴 FX トレイリングストップ処理 ---
         if short_size >= 0.005:
             if trailing_state.get("margin_active"):
@@ -150,7 +220,6 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
         
         # トレイリング系以外のアクション（新規空売り）
         if margin_signal["action"] == "HOLD" and not trailing_state.get("margin_active"):
-            
             # 新規フィルター計算
             # 価格が短期移動平均を下抜けしたか
             is_below_sma = current_price < short_sma
@@ -163,7 +232,7 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
                 elif is_margin_full:
                     margin_signal = {"action": "HOLD", "reason": f"空売りシグナルですがFX予算上限のため待機。"}
                 else:
-                    invest_amount = margin_trade_limit * (settings.get("entry_size_percent", 20) / 100.0)
+                    invest_amount = margin_trade_limit * (entry_size_percent / 100.0)
                     available_amount = margin_balance.get("available_amount", 0)
                     actual_invest = min(invest_amount, available_amount)
                     required_margin = (current_price * 0.01) / 2
@@ -185,4 +254,4 @@ def generate_hybrid_signals(current_price, rsi, macd_hist, sentiment_score, spot
                         else:
                             margin_signal = {"action": "OPEN_SHORT", "reason": f"RSI天井({rsi:.1f})＋MACD陰転。ハイリターンな空売りを仕掛けます。"}
 
-    return {"spot": spot_signal, "margin": margin_signal}
+    return {"spot": spot_signal, "margin": margin_signal, "auto_shift_status": auto_shift_status, "shift_level": shift_level}

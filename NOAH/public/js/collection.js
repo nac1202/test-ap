@@ -33,30 +33,64 @@ function startCollectionOrbs(rank = 1) {
     
     let particles = [];
     
-    // ランクに応じてオーブの数を増やす
+    // ランクに応じた設定
     let particleCount = 100;
-    if (rank >= 5) particleCount = 150;
-    if (rank >= 10) particleCount = 200;
-    if (rank >= 20) particleCount = 300;
-    
-    // 色のバリエーション（金、白、薄紫、薄青）
-    const colors = [
+    let speedMult = 1.0;
+    let sizeMult = 1.0;
+    let colors = [
         {r: 255, g: 223, b: 128}, // ゴールド
-        {r: 255, g: 255, b: 255}, // 白
-        {r: 224, g: 176, b: 255}, // 薄紫
-        {r: 176, g: 224, b: 255}  // 薄青
+        {r: 255, g: 255, b: 255}  // 白
     ];
+
+    if (rank >= 20) {
+        // PERFECT MASTER: 虹色・超高速・大乱舞
+        particleCount = 400;
+        speedMult = 3.5;
+        sizeMult = 1.8;
+        colors = [
+            {r: 255, g: 100, b: 100}, // 赤
+            {r: 255, g: 200, b: 100}, // オレンジ
+            {r: 255, g: 255, b: 100}, // 黄
+            {r: 100, g: 255, b: 100}, // 緑
+            {r: 100, g: 200, b: 255}, // 水色
+            {r: 100, g: 100, b: 255}, // 青
+            {r: 200, g: 100, b: 255}, // 紫
+            {r: 255, g: 255, b: 255}  // 白
+        ];
+    } else if (rank >= 10) {
+        // ROYAL MASTER: プラチナ＆ローズゴールド・高速・煌びやか
+        particleCount = 250;
+        speedMult = 2.0;
+        sizeMult = 1.4;
+        colors = [
+            {r: 223, g: 197, b: 160}, // シャンパン
+            {r: 255, g: 240, b: 245}, // ピンクがかった白
+            {r: 255, g: 215, b: 0},   // 黄金
+            {r: 255, g: 255, b: 255}  // 白
+        ];
+    } else if (rank >= 5) {
+        // GRAND MASTER: 金と白と少しの紫・少し速い・リッチ
+        particleCount = 150;
+        speedMult = 1.3;
+        sizeMult = 1.2;
+        colors = [
+            {r: 255, g: 223, b: 128}, // ゴールド
+            {r: 255, g: 255, b: 255}, // 白
+            {r: 224, g: 176, b: 255}  // 薄紫
+        ];
+    }
     
     for (let i = 0; i < particleCount; i++) {
         const colorBase = colors[Math.floor(Math.random() * colors.length)];
         particles.push({
             x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height, // 最初から画面全体に散らす
-            radius: Math.random() * 2.5 + 0.5,
-            speed: Math.random() * 1.0 + 0.2, // 少しゆっくり
+            y: Math.random() * canvas.height,
+            radius: (Math.random() * 2.5 + 0.5) * sizeMult,
+            speed: (Math.random() * 1.5 + 0.2) * speedMult,
             opacity: Math.random(),
-            drift: Math.random() * 1 - 0.5,
-            colorBase: colorBase
+            drift: (Math.random() * 2 - 1) * speedMult,
+            colorBase: colorBase,
+            blinkSpeed: Math.random() * 0.05 + 0.01 // 点滅速度
         });
     }
     
@@ -67,8 +101,9 @@ function startCollectionOrbs(rank = 1) {
             p.y -= p.speed;
             p.x += Math.sin(p.y * 0.01) * p.drift;
             
-            p.opacity += (Math.random() - 0.5) * 0.05;
-            if (p.opacity > 0.8) p.opacity = 0.8;
+            // 激しい瞬き
+            p.opacity += (Math.random() - 0.5) * p.blinkSpeed * (rank >= 20 ? 3 : 1);
+            if (p.opacity > 1.0) p.opacity = 1.0;
             if (p.opacity < 0.1) p.opacity = 0.1;
             
             if (p.y < -20) {
@@ -79,7 +114,7 @@ function startCollectionOrbs(rank = 1) {
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(${p.colorBase.r}, ${p.colorBase.g}, ${p.colorBase.b}, ${p.opacity})`;
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 10 * sizeMult;
             ctx.shadowColor = `rgb(${p.colorBase.r}, ${p.colorBase.g}, ${p.colorBase.b})`;
             ctx.fill();
         });
@@ -142,10 +177,10 @@ function openCollectionModal() {
             textColor = '#ffffff';
         } else if (rank >= 10) {
             badgeSrc = '/images/badge_noa_royal_master.png';
-            borderColor = '#ff4d4d';
-            boxShad = '0 0 30px rgba(255, 77, 77, 0.6)';
+            borderColor = '#dfc5a0'; // シャンパンゴールド/パール系の色
+            boxShad = '0 0 30px rgba(223, 197, 160, 0.6)';
             descText = 'すべてのカードを黄金に輝かせた<br>栄光なる真理の探求者。<br>王者の到達 (全カード10回以上達成)';
-            textColor = '#ff9999';
+            textColor = '#f2e4cf'; // 薄いシャンパン色
         } else if (rank >= 5) {
             badgeSrc = '/images/badge_noa_grand_master.png';
             borderColor = '#e6e6e6';

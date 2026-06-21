@@ -11,6 +11,7 @@ export interface UserLocation {
     updatedAt: number;
     status: 'safe' | 'danger' | 'unknown';
     message?: string;
+    isFuzzy?: boolean;
 }
 
 export function useFamilyLocation() {
@@ -204,7 +205,7 @@ export function useFamilyLocation() {
             }
 
             const { data: finalData, error: finalErr } = await supabase
-                .from('safety_status')
+                .from('visible_safety_status')
                 .select(`
                     user_id,
                     status,
@@ -212,7 +213,8 @@ export function useFamilyLocation() {
                     latitude,
                     longitude,
                     updated_at,
-                    users ( display_name )
+                    display_name,
+                    is_fuzzy
                 `)
                 .in('user_id', memberIds);
 
@@ -231,12 +233,13 @@ export function useFamilyLocation() {
 
                     return {
                         id: row.user_id,
-                        name: row.users?.display_name || '名前未設定',
+                        name: row.display_name || '名前未設定',
                         lat: finalLat,
                         lng: finalLng,
                         updatedAt: new Date(row.updated_at).getTime(),
                         status: row.status,
-                        message: row.message || undefined
+                        message: row.message || undefined,
+                        isFuzzy: row.is_fuzzy
                     };
                 });
 

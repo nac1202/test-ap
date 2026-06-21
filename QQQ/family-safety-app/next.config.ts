@@ -15,7 +15,12 @@ const withPWA = withPWAInit({
 
 // Disable strict type checking for rapid prototype deployments on Vercel
 // Disable strict type checking for rapid prototype deployments on Vercel
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+    env: {
+        NEXT_PUBLIC_SUPABASE_URL: "https://hfqvpnqtdgniilentrfw.supabase.co",
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_CeUTopZVuWVEwtUnvpMvgg_ORForazi"
+    }
+};
 
 // export default withPWA(nextConfig);
 export default nextConfig;

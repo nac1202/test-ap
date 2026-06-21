@@ -20,7 +20,7 @@ export default function Login() {
 
         // --- DEV MODE BYPASS ---
         // To bypass Supabase's strict email rate limits during local testing
-        if (email === 'test@test.com' && password === 'testtest') {
+        if (email === 'demo@kizuna.com' && password === 'demo2026') {
             // Simulate a successful login 
             localStorage.setItem('dev_mock_session', 'true');
             setMessage({ text: 'テスト用アカウントでログインしました！', type: 'success' });
@@ -44,7 +44,14 @@ export default function Login() {
             });
             error = res.error;
             if (!error && res.data?.user) {
-                setMessage({ text: 'アカウントを作成してログインしました！', type: 'success' });
+                if (res.data.session) {
+                    setMessage({ text: 'アカウントを作成してログインしました！', type: 'success' });
+                    setTimeout(() => {
+                        window.location.href = '/profile';
+                    }, 1000);
+                } else {
+                    setMessage({ text: '確認メールを送信しました！メール内のリンクをクリックして本登録を完了してください。', type: 'success' });
+                }
             }
         } else {
             const res = await supabase.auth.signInWithPassword({
@@ -54,6 +61,9 @@ export default function Login() {
             error = res.error;
             if (!error) {
                 setMessage({ text: 'ログインしました！', type: 'success' });
+                setTimeout(() => {
+                    window.location.href = '/profile';
+                }, 1000);
             }
         }
 
@@ -78,33 +88,43 @@ export default function Login() {
                 </div>
 
                 {/* Dev mode hint */}
-                <div className="mt-4 p-3 bg-blue-50 text-blue-800 text-sm rounded-md border border-blue-200 text-center">
-                    <p className="font-semibold">テスト用ログイン（制限回避用）</p>
-                    <p>メール: test@test.com</p>
-                    <p>パスワード: testtest</p>
+                <div className="mt-4 p-4 bg-teal-50 text-teal-800 text-sm rounded-lg border border-teal-200 text-center">
+                    <p className="font-bold mb-2 text-base">商談デモ用（ワンタップで開始）</p>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            localStorage.setItem('dev_mock_session', 'true');
+                            window.dispatchEvent(new Event('dev_mock_login'));
+                            window.location.href = '/profile';
+                        }}
+                        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-md text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 transition-all active:scale-95"
+                    >
+                        デモ環境にログインする
+                    </button>
+                    <p className="text-xs mt-3 opacity-90 font-medium">※パスワード警告が出ないように、入力なしで安全にデモに入れます</p>
                 </div>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200">
-                    <form className="space-y-6" onSubmit={handleAuth}>
+                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200 relative overflow-hidden">
+                    {/* デモ版の制限オーバーレイ（半透明） */}
+                    <div className="absolute inset-0 bg-white/60 z-10 flex flex-col items-center justify-center backdrop-blur-[1px]">
+                        <div className="bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg">
+                            デモ版のため一般ログインは制限されています
+                        </div>
+                    </div>
+
+                    <form className="space-y-6 opacity-50" onSubmit={(e) => e.preventDefault()}>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                 メールアドレス
                             </label>
                             <div className="mt-1 relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-gray-400" />
-                                </div>
                                 <input
                                     id="email"
-                                    name="email"
                                     type="email"
-                                    autoComplete="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="focus:ring-teal-500 focus:border-teal-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border"
+                                    disabled
+                                    className="block w-full sm:text-sm border-gray-300 rounded-md py-3 border bg-gray-50"
                                     placeholder="you@example.com"
                                 />
                             </div>
@@ -115,52 +135,23 @@ export default function Login() {
                                 パスワード
                             </label>
                             <div className="mt-1 relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
-                                </div>
                                 <input
                                     id="password"
-                                    name="password"
                                     type="password"
-                                    autoComplete="current-password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="focus:ring-teal-500 focus:border-teal-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border"
+                                    disabled
+                                    className="block w-full sm:text-sm border-gray-300 rounded-md py-3 border bg-gray-50"
                                     placeholder="6文字以上"
-                                    minLength={6}
                                 />
                             </div>
                         </div>
 
-                        {message && (
-                            <div
-                                className={`p-4 rounded-md text-sm ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-                                    }`}
-                            >
-                                {message.text}
-                            </div>
-                        )}
-
                         <div>
                             <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50"
-                            >
-                                {loading ? '処理中...' : (isSignUp ? 'アカウントを作成' : 'ログイン')}
-                            </button>
-                        </div>
-
-                        <div className="mt-4 text-center">
-                            <button
                                 type="button"
-                                onClick={() => setIsSignUp(!isSignUp)}
-                                className="text-sm text-teal-600 hover:text-teal-500"
+                                disabled
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-400 cursor-not-allowed"
                             >
-                                {isSignUp
-                                    ? 'すでにアカウントをお持ちの方はこちら (ログイン)'
-                                    : '初めての方はこちら (アカウント作成)'}
+                                ログイン
                             </button>
                         </div>
                     </form>

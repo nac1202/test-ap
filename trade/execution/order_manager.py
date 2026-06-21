@@ -10,14 +10,30 @@ class OrderManager:
         if action == "HOLD":
             return {"status": "skipped", "message": "シグナルがないため取引を実行しません。"}
             
+        if current_price is None or not isinstance(current_price, (int, float)) or not math.isfinite(current_price) or current_price <= 0:
+            return {
+                "status": "error",
+                "message": "[SAFETY BLOCK] 価格異常のため注文処理を中断しました",
+                "reason": "invalid_price",
+                "price": current_price
+            }
+            
         jpy_balance = balance_info.get("jpy", 0)
         btc_balance = balance_info.get("btc", 0)
         
         trade_limit = settings.get("trade_amount_limit", 100000)
-        entry_percent = settings.get("entry_size_percent", 20) / 100.0
+        
+        signal_percent = signal.get("size_percent", settings.get("entry_size_percent", 20))
+        entry_percent = signal_percent / 100.0
+        
+        is_dry_run = settings.get("dry_run", True)
+        live_enabled = settings.get("live_trading_enabled", False)
         
         if action == "BUY_SPOT":
             invest_amount = trade_limit * entry_percent
+            
+            if invest_amount is None or not isinstance(invest_amount, (int, float)) or not math.isfinite(invest_amount) or invest_amount <= 0:
+                return {"status": "error", "message": "[SAFETY BLOCK] 発注金額異常のため注文処理を中断しました", "reason": "invalid_amount", "amount": invest_amount}
             
             # 成行購入時のAPI拘束金（スリッページ等に備えた余力バッファ: 約5〜10%）を考慮し、残高の最大90%までを上限とする
             max_usable_jpy = jpy_balance * 0.90
@@ -28,23 +44,46 @@ class OrderManager:
                     return {"status": "error", "message": f"現物購入のための日本円残高が不足しています。(成行拘束バッファ考慮時)"}
                     
             btc_to_buy = math.floor((invest_amount / current_price) * 10000) / 10000.0
+            
+            if btc_to_buy is None or not isinstance(btc_to_buy, (int, float)) or not math.isfinite(btc_to_buy) or btc_to_buy <= 0:
+                return {"status": "error", "message": "[SAFETY BLOCK] 数量異常のため注文処理を中断しました", "reason": "invalid_size", "size": btc_to_buy}
+                
             if btc_to_buy < 0.0001:
                 return {"status": "error", "message": "現物最小ロット(0.0001 BTC)に満たないため購入不可。"}
                 
+            # 早期 DRY RUN 判定
+            if is_dry_run or not live_enabled:
+                return {"status": "success", "message": f"[DRY RUN] BUY_SPOT 仮想注文のみ。実注文なし (🟢 現物 {btc_to_buy} BTC @ {current_price})"}
+                
+            # 最終防衛ライン
+            if is_dry_run or not live_enabled:
+                return {"status": "error", "message": "[LIVE BLOCKED] live_trading_enabled=false のため実注文直前でブロックしました。"}
+                
             res = self.exchange.create_order(symbol="BTC", side="BUY", execution_type="MARKET", size=btc_to_buy)
             if res.get('status') == 0:
-                return {"status": "success", "message": f"実行: [TRADE EXECUTED] 🟢 現物 {btc_to_buy} BTC を成行買いしました！"}
+                return {"status": "success", "message": f"[LIVE ORDER] 実行: [TRADE EXECUTED] 🟢 現物 {btc_to_buy} BTC を成行買いしました！"}
             else:
                 err_msg = res.get('messages', [{}])[0].get('message_string', str(res))
                 return {"status": "error", "message": f"現物買い発注失敗: {err_msg}"}
                 
         elif action == "SELL_SPOT":
+            if btc_balance is None or not isinstance(btc_balance, (int, float)) or not math.isfinite(btc_balance) or btc_balance <= 0:
+                return {"status": "error", "message": "[SAFETY BLOCK] 数量異常のため注文処理を中断しました", "reason": "invalid_size", "size": btc_balance}
+                
             if btc_balance < 0.0001:
                 return {"status": "skipped", "message": "売却する現物BTCがありません。"}
                 
+            # 早期 DRY RUN 判定
+            if is_dry_run or not live_enabled:
+                return {"status": "success", "message": f"[DRY RUN] SELL_SPOT 仮想注文のみ。実注文なし (🟢 現物資産({btc_balance} BTC) 全決済)"}
+                
+            # 最終防衛ライン
+            if is_dry_run or not live_enabled:
+                return {"status": "error", "message": "[LIVE BLOCKED] live_trading_enabled=false のため実注文直前でブロックしました。"}
+                
             res = self.exchange.create_order(symbol="BTC", side="SELL", execution_type="MARKET", size=btc_balance)
             if res.get('status') == 0:
-                return {"status": "success", "message": f"実行: [TRADE EXECUTED] 🟢 保有中の現物資産({btc_balance} BTC)を全て利益確定売却しました！"}
+                return {"status": "success", "message": f"[LIVE ORDER] 実行: [TRADE EXECUTED] 🟢 保有中の現物資産({btc_balance} BTC)を全て利益確定売却しました！"}
             else:
                 err_msg = res.get('messages', [{}])[0].get('message_string', str(res))
                 return {"status": "error", "message": f"現物売り発注失敗: {err_msg}"}
@@ -57,12 +96,27 @@ class OrderManager:
         if action == "HOLD":
             return {"status": "skipped", "message": "シグナルがないため取引を実行しません。"}
             
+        if current_price is None or not isinstance(current_price, (int, float)) or not math.isfinite(current_price) or current_price <= 0:
+            return {
+                "status": "error",
+                "message": "[SAFETY BLOCK] 価格異常のため注文処理を中断しました",
+                "reason": "invalid_price",
+                "price": current_price
+            }
+            
         margin_trade_limit = settings.get("margin_trade_amount_limit", 200000)
         entry_percent = settings.get("entry_size_percent", 20) / 100.0
+        
+        is_dry_run = settings.get("dry_run", True)
+        live_enabled = settings.get("live_trading_enabled", False)
+        fx_enabled = settings.get("fx_short_enabled", False)
         
         invest_amount = min(margin_trade_limit * entry_percent, margin_amount)
         
         if action == "OPEN_SHORT":
+            if invest_amount is None or not isinstance(invest_amount, (int, float)) or not math.isfinite(invest_amount) or invest_amount <= 0:
+                return {"status": "error", "message": "[SAFETY BLOCK] 発注金額異常のため注文処理を中断しました", "reason": "invalid_amount", "amount": invest_amount}
+                
             if invest_amount < 1000:
                 return {"status": "error", "message": "空売り新規建玉に必要な証拠金利用可能額が不足しています。"}
                 
@@ -76,25 +130,50 @@ class OrderManager:
                 else:
                     return {"status": "error", "message": f"GMOレバレッジ最小単位(0.01)の証拠金(約{required_margin:,.0f}円)が不足しています。"}
                     
+            if btc_to_trade_rounded is None or not isinstance(btc_to_trade_rounded, (int, float)) or not math.isfinite(btc_to_trade_rounded) or btc_to_trade_rounded <= 0:
+                return {"status": "error", "message": "[SAFETY BLOCK] 数量異常のため注文処理を中断しました", "reason": "invalid_size", "size": btc_to_trade_rounded}
+                    
+            # 早期 DRY RUN 判定
+            if not fx_enabled:
+                return {"status": "success", "message": f"[SKIPPED] OPEN_SHORT：FX空売りOFFのため見送り (🔴 証拠金 {btc_to_trade_rounded} BTC @ {current_price})"}
+            elif is_dry_run or not live_enabled:
+                return {"status": "success", "message": f"[DRY RUN] OPEN_SHORT 仮想注文のみ。実注文なし (🔴 証拠金 {btc_to_trade_rounded} BTC @ {current_price})"}
+                
+            # 最終防衛ライン
+            if is_dry_run or not live_enabled or not fx_enabled:
+                return {"status": "error", "message": "[LIVE BLOCKED] live_trading_enabled=false または dry_run=true のため実注文直前でブロックしました。"}
+                
             res = self.exchange.create_order(symbol="BTC_JPY", side="SELL", execution_type="MARKET", size=btc_to_trade_rounded)
             if res.get('status') == 0:
-                return {"status": "success", "message": f"実行: [TRADE EXECUTED] 🔴 証拠金 {btc_to_trade_rounded} BTC の新規空売り(Short)を発注しました！"}
+                return {"status": "success", "message": f"[LIVE ORDER] 実行: [TRADE EXECUTED] 🔴 証拠金 {btc_to_trade_rounded} BTC の新規空売り(Short)を発注しました！"}
             else:
                 err_msg = res.get('messages', [{}])[0].get('message_string', str(res))
                 return {"status": "error", "message": f"空売り発注失敗: {err_msg}"}
                 
         elif action in ["CLOSE_SHORT", "CLOSE_ALL"]:
             short_size = positions_info.get("short_size", 0)
-            if short_size == 0:
-                return {"status": "skipped", "message": "買戻す（決済する）空売り建玉がありません。"}
+            
+            if short_size is None or not isinstance(short_size, (int, float)) or not math.isfinite(short_size) or short_size <= 0:
+                return {"status": "error", "message": "[SAFETY BLOCK] 数量異常のため注文処理を中断しました", "reason": "invalid_size", "size": short_size}
                 
             short_size_rounded = round(short_size, 3)
             size_str = f"{short_size_rounded:.3f}".rstrip('0').rstrip('.')
             
+            tag = "CLOSE_ALL" if action == "CLOSE_ALL" else "CLOSE_SHORT"
+            tag_icon = "🛑緊急" if action == "CLOSE_ALL" else "🔴"
+            
+            # 早期 DRY RUN 判定
+            if is_dry_run or not live_enabled or not fx_enabled:
+                status_msg = "実注文なし" if fx_enabled else "実注文なし (FX設定OFF)"
+                return {"status": "success", "message": f"[DRY RUN] {tag} 仮想注文のみ。{status_msg} ({tag_icon} 建玉({short_size_rounded} BTC) 買戻し)"}
+                
+            # 最終防衛ライン
+            if is_dry_run or not live_enabled or not fx_enabled:
+                return {"status": "error", "message": "[LIVE BLOCKED] live_trading_enabled=false または dry_run=true のため実注文直前でブロックしました。"}
+                
             res = self.exchange.close_bulk_order(symbol="BTC_JPY", side="BUY", size=size_str)
             if res.get('status') == 0:
-                tag = "🛑緊急" if action == "CLOSE_ALL" else "🔴"
-                return {"status": "success", "message": f"実行: [TRADE EXECUTED] {tag} 保有中の空売り建玉(Short)を全て買戻し決済しました！"}
+                return {"status": "success", "message": f"[LIVE ORDER] 実行: [TRADE EXECUTED] {tag_icon} 保有中の空売り建玉(Short)を全て買戻し決済しました！"}
             else:
                 err_msg = res.get('messages', [{}])[0].get('message_string', str(res))
                 return {"status": "error", "message": f"買戻し発注失敗: {err_msg}"}

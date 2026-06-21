@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (typeof window !== 'undefined' && localStorage.getItem('dev_mock_session') === 'true') {
                 const mockUser = {
                     id: 'dev-mock-uuid-1234-5678',
-                    email: 'test@test.com',
+                    email: 'demo@kizuna.com',
                     app_metadata: {},
                     user_metadata: {},
                     aud: 'authenticated',

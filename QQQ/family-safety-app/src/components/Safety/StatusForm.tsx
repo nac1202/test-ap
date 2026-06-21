@@ -30,7 +30,8 @@ export function StatusForm() {
         setFeedback(null);
 
         // --- DEV MODE BYPASS ---
-        if (isDevMode) {
+        const currentIsDevMode = (typeof window !== 'undefined' && localStorage.getItem('dev_mock_session') === 'true') || user.email === 'demo@kizuna.com';
+        if (currentIsDevMode) {
             setTimeout(() => {
                 // Save mock data so useFamilyLocation can read it
                 localStorage.setItem('dev_mock_status', status);

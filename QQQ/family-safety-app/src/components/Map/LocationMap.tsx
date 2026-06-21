@@ -5,7 +5,8 @@ import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from "@vis.g
 import { useFamilyLocation } from "@/hooks/useFamilyLocation";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { calculateDistance } from "@/utils/geoCalculations";
-import { Users, Navigation, User as UserIcon } from "lucide-react";
+import { Users, Navigation, User as UserIcon, Waves } from "lucide-react";
+import { HazardMapOverlay } from "./HazardMapOverlay";
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
@@ -81,7 +82,7 @@ function MapBoundsController({ targetId, locations, userId }: { targetId: string
 export function LocationMap() {
     const { user } = useAuth();
     const { currentLocation, familyLocations } = useFamilyLocation();
-    let displayLocations = [...familyLocations];
+    const displayLocations = [...familyLocations];
 
     const currentUserId = user?.id || 'current-user-fallback';
 
@@ -127,6 +128,7 @@ export function LocationMap() {
 
     const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
     const [targetId, setTargetId] = useState<string>('all');
+    const [showHazardMap, setShowHazardMap] = useState<boolean>(false);
 
     const targetMember = displayLocations.find(m => m.id === targetId);
 
@@ -173,6 +175,34 @@ export function LocationMap() {
         <div className="h-[70vh] w-full rounded-xl overflow-hidden shadow-lg border border-slate-200 relative">
             <APIProvider apiKey={API_KEY}>
 
+                {/* Hazard Map Legend */}
+                {showHazardMap && (
+                    <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md p-3 rounded-xl shadow-lg border border-slate-200 text-[11px] sm:text-xs text-slate-700 pointer-events-none transition-opacity duration-300">
+                        <div className="font-bold mb-2 flex items-center gap-1.5">
+                            <Waves size={14} className="text-red-500" />
+                            <span>想定浸水深 (洪水)</span>
+                        </div>
+                        <div className="flex flex-col gap-1.5 font-medium">
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-sm bg-[#dc76b5] border border-black/10 shadow-sm"></div>
+                                <span>5.0m 以上 (2階屋根〜)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-sm bg-[#f285c9] border border-black/10 shadow-sm"></div>
+                                <span>3.0m 〜 5.0m (2階床〜)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-sm bg-[#ffb7b7] border border-black/10 shadow-sm"></div>
+                                <span>0.5m 〜 3.0m (1階床〜)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-sm bg-[#f2e500] border border-black/10 shadow-sm"></div>
+                                <span>0.5m 未満 (床下浸水)</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Floating UI Panel */}
                 <div className="absolute bottom-6 left-4 right-4 z-10 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-[0_-8px_30px_rgb(0,0,0,0.12)] border border-slate-100/50 opacity-60 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300">
                     <div className="flex items-center gap-2 mb-3 text-slate-700">
@@ -211,6 +241,25 @@ export function LocationMap() {
                             </div>
                         </div>
                     )}
+
+                    <div className="mt-3 pt-3 border-t border-slate-200/60">
+                        <button
+                            onClick={() => setShowHazardMap(!showHazardMap)}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+                                showHazardMap 
+                                ? 'bg-red-50 text-red-700 border border-red-200' 
+                                : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <Waves size={16} className={showHazardMap ? "text-red-500" : "text-slate-400"} />
+                                <span>洪水ハザード表示</span>
+                            </div>
+                            <div className={`w-8 h-4 rounded-full relative transition-colors ${showHazardMap ? 'bg-red-500' : 'bg-slate-300'}`}>
+                                <div className={`absolute top-0.5 left-0.5 bg-white w-3 h-3 rounded-full transition-transform duration-200 ${showHazardMap ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                            </div>
+                        </button>
+                    </div>
                 </div>
 
                 <Map
@@ -245,7 +294,19 @@ export function LocationMap() {
                                         <div className="absolute top-10 w-16 h-16 bg-amber-500 rounded-full animate-ping opacity-60 -z-10 pointer-events-none blur-[1px]"></div>
                                     )}
 
-                                    {isMe ? (
+                                    {member.isFuzzy ? (
+                                        <div className="relative flex flex-col items-center justify-center mt-2 z-10 w-24 h-24">
+                                            {/* Fuzzy blob background */}
+                                            <div className="absolute inset-0 bg-blue-400 rounded-full opacity-30 blur-md pointer-events-none"></div>
+                                            <div className="absolute inset-0 bg-blue-300 rounded-full opacity-20 blur-xl animate-pulse pointer-events-none"></div>
+                                            
+                                            {/* Fuzzy Label */}
+                                            <div className={`bg-white/90 backdrop-blur px-2 py-1 rounded-full text-[10px] font-bold text-blue-800 shadow-sm flex items-center gap-1 border border-blue-200 z-20`}>
+                                                <UserIcon size={10} className="text-blue-500" />
+                                                <span>{member.name} (付近)</span>
+                                            </div>
+                                        </div>
+                                    ) : isMe ? (
                                         // Custom GPS-style blue beacon for the current user
                                         <div className="relative flex items-center justify-center w-8 h-8 mt-1 z-20">
                                             <div className="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-60"></div>
@@ -278,6 +339,7 @@ export function LocationMap() {
                     })}
                     {/* Controller to handle bounds changes based on target selection */}
                     <MapBoundsController targetId={targetId} locations={displayLocations} userId={currentUserId} />
+                    <HazardMapOverlay visible={showHazardMap} />
                 </Map>
             </APIProvider>
         </div>
