@@ -136,17 +136,8 @@ function openCollectionModal() {
     const modal = document.getElementById('collection-modal');
     if (!modal) return;
     
-    // マスター判定とUI変更
-    let rank = getMasterRank();
-    const hasMasterFlag = localStorage.getItem('noa_tarot_master') === 'true';
-    
-    // 【重要】テスト中、および過去にコンプリートしたユーザーの互換性のため
-    // コンプリートフラグが立っているのにカード引取回数が記録上で足りていない場合は、
-    // 最低限「ランク1（MASTER）」として扱います。
-    if (hasMasterFlag && rank === 0) {
-        rank = 1;
-    }
-    
+    // マスター判定とUI変更（公開時の安全性を高めるため、実際のカード引取回数で厳密に判定）
+    const rank = getMasterRank();
     const isMaster = rank >= 1;
     
     // 従来のマスターフラグも一応セットしておく
