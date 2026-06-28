@@ -342,6 +342,11 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: rgba(197, 160, 89, 0.8);
     }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 
@@ -690,9 +695,26 @@
           </div>
         </div>
 
-        <div style="text-align: left; margin-bottom: 1rem;">
-          <p style="font-size: 0.8rem; color: #c5a059; border-bottom: 1px solid rgba(197,160,89,0.3); margin-bottom: 0.5rem;">引いた日時 (直近)</p>
-          <ul id="detail-card-dates" class="custom-scrollbar" style="list-style: none; padding: 0; margin: 0; font-size: 0.75rem; color: #aaa; max-height: 120px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+        <div id="detail-stats-section" style="position: relative; text-align: left; margin-bottom: 1rem; padding-top: 0.5rem; overflow: hidden; border-top: 1px solid rgba(197,160,89,0.3);">
+          
+          <!-- Background Magic Circle -->
+          <img src="/images/magic_circle.png" class="magic-circle-bg" style="position: absolute; right: -80px; bottom: -50px; width: 220px; height: 220px; mix-blend-mode: screen; opacity: 0.25; pointer-events: none; animation: spin 24s linear infinite;">
+
+          <!-- Stats Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.8rem; position: relative; z-index: 1;">
+            <div>
+              <p style="font-size: 0.7rem; color: #c5a059; margin-bottom: 2px;">First Drawn</p>
+              <p id="detail-card-first" style="font-size: 0.9rem; color: #fff; font-family: var(--font-serif); font-weight: bold;">-</p>
+            </div>
+            <div>
+              <p style="font-size: 0.7rem; color: #c5a059; margin-bottom: 2px;">Draw Rate</p>
+              <p id="detail-card-rate" style="font-size: 0.9rem; color: #fff; font-family: var(--font-serif); font-weight: bold;">-</p>
+            </div>
+          </div>
+
+          <!-- Dates List -->
+          <p style="font-size: 0.7rem; color: #c5a059; margin-bottom: 0.5rem; position: relative; z-index: 1;">引いた日時 (直近)</p>
+          <ul id="detail-card-dates" class="custom-scrollbar" style="position: relative; z-index: 1; list-style: none; padding: 0; margin: 0; font-size: 0.75rem; color: #aaa; max-height: 100px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
             <!-- JS will populate -->
           </ul>
         </div>

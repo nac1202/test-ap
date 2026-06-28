@@ -294,6 +294,22 @@ function renderCollectionGrid() {
                 document.getElementById('detail-card-keyword').textContent = cardData.keyword;
                 document.getElementById('detail-card-message').textContent = cardData.message;
                 
+                let totalDraws = 0;
+                Object.values(stats).forEach(s => totalDraws += (s.count || 0));
+                
+                let firstDrawnDate = cardStats.firstDate;
+                if (!firstDrawnDate && cardStats.dates && cardStats.dates.length > 0) {
+                    // 古い記録がない場合は一番古い記録を表示
+                    firstDrawnDate = cardStats.dates[0].split(' ')[0];
+                }
+                document.getElementById('detail-card-first').textContent = firstDrawnDate || '未記録';
+
+                let rate = '0.0%';
+                if (totalDraws > 0) {
+                    rate = ((cardStats.count / totalDraws) * 100).toFixed(1) + '%';
+                }
+                document.getElementById('detail-card-rate').textContent = rate;
+                
                 const datesList = document.getElementById('detail-card-dates');
                 datesList.innerHTML = '';
                 if (cardStats.dates && cardStats.dates.length > 0) {

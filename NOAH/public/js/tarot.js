@@ -201,7 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const dateTimeStr = `${todayPrefix} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
         if (!stats[cardIndex]) {
-            stats[cardIndex] = { count: 0, dates: [] };
+            stats[cardIndex] = { count: 0, dates: [], firstDate: todayPrefix };
+        } else if (!stats[cardIndex].firstDate && stats[cardIndex].dates.length > 0) {
+            stats[cardIndex].firstDate = stats[cardIndex].dates[0].split(' ')[0];
         }
 
         const alreadyDrawnToday = stats[cardIndex].dates.some(d => d.startsWith(todayPrefix));
