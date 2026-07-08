@@ -482,3 +482,126 @@
         transform: scale(1.05);
     }
 }
+
+/* --- Time Environment Overlays --- */
+.time-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    transition: background 2s ease-in-out;
+    mix-blend-mode: overlay;
+}
+
+/* Morning (5:00-11:59) */
+.bg-morning {
+    background: linear-gradient(135deg, rgba(255, 235, 180, 0.25), rgba(135, 206, 235, 0.15));
+}
+/* Day (12:00-16:59) */
+.bg-day {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(100, 150, 255, 0.1));
+}
+/* Evening (17:00-18:59) */
+.bg-evening {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.25), rgba(139, 0, 139, 0.15));
+}
+/* Night (19:00-4:59) */
+.bg-night {
+    background: linear-gradient(135deg, rgba(0, 0, 50, 0.4), rgba(10, 10, 20, 0.6));
+    mix-blend-mode: multiply;
+}
+
+/* --- Magic Circle Animation --- */
+.magic-circle-container {
+    position: absolute;
+    top: 170px; /* Center of the 340px high card deck */
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0) rotate(-45deg);
+    width: 500px;
+    height: 500px;
+    opacity: 0;
+    z-index: 0; /* 時間オーバーレイより手前（z-index: -1）、カード（DOM順序で手前）より奥に配置 */
+    pointer-events: none;
+    transition: opacity 0.8s ease, transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.magic-circle-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: screen; /* 黒背景などを透過させて光らせる */
+    border-radius: 50%;
+    box-shadow: 0 0 30px rgba(255, 223, 128, 0.6), inset 0 0 20px rgba(255, 223, 128, 0.3);
+}
+
+.magic-circle-active {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+}
+
+.magic-circle-active .magic-circle-img {
+    animation: spinMagic 6s linear infinite;
+}
+
+@keyframes spinMagic {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Flashy Magic Particles --- */
+.magic-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 10px 2px var(--particle-color, #c5a059);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 5;
+    animation: magicParticle 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes magicParticle {
+    0% {
+        transform: translate(-50%, -50%) scale(0.2);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.8);
+        opacity: 0;
+    }
+}
+
+.magic-core-light {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 100px 50px rgba(255, 223, 128, 0.9), 0 0 150px 80px rgba(255, 223, 128, 0.6), inset 0 0 20px rgba(255, 255, 255, 1);
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    animation: pulseCore 2s infinite alternate;
+}
+
+@keyframes pulseCore {
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+}

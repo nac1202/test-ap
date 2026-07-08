@@ -4,6 +4,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultCard = document.getElementById('result-card');
     // const retryBtn = document.getElementById('retry-btn'); // Removed
 
+    // --- Time Environment Setup ---
+    setupTimeEnvironment();
+    
+    function setupTimeEnvironment() {
+        const hour = new Date().getHours();
+        const overlay = document.getElementById('time-overlay');
+        let bgClass = '';
+        let bgmFile = '';
+        
+        if (hour >= 5 && hour < 12) {
+            bgClass = 'bg-morning';
+            bgmFile = '/audio/bgm_morning.mp3';
+        } else if (hour >= 12 && hour < 17) {
+            bgClass = 'bg-day';
+            bgmFile = '/audio/bgm_day.mp3';
+        } else if (hour >= 17 && hour < 19) {
+            bgClass = 'bg-evening';
+            bgmFile = '/audio/bgm_evening.mp3';
+        } else {
+            bgClass = 'bg-night';
+            bgmFile = '/audio/bgm_night.mp3';
+        }
+        
+        if (overlay) overlay.classList.add(bgClass);
+        
+        // BGMは別画面(index.html)で鳴らすため、タロット画面では環境音BGMを再生しません
+        // (背景色の時間連動のみ残しています)
+    }
+
     // Elements to populate
     const cardNumber = document.getElementById('card-number');
     const cardName = document.getElementById('card-name');
@@ -14,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const luckyItem = document.getElementById('result-lucky');
 
     let isAnimating = false;
+    let magicParticleInterval = null;
     // --- Sound effects ---
     const drawWaitAudio = new Audio('/audio/draw_wait.mp3.mp3');
     const drawNormalAudio = new Audio('/audio/draw_normal.mp3');
@@ -41,8 +71,67 @@ document.addEventListener('DOMContentLoaded', () => {
         // Wait for user interaction
         cardDeck.addEventListener('click', () => {
             if (isAnimating) return;
+            triggerMagicCircle();
+        });
+    }
+
+    function triggerMagicCircle() {
+        isAnimating = true;
+        
+        // 魔法陣SE再生
+        try {
+            const magicAudio = new Audio('/audio/magic_circle.mp3');
+            magicAudio.volume = 0.8;
+            magicAudio.play().catch(e => console.log(e));
+        } catch(e) {}
+        
+        // 魔法陣表示
+        const magicCircle = document.getElementById('magic-circle-container');
+        if (magicCircle) {
+            magicCircle.classList.add('magic-circle-active');
+
+            // コア発光を追加
+            const coreLight = document.createElement('div');
+            coreLight.classList.add('magic-core-light');
+            magicCircle.appendChild(coreLight);
+
+            // パーティクル発生ループ
+            magicParticleInterval = setInterval(() => {
+                spawnMagicParticle(magicCircle);
+                spawnMagicParticle(magicCircle); // 2個ずつ出して派手に
+            }, 100);
+        }
+        
+        // 展開を待ってから占いスタート
+        setTimeout(() => {
             playMagicSound();
             startDivination();
+        }, 2000);
+    }
+
+    function spawnMagicParticle(container) {
+        const particle = document.createElement('div');
+        particle.classList.add('magic-particle');
+        
+        // ランダムな方向と距離
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 150 + Math.random() * 200; // 150px〜350px飛ばす
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+        
+        // 色をランダムに設定（ゴールド、白、たまにシアン）
+        const colors = ['#c5a059', '#ffffff', '#ffffff', '#e8cca1', '#00ffff'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        particle.style.setProperty('--tx', `${tx}px`);
+        particle.style.setProperty('--ty', `${ty}px`);
+        particle.style.setProperty('--particle-color', color);
+        
+        container.appendChild(particle);
+        
+        // アニメーション終了後に削除
+        particle.addEventListener('animationend', () => {
+            particle.remove();
         });
     }
 
@@ -324,6 +413,18 @@ document.addEventListener('DOMContentLoaded', () => {
     window.testCompletionEffect = triggerCompletionEffect;
 
     function drawCard() {
+        // エフェクトのクリーンアップ
+        if (magicParticleInterval) {
+            clearInterval(magicParticleInterval);
+            magicParticleInterval = null;
+        }
+        const magicCircle = document.getElementById('magic-circle-container');
+        if (magicCircle) {
+            magicCircle.classList.remove('magic-circle-active');
+            const coreLights = magicCircle.querySelectorAll('.magic-core-light');
+            coreLights.forEach(el => el.remove());
+        }
+
         // 2. Select Card (Daily Persistence)
         const cardIndex = getOrGenerateDailyResult();
 

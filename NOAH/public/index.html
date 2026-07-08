@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>NOA - 空席状況</title>
   <meta property="og:title" content="NOA - 空席状況">
   <meta property="og:description" content="只今の空席状況をご確認いただけます。">
@@ -26,6 +26,13 @@
   <link rel="stylesheet" href="/style.css?v=1.1">
   <script src="/js/particles.js" defer></script>
   <style>
+    /* Prevent double-tap zoom */
+    body {
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    
     /* Additional states styles */
     .state-message {
       text-align: center;
@@ -489,7 +496,14 @@
       <p id="mama-message-text" class="mama-text"></p>
     </div>
 
-      <div class="address-map-container" style="margin-top: 1.5rem; border-top: 1px dashed rgba(197, 160, 89, 0.3); padding-top: 1.5rem;">
+    <!-- YouTube Banner -->
+    <div class="youtube-banner-container" style="margin-top: 1.5rem; text-align: center; padding: 0 1rem; width: 100%; box-sizing: border-box;">
+      <a href="https://www.youtube.com/@miryu-ch-777" target="_blank" rel="noopener noreferrer" style="display: inline-block; width: 100%; max-width: 600px; transition: transform 0.2s ease, opacity 0.2s ease; border-bottom: none;">
+        <img src="/images/banner_youtube.png" alt="みりゅうママのYouTubeチャンネル" style="width: 100%; height: auto; mix-blend-mode: screen; display: block;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+      </a>
+    </div>
+
+    <div class="address-map-container" style="margin-top: 1.5rem; border-top: 1px dashed rgba(197, 160, 89, 0.3); padding-top: 1.5rem;">
         <p class="address-text">中央区銀座8-2-10<br>銀座誠和シルバービル8F B</p>
         <a href="https://www.google.com/maps/search/?api=1&query=東京都中央区銀座8-2-10+銀座誠和シルバービル8F" target="_blank"
           rel="noopener noreferrer" class="map-btn">
@@ -735,6 +749,70 @@
   </main>
 
   <script>
+    /* Time Environment BGM Setup (Hidden Mode) */
+    document.addEventListener('DOMContentLoaded', () => {
+        const hour = new Date().getHours();
+        let bgmFile = '';
+        
+        if (hour >= 5 && hour < 12) {
+            bgmFile = '/audio/bgm_morning.mp3';
+        } else if (hour >= 12 && hour < 17) {
+            bgmFile = '/audio/bgm_day.mp3';
+        } else if (hour >= 17 && hour < 19) {
+            bgmFile = '/audio/bgm_evening.mp3';
+        } else {
+            bgmFile = '/audio/bgm_night.mp3';
+        }
+        
+        try {
+            const bgm = new Audio(bgmFile);
+            bgm.loop = true;
+            bgm.volume = 0.25; 
+            
+            let tapCount = 0;
+            let tapTimeout;
+            let isBgmPlaying = false;
+            
+            const logo = document.getElementById('logo-sparkles-container');
+            if (logo) {
+                // 拡大防止措置はCSSでも行うが、念のためJSでも設定
+                logo.style.touchAction = 'manipulation';
+                logo.style.userSelect = 'none';
+                
+                logo.addEventListener('click', (e) => {
+                    // aタグなどのデフォルト遷移がある場合は防ぐ(今回はdivなので基本問題なし)
+                    e.preventDefault();
+                    
+                    if (isBgmPlaying) {
+                        // すでに鳴っている場合は1回タップで停止
+                        bgm.pause();
+                        isBgmPlaying = false;
+                        tapCount = 0;
+                        return;
+                    }
+                    
+                    // 鳴っていない場合はタップをカウント
+                    tapCount++;
+                    clearTimeout(tapTimeout);
+                    
+                    if (tapCount >= 8) {
+                        // 8回連続タップで再生開始
+                        bgm.play().catch(err => console.log('BGM play blocked:', err));
+                        isBgmPlaying = true;
+                        tapCount = 0;
+                    } else {
+                        // 1秒以上間隔が空いたらカウントをリセット
+                        tapTimeout = setTimeout(() => {
+                            tapCount = 0;
+                        }, 1000);
+                    }
+                });
+            }
+        } catch(e) {
+            console.error('BGM setup failed', e);
+        }
+    });
+
     /* Clock */
     function updateClock() {
       const now = new Date();
@@ -1127,8 +1205,13 @@
           openSuccessModal(`ご予約ありがとうございます。
 お席を確保いたしました。
 
+【ご予約内容】
+日時：${date} ${time}
+お名前：${name} 様
+席タイプ：${type === 'counter' ? 'カウンター' : 'ボックス'} (${count}名)
+
 恐れ入りますが、予約完了メール等は送信されませんので、
-この画面のスクリーンショットを保存 していただくようお願いいたします。
+この画面のスクリーンショットを保存していただくようお願いいたします。
 
 当日お会いできるのを楽しみにしております。
 ※変更・キャンセルの際は店舗までご連絡ください。`);
