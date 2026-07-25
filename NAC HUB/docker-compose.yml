@@ -1,0 +1,61 @@
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: nac_hub_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-nac_hub}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nac_hub_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/workspace
+      - /workspace/venv
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-nac_hub}
+      SECRET_KEY: ${SECRET_KEY}
+      FIRST_SUPERUSER: ${FIRST_SUPERUSER:-admin@example.com}
+      FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost:5173", "http://localhost:3000", "http://host.docker.internal:5173"]}
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nac_hub_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/workspace
+      - frontend_node_modules:/workspace/node_modules
+    env_file:
+      - .env
+    command: >
+      sh -c "
+      if [ ! -x node_modules/.bin/vite ]; then npm ci; fi &&
+      npm run dev -- --host 0.0.0.0 --port 5173
+      "
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  frontend_node_modules:

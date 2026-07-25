@@ -1,0 +1,23 @@
+# タスクリスト：システム基盤の安定化と初期設定
+
+- [x] Docker環境の構築
+  - [x] `backend/requirements.txt` の作成
+  - [x] `backend/Dockerfile` の作成
+  - [x] `frontend/Dockerfile` の作成
+  - [x] `docker-compose.yml` の作成
+- [x] FastAPI基盤とDB接続の修正
+  - [x] `backend/app/core/config.py` 修正 (PostgreSQL, 環境変数拡張)
+  - [x] `backend/app/db/database.py` 修正 (PostgreSQL 接続)
+  - [x] `backend/app/main.py` 修正 (CORS, 例外処理, ヘルスチェック拡張)
+- [x] Alembic マイグレーションの設定と実行
+  - [x] Alembic 初期化
+  - [x] `alembic.ini` と `alembic/env.py` の修正
+  - [x] マイグレーションファイルの自動生成
+  - [x] マイグレーションの適用 & ロールバック検証
+- [x] 認証・権限の実装と動作確認
+  - [x] `backend/app/api/deps.py` 修正 (管理者チェック依存関係)
+  - [x] `backend/app/api/routers/auth.py` 修正 (ログアウトAPI)
+  - [x] `backend/app/db/seed.py` 初期シードスクリプトの作成 & 実行
+- [x] タスクリストの表記修正とステータス更新
+  - [x] `docs/nac_hub_development/task.md` の表記修正 & フロントエンド基盤完了更新
+  - [x] 全体動作確認と起動手順・検証結果のまとめ作成 (`walkthrough.md`)

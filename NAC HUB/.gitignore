@@ -1,0 +1,17 @@
+# Keep environment files out of Git (except for the template example)
+.env
+.env.production
+.env.test
+.env.development
+
+# Other local files
+backend/nac_hub_temp.db
+backup/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+venv/
+.venv/
+.idea/
+.vscode/
