@@ -68,7 +68,9 @@ def health_check(db: Session = Depends(get_db)):
 
 from app.api.routers import auth
 from app.api.routers import ai_assistant
+from app.api.routers import projects
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(ai_assistant.router, prefix="/api/v1/ai", tags=["ai"])
+app.include_router(projects.router, prefix="/api/v1/projects", tags=["projects"])
 
