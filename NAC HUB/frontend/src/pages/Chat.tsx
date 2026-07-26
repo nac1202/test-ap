@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Send, RotateCcw, Trash2, AlertCircle, Loader2 } from 'lucide-react';
@@ -26,6 +26,7 @@ interface PendingMessage {
 export default function Chat() {
   const { token } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pendingMessage, setPendingMessage] = useState<PendingMessage | null>(null);
   const [input, setInput] = useState('');
@@ -34,6 +35,10 @@ export default function Chat() {
   const [loadError, setLoadError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Guard: consume the initial question exactly once, never re-fire
+  const hasConsumedInitialQ = useRef(false);
+  // Keep a stable ref to sendMessage to avoid stale closure in effects
+  const sendMessageRef = useRef<(q: string) => void>(() => {});
 
   const headers = useCallback(() => ({
     Authorization: `Bearer ${token}`,
@@ -109,15 +114,32 @@ export default function Chat() {
     }
   }, [isSending, headers]);
 
+  // Keep sendMessageRef always pointing to the latest sendMessage
+  // (avoids stale closures without adding sendMessage to effect deps)
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  });
+
   // If redirected from Home page with an initial question
+  // IMPORTANT: consumed exactly once via hasConsumedInitialQ ref.
+  // Do NOT add messages.length or sendMessage to deps — that was the
+  // root cause of the infinite-loop duplicate message bug.
   useEffect(() => {
     const state = location.state as { initialQuestion?: string } | null;
-    if (state?.initialQuestion && !isLoading && messages.length >= 0) {
+    if (
+      state?.initialQuestion &&
+      !isLoading &&
+      !hasConsumedInitialQ.current
+    ) {
+      hasConsumedInitialQ.current = true;
       const initialQ = state.initialQuestion;
-      window.history.replaceState({}, document.title);
-      sendMessage(initialQ);
+      // Clear React Router location state properly (window.history.replaceState
+      // does NOT update location in React Router v6)
+      navigate('/chat', { replace: true, state: null });
+      sendMessageRef.current(initialQ);
     }
-  }, [location.state, isLoading, messages.length, sendMessage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, isLoading]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
