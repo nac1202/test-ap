@@ -5,8 +5,39 @@ import os
 # Add parent directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 
+# Load .env.test if present
+env_paths = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '.env.test')),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '../.env.test')),
+    '/workspace/.env.test',
+    './.env.test'
+]
+for ep in env_paths:
+    if os.path.exists(ep):
+        with open(ep, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    k, v = line.split('=', 1)
+                    if k.strip() == 'DATABASE_URL':
+                        os.environ['DATABASE_URL'] = v.strip()
+        break
+
 from app.core.config import settings
-from app.db.database import SessionLocal, engine, Base, get_db
+if os.environ.get('DATABASE_URL'):
+    settings.DATABASE_URL = os.environ['DATABASE_URL']
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import app.db.database as db_module
+
+db_module.engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+db_module.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_module.engine)
+engine = db_module.engine
+SessionLocal = db_module.SessionLocal
+Base = db_module.Base
+get_db = db_module.get_db
+
 from app.models.user import User
 from app.models.audit import AuditLog
 from app.core import security

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import {
   Calendar, FolderKanban, Bell, CheckCircle2, ArrowRight,
-  UserCheck, Plus, AlertTriangle, Sun, Moon, Sunset, Clock, Loader2, AlertCircle, RefreshCw, MessageSquare
+  UserCheck, AlertTriangle, Sun, Moon, Sunset, Clock, Loader2, AlertCircle, RefreshCw, MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchDashboardData } from '../api/dashboard';

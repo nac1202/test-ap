@@ -1,8 +1,11 @@
-# Keep environment files out of Git (except for the template example)
+# Keep environment files out of Git (except for example templates)
 .env
 .env.production
 .env.test
 .env.development
+.env*.local
+*.env.bak
+backend/.env*
 
 # Other local files
 backend/nac_hub_temp.db

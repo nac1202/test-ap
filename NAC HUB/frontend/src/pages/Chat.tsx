@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Send, Sparkles, RotateCcw, Trash2, AlertCircle, Loader2 } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { Send, RotateCcw, Trash2, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = 'http://localhost:8000/api/v1/ai';
