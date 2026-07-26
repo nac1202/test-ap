@@ -2,7 +2,7 @@
 
 **プロジェクト情報:**
 - **プロジェクト名:** NAC HUB
-- **バージョン:** 1.3.1 (セキュリティ補正・監査完了)
+- **バージョン:** 1.3.2 (JWT・管理者認証情報再ローテーション完了)
 - **リポジトリパス:** `D:\Antigravity\data\NAC HUB`
 - **通常利用URL:** `http://localhost:5173`
 - **バックエンドURL:** `http://localhost:8000` (`http://localhost:8000/docs` でSwagger API仕様確認可能)
@@ -26,8 +26,8 @@ pie title PC版基本開発フェーズ進捗（100%）
 | バックエンド基盤 | ✅ 完了 | FastAPI + SQLAlchemy + Alembic（16テーブル） |
 | フロントエンド基盤 | ✅ 完了 | React + Vite + Tailwind CSS |
 | 認証・権限 | ✅ 完了 | JWT認証、ロールガード、ログイン/ログアウト（フロント↔バックエンド接続済み） |
-| セキュリティ基盤 | ✅ 完了 | 初期パスワード変更強制、ポリシーチェック、監査ログ、**認証情報ローテーション完了** |
-| Docker環境 | ✅ 完了 | 3コンテナ正常稼働、ポートフォワーディング解消済 |
+| セキュリティ基盤 | ✅ 完了 | 初期パスワード変更強制、ポリシーチェック、監査ログ、**全認証情報再ローテーション・平文バックアップ整理完了** |
+| Docker環境 | ✅ 完了 | 3コンテナ正常稼働、ノーキャッシュ再ビルド環境確立 |
 | ホーム画面（静的モック） | ✅ 完了 | ウィジェット方式、通知センター、SYSTEM MODE |
 | ① なっくんチャットUI | ✅ 完了 | チャットUI本実装 + モックAPI（外部AI API未接続・内部モック回答） |
 | ② FastAPIモックAPI連携 | ✅ 完了 | 認証系 + なっくんチャットAPI接続済み |
@@ -41,9 +41,11 @@ pie title PC版基本開発フェーズ進捗（100%）
 
 ### 1. 基盤・認証・セキュリティ補正（完了）
 - **JWT 認証:** パスワード暗号化 (`bcrypt`)、アクセストークン発行・検証
-- **PostgreSQL 認証情報ローテーション:** 漏洩済み認証情報を強力なランダム値に無害化変更。`.env`, `.env.test` のGit追跡を遮断し、プレースホルダーのみを `.env.example` に保持。
+- **全認証情報の再ローテーション:** 漏洩リスクのある `SECRET_KEY` および `FIRST_SUPERUSER_PASSWORD` を開発・テスト環境用に個別のランダム値で再設定。
+- **管理者認証情報の非公開管理:** 新しい一時管理者パスワードは Git 管理外の `D:\Antigravity\secrets\NAC_HUB\initial_admin_password.txt` にのみ安全保存。`must_change_password = True` を設定。
+- **平文バックアップの整理:** 事前バックアップ内の `env.bak`, `env_test.bak` を完全削除し、`db_dump.sql` にアクセス制限を適用。
 - **コマンド実行方式の保護:** テストコマンドへの `DATABASE_URL` 実値埋め込みを廃止し、テストコード側で `.env.test` を安全自動ロードする構成に標準化。
-- **監査ログ (`audit_logs`):** ログイン、パスワード変更、案件登録・更新・削除などの操作を追跡
+- **Dockerクリーン再ビルド:** 手動 `pip install` なしで `requirements.txt` からノーキャッシュ完全構築・自動テスト全件合格。
 
 ### 2. なっくんチャット機能（完了）
 - なっくんチャットUI (`/chat`)、メッセージ送受信、履歴保持・削除、ログアウト保護
@@ -65,9 +67,9 @@ pie title PC版基本開発フェーズ進捗（100%）
 
 | テストスイート / 検証項目 | 内容 | 結果 |
 |---|---|---|
-| `backend/test_dashboard_api.py` | ダッシュボードAPI・マルチテナント・閲覧履歴 | **100% PASSED** ✅ |
-| `backend/test_projects_api.py` | 案件CRUD 11項目 + プロデューサーテスト | **100% PASSED** ✅ |
-| `backend/test_api.py` | 21項目 (認証・セキュリティ・チャット) | **100% PASSED** ✅ |
+| `backend/test_dashboard_api.py` | ダッシュボードAPI・マルチテナント・閲覧履歴 | **100% PASSED** (手動 pip なし) ✅ |
+| `backend/test_projects_api.py` | 案件CRUD 11項目 + プロデューサーテスト | **100% PASSED** (手動 pip なし) ✅ |
+| `backend/test_api.py` | 21項目 (認証・セキュリティ・チャット) | **100% PASSED** (手動 pip なし) ✅ |
 | TypeScript 型チェック (`npx tsc`) | フロントエンド全体型検査 | **0 Error** ✅ |
 | フロントエンドビルド (`npm run build`) | Vite プロダクションビルド | **成功 (0 Error)** ✅ |
 | フロントエンド Lint (`npm run lint`) | `oxlint` コード品質検証 | **0 Error (9 Warnings)** ✅ |
