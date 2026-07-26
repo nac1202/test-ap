@@ -1,7 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Header } from '../components/ui/Header';
 
 function ProtectedRoute() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -15,22 +14,14 @@ function ProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
+  // If must_change_password=true, force redirect to /change-password (only if not already there)
   if (user?.must_change_password && location.pathname !== '/change-password') {
     return <Navigate to="/change-password" replace />;
   }
 
-  if (!user?.must_change_password && location.pathname === '/change-password') {
-    return <Navigate to="/" replace />;
-  }
+  // NOTE: must_change_password=false users CAN visit /change-password voluntarily (no redirect)
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="p-6">
-        <Outlet />
-      </main>
-    </div>
-  );
+  return <Outlet />;
 }
 
 export default ProtectedRoute;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardContent } from '../components/ui/Card';
+import { Card, CardContent } from '../components/ui/Card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../components/ui/Table';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -8,7 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { Plus, Search, FolderKanban, Loader2, AlertCircle, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchProjects, createProject, fetchProducers } from '../api/projects';
-import type { Project, ProjectStatus, Producer } from '../types/project';
+import type { Project, Producer } from '../types/project';
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   normal: { label: '正常', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
@@ -17,9 +17,9 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 };
 
 function renderStatusBadge(statusStr: string) {
-  const config = STATUS_LABELS[statusStr] || { label: statusStr, className: 'bg-gray-100 text-gray-700' };
+  const config = STATUS_LABELS[statusStr] || { label: statusStr, className: 'bg-gray-100 text-gray-700 border-gray-200' };
   return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${config.className}`}>
+    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${config.className}`}>
       {config.label}
     </span>
   );
@@ -56,36 +56,23 @@ export default function Projects() {
   // Create Modal
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [newProjectName, setNewProjectName] = useState<string>('');
-  const [newStatus, setNewStatus] = useState<ProjectStatus>('normal');
+  const [newStatus, setNewStatus] = useState<string>('normal');
   const [newProgress, setNewProgress] = useState<number>(0);
-  const [newDeadline, setNewDeadline] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [modalError, setModalError] = useState<string>('');
+  const [newEndDate, setNewEndDate] = useState<string>('');
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [createError, setCreateError] = useState<string>('');
 
-  // Fetch Producers list once
-  useEffect(() => {
-    async function loadProducersList() {
-      try {
-        const data = await fetchProducers(token);
-        setProducers(data);
-      } catch {
-        // Ignore fallback
-      }
-    }
-    if (token) loadProducersList();
-  }, [token]);
-
-  const loadProjects = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     setError('');
     try {
       const res = await fetchProjects(
         {
-          status: statusFilter,
-          producer_id: producerFilter !== 'all' ? Number(producerFilter) : undefined,
-          search: activeSearch,
           page,
           size: pageSize,
+          search: activeSearch || undefined,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          producer_id: producerFilter !== 'all' ? Number(producerFilter) : undefined,
         },
         token
       );
@@ -97,223 +84,222 @@ export default function Projects() {
         logout();
         return;
       }
-      setError(errorObj.message || '案件データの取得に失敗しました。');
+      setError(errorObj.message || '案件一覧の取得に失敗しました。');
     } finally {
       setIsLoading(false);
     }
-  }, [token, statusFilter, producerFilter, activeSearch, page, pageSize, logout]);
+  }, [page, pageSize, activeSearch, statusFilter, producerFilter, token, logout]);
 
   useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
+    fetchProducers(token)
+      .then(setProducers)
+      .catch(() => {});
+  }, [token]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setActiveSearch(searchInput);
     setPage(1);
-  };
-
-  const handleStatusChange = (newStatus: string) => {
-    setStatusFilter(newStatus);
-    setPage(1);
-  };
-
-  const handleProducerChange = (newProducer: string) => {
-    setProducerFilter(newProducer);
-    setPage(1);
+    setActiveSearch(searchInput.trim());
   };
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreateError('');
     if (!newProjectName.trim()) {
-      setModalError('案件名を入力してください。');
+      setCreateError('案件名を入力してください。');
       return;
     }
-    setIsSubmitting(true);
-    setModalError('');
+    setIsCreating(true);
     try {
       await createProject(
         {
           name: newProjectName.trim(),
           status: newStatus,
           progress_rate: Number(newProgress),
-          deadline: newDeadline ? new Date(newDeadline).toISOString() : null,
+          deadline: newEndDate || undefined,
         },
         token
       );
       setIsModalOpen(false);
       setNewProjectName('');
-      setNewProgress(0);
-      setNewDeadline('');
       setNewStatus('normal');
-      loadProjects();
+      setNewProgress(0);
+      setNewEndDate('');
+      setPage(1);
+      await loadData();
     } catch (err: unknown) {
       const errorObj = err as { message?: string };
-      setModalError(errorObj.message || '案件の作成に失敗しました。');
+      setCreateError(errorObj.message || '案件の作成に失敗しました。');
     } finally {
-      setIsSubmitting(false);
+      setIsCreating(false);
     }
   };
 
   const totalPages = Math.ceil(total / pageSize) || 1;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-10">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-black text-gray-800 flex items-center gap-2">
-            <FolderKanban className="h-6 w-6 text-primary" /> 案件一覧
+          <h2 className="text-xl sm:text-2xl font-black text-gray-800 flex items-center gap-2">
+            <FolderKanban className="h-6 w-6 text-primary shrink-0" />
+            案件管理
           </h2>
-          <p className="text-sm text-gray-500 mt-1">全 {total} 件のプロジェクト</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">進行中案件のステータス・進捗・タイムラインを管理します。</p>
         </div>
-        <Button
+        <Button 
           id="btn-new-project"
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-primary hover:bg-orange-600 text-white font-bold shadow-md cursor-pointer"
+          onClick={() => setIsModalOpen(true)} 
+          className="bg-primary hover:bg-orange-600 text-white font-bold gap-2 min-h-[44px] w-full sm:w-auto justify-center"
         >
-          <Plus className="h-4 w-4" /> 新規案件
+          <Plus className="h-5 w-5" /> 新規案件を作成
         </Button>
       </div>
 
-      {/* Main Card */}
-      <Card className="border shadow-sm">
-        <CardHeader className="py-4 px-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b bg-gray-50/50">
-          {/* Search Form */}
-          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-sm flex items-center gap-2">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+      {/* Filter Section */}
+      <Card className="border border-gray-100 shadow-sm rounded-xl sm:rounded-2xl">
+        <CardContent className="p-3 sm:p-4">
+          <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                id="search-input"
+                id="project-search-input"
+                type="text"
+                placeholder="案件名で検索..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="pl-9 bg-white border-gray-300 focus:border-primary"
-                placeholder="案件名で検索 (Enterで検索)..."
+                className="pl-9 bg-gray-50 focus:bg-white text-xs sm:text-sm h-11"
               />
             </div>
-            <Button id="btn-search" type="submit" variant="secondary" size="sm" className="whitespace-nowrap cursor-pointer">
-              検索
-            </Button>
-          </form>
 
-          {/* Filter */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500" />
-            <select
-              id="status-filter"
-              value={statusFilter}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            >
-              <option value="all">すべてのステータス</option>
-              <option value="normal">正常</option>
-              <option value="warning">注意</option>
-              <option value="delayed">遅延</option>
-            </select>
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 h-11">
+                <Filter className="h-4 w-4 text-gray-400 shrink-0" />
+                <select
+                  id="status-filter"
+                  value={statusFilter}
+                  onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                  className="bg-transparent text-xs sm:text-sm font-bold text-gray-700 focus:outline-none w-full"
+                >
+                  <option value="all">全ステータス</option>
+                  <option value="normal">正常</option>
+                  <option value="warning">注意</option>
+                  <option value="delayed">遅延</option>
+                </select>
+              </div>
 
-            <select
-              id="producer-filter"
-              value={producerFilter}
-              onChange={(e) => handleProducerChange(e.target.value)}
-              className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            >
-              <option value="all">すべてのプロデューサー</option>
-              {producers.map((prod) => (
-                <option key={prod.id} value={prod.id}>
-                  {prod.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </CardHeader>
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 h-11">
+                <select
+                  id="producer-filter"
+                  value={producerFilter}
+                  onChange={(e) => { setProducerFilter(e.target.value); setPage(1); }}
+                  className="bg-transparent text-xs sm:text-sm font-bold text-gray-700 focus:outline-none w-full"
+                >
+                  <option value="all">全プロデューサー</option>
+                  {producers.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
 
-        <CardContent className="p-0">
-          {/* Loading state */}
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-              <p className="text-sm font-medium">案件データを読み込み中...</p>
-            </div>
-          ) : error ? (
-            /* Error state */
-            <div className="flex flex-col items-center justify-center py-12 text-rose-600 bg-rose-50/30">
-              <AlertCircle className="h-8 w-8 mb-2" />
-              <p className="font-bold">{error}</p>
-              <Button variant="ghost" size="sm" onClick={loadProjects} className="mt-3 underline text-sm">
-                再読み込み
+              <Button id="btn-submit-search" type="submit" className="bg-primary text-white font-bold h-11 px-5 shrink-0 justify-center">
+                検索
               </Button>
             </div>
-          ) : projects.length === 0 ? (
-            /* Empty state */
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-              <FolderKanban className="h-12 w-12 stroke-1 mb-3 text-gray-300" />
-              <p className="font-bold text-gray-600">
-                {activeSearch || statusFilter !== 'all' ? '条件に一致する案件がありません' : '表示できる案件がありません'}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                {activeSearch || statusFilter !== 'all' ? '検索条件を変更してください。' : '新しい案件を作成して開始しましょう。'}
-              </p>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Loading & Error */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+          <p className="text-sm font-medium">案件一覧を読み込み中...</p>
+        </div>
+      )}
+
+      {error && !isLoading && (
+        <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-center text-red-600 my-4 space-y-3">
+          <AlertCircle className="h-8 w-8 text-red-500 mx-auto" />
+          <p className="text-sm font-medium">{error}</p>
+          <Button variant="outline" onClick={loadData} className="gap-2 text-red-600 border-red-300">
+            再読み込み
+          </Button>
+        </div>
+      )}
+
+      {/* Projects Table */}
+      {!isLoading && !error && (
+        <>
+          {projects.length === 0 ? (
+            <div className="py-16 text-center bg-white border border-gray-100 rounded-2xl shadow-sm space-y-3">
+              <FolderKanban className="h-12 w-12 text-gray-300 mx-auto" />
+              <h3 className="text-base font-bold text-gray-700">該当する案件が見つかりません</h3>
+              <p className="text-xs text-gray-500">条件を変更して再度検索するか、新しい案件を作成してください。</p>
             </div>
           ) : (
-            /* Table Data */
-            <Table id="projects-table">
-              <TableHeader>
-                <TableRow className="bg-gray-50/80">
-                  <TableHead className="font-bold">案件名</TableHead>
-                  <TableHead className="font-bold">プロデューサー</TableHead>
-                  <TableHead className="font-bold">ステータス</TableHead>
-                  <TableHead className="font-bold w-48">進捗率</TableHead>
-                  <TableHead className="font-bold">期日</TableHead>
-                  <TableHead className="font-bold text-center">メンバー</TableHead>
-                  <TableHead className="text-right"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {projects.map((p) => (
-                  <TableRow
-                    key={p.id}
-                    id={`project-row-${p.id}`}
-                    className="cursor-pointer hover:bg-orange-50/40 transition-colors"
-                    onClick={() => navigate(`/projects/${p.id}`)}
-                  >
-                    <TableCell className="font-bold text-gray-900">{p.name}</TableCell>
-                    <TableCell className="text-gray-600">{p.producer_name || '未割り当て'}</TableCell>
-                    <TableCell>{renderStatusBadge(p.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full transition-all"
-                            style={{ width: `${Math.min(100, Math.max(0, p.progress_rate))}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs font-bold text-gray-600 w-9 text-right">{p.progress_rate}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-600">{formatDate(p.deadline)}</TableCell>
-                    <TableCell className="text-center font-medium text-sm text-gray-600">{p.member_count}名</TableCell>
-                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        id={`btn-detail-${p.id}`}
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/projects/${p.id}`)}
-                        className="text-primary hover:text-orange-700 hover:bg-orange-100/50"
-                      >
-                        詳細
-                      </Button>
-                    </TableCell>
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-bold text-xs sm:text-sm">案件名</TableHead>
+                    <TableHead className="font-bold text-xs sm:text-sm">ステータス</TableHead>
+                    <TableHead className="font-bold text-xs sm:text-sm hidden sm:table-cell">進捗</TableHead>
+                    <TableHead className="font-bold text-xs sm:text-sm hidden md:table-cell">プロデューサー</TableHead>
+                    <TableHead className="font-bold text-xs sm:text-sm hidden lg:table-cell">期日</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {projects.map((proj) => (
+                    <TableRow 
+                      key={proj.id}
+                      onClick={() => navigate(`/projects/${proj.id}`)}
+                      className="cursor-pointer hover:bg-orange-50/40 transition-colors"
+                      id={`project-row-${proj.id}`}
+                    >
+                      <TableCell className="font-bold text-xs sm:text-sm text-gray-900 py-3 sm:py-4">
+                        <div className="flex flex-col">
+                          <span className="truncate max-w-[200px] sm:max-w-md hover:text-primary">{proj.name}</span>
+                          <span className="text-[10px] text-gray-400 sm:hidden mt-0.5">
+                            進捗: {proj.progress_rate}% | {proj.producer_name || 'プロデューサー未設定'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3 sm:py-4">{renderStatusBadge(proj.status)}</TableCell>
+                      <TableCell className="hidden sm:table-cell py-3 sm:py-4">
+                        <div className="flex items-center gap-2 min-w-[100px]">
+                          <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                            <div 
+                              className="bg-primary h-full rounded-full transition-all" 
+                              style={{ width: `${proj.progress_rate}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-gray-600 w-8">{proj.progress_rate}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-xs sm:text-sm text-gray-600 py-3 sm:py-4">
+                        {proj.producer_name || '-'}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-xs text-gray-500 py-3 sm:py-4">
+                        {formatDate(proj.deadline)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
 
           {/* Pagination */}
-          {!isLoading && total > 0 && (
-            <div className="flex items-center justify-between px-6 py-3 border-t bg-gray-50/50">
-              <p className="text-xs text-gray-500">
-                {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} / {total} 件
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-2 px-1 flex-wrap gap-2">
+              <p className="text-xs text-gray-500 font-medium">
+                全 {total} 件中 {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} 件を表示
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -322,99 +308,95 @@ export default function Projects() {
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="h-8 w-8 p-0 cursor-pointer"
+                  className="gap-1 text-xs min-h-[36px]"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" /> 前へ
                 </Button>
-                <span className="text-xs font-bold text-gray-700">
-                  {page} / {totalPages}
-                </span>
+                <span className="text-xs font-bold text-gray-700 px-2">{page} / {totalPages}</span>
                 <Button
                   id="btn-next-page"
                   variant="outline"
                   size="sm"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="h-8 w-8 p-0 cursor-pointer"
+                  className="gap-1 text-xs min-h-[36px]"
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  次へ <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </>
+      )}
 
       {/* Create Project Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="新規案件作成">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="新規案件の作成">
         <form onSubmit={handleCreateProject} className="space-y-4 pt-2">
-          {modalError && (
-            <div className="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-md text-xs font-bold">
-              {modalError}
+          {createError && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-medium">
+              {createError}
             </div>
           )}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              案件名 <span className="text-rose-500">*</span>
-            </label>
+
+          <div className="space-y-1">
+            <label htmlFor="new-project-name" className="text-xs font-bold text-gray-700 block">案件名 <span className="text-red-500">*</span></label>
             <Input
               id="new-project-name"
+              type="text"
+              required
+              placeholder="例: NAC HUB レスポンシブUI開発"
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
-              placeholder="例: コマースサイトリニューアル"
-              required
+              className="w-full"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">ステータス</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label htmlFor="new-project-status" className="text-xs font-bold text-gray-700 block">初期ステータス</label>
               <select
                 id="new-project-status"
                 value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value as ProjectStatus)}
-                className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                onChange={(e) => setNewStatus(e.target.value)}
+                className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-md text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="normal">正常 (normal)</option>
-                <option value="warning">注意 (warning)</option>
-                <option value="delayed">遅延 (delayed)</option>
+                <option value="normal">正常</option>
+                <option value="warning">注意</option>
+                <option value="delayed">遅延</option>
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">進捗率 (%)</label>
+
+            <div className="space-y-1">
+              <label htmlFor="new-project-progress" className="text-xs font-bold text-gray-700 block">進捗率 (%)</label>
               <Input
                 id="new-project-progress"
                 type="number"
-                min="0"
-                max="100"
+                min={0}
+                max={100}
                 value={newProgress}
                 onChange={(e) => setNewProgress(Number(e.target.value))}
+                className="w-full"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">期日</label>
+          <div className="space-y-1">
+            <label htmlFor="new-project-end-date" className="text-xs font-bold text-gray-700 block">完了予定日</label>
             <Input
-              id="new-project-deadline"
+              id="new-project-end-date"
               type="date"
-              value={newDeadline}
-              onChange={(e) => setNewDeadline(e.target.value)}
+              value={newEndDate}
+              onChange={(e) => setNewEndDate(e.target.value)}
+              className="w-full"
             />
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="min-h-[44px]">
               キャンセル
             </Button>
-            <Button
-              id="btn-submit-project"
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-primary hover:bg-orange-600 text-white font-bold"
-            >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              作成する
+            <Button id="btn-save-new-project" type="submit" className="bg-primary text-white font-bold min-h-[44px]" disabled={isCreating}>
+              {isCreating ? '作成中...' : '登録する'}
             </Button>
           </div>
         </form>

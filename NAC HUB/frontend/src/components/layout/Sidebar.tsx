@@ -16,7 +16,11 @@ import {
   Network
 } from 'lucide-react';
 
-export function Sidebar() {
+interface SidebarProps {
+  onCloseMobileMenu?: () => void;
+}
+
+export function Sidebar({ onCloseMobileMenu }: SidebarProps) {
   const navItems = [
     { name: 'ホーム', path: '/', icon: Home, badge: null },
     { name: 'なっくん (AI)', path: '/chat', icon: MessageSquare, badge: null },
@@ -37,7 +41,10 @@ export function Sidebar() {
   return (
     <div className="w-64 h-full bg-white border-r flex flex-col flex-shrink-0 relative z-20">
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 shrink-0 cursor-pointer">
+      <div 
+        onClick={() => onCloseMobileMenu?.()}
+        className="h-16 flex items-center px-6 shrink-0 cursor-pointer border-b border-gray-100"
+      >
         <div className="flex items-center gap-2">
           <Network className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-black text-gray-800 tracking-tight">NAC HUB</h1>
@@ -50,9 +57,10 @@ export function Sidebar() {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={() => onCloseMobileMenu?.()}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-bold transition-colors",
+                  "flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-bold transition-colors min-h-[44px]",
                   isActive 
                     ? "bg-primary/10 text-primary" 
                     : "text-gray-600 hover:bg-gray-50 hover:text-primary"
@@ -79,9 +87,10 @@ export function Sidebar() {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={() => onCloseMobileMenu?.()}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition-colors",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition-colors min-h-[44px]",
                     isActive 
                       ? "bg-primary/10 text-primary" 
                       : "text-gray-600 hover:bg-gray-50 hover:text-primary"
@@ -99,9 +108,9 @@ export function Sidebar() {
         <div className="mt-auto pt-6 px-3 pb-2">
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
             <p className="text-xs font-black text-gray-800">NAC HUB</p>
-            <p className="text-[10px] text-gray-500 mt-0.5">Ver 1.1.0</p>
-            <p className="text-[10px] text-gray-500">Build 20260708</p>
-            <button className="w-full mt-3 py-1.5 border border-primary/30 text-primary text-xs font-bold rounded-full hover:bg-primary/5 transition-colors">
+            <p className="text-[10px] text-gray-500 mt-0.5">Ver 1.4.0</p>
+            <p className="text-[10px] text-gray-500">Build 20260726</p>
+            <button className="w-full mt-3 py-2 border border-primary/30 text-primary text-xs font-bold rounded-full hover:bg-primary/5 transition-colors min-h-[36px]">
               システム情報
             </button>
           </div>

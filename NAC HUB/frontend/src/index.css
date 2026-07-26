@@ -3,7 +3,26 @@
 @tailwind utilities;
 
 @layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    overflow: hidden;
+  }
+
   body {
+    overflow: hidden;
     @apply bg-background text-text-main font-sans antialiased;
+  }
+
+  #root {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 }

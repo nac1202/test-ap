@@ -37,7 +37,6 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/change-password" element={<ChangePassword />} />
             <Route element={<MockLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/chat" element={<Chat />} />
@@ -46,6 +45,7 @@ function App() {
               <Route path="/notices" element={<Notices />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/hotbiz" element={<HotBiz />} />
+              <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/settings/users" element={<Users />} />
               <Route path="/settings/roles" element={<Roles />} />
               <Route path="/settings/system" element={<System />} />

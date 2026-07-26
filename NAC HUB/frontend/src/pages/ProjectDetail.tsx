@@ -7,11 +7,6 @@ import { Modal } from '../components/ui/Modal';
 import {
   ArrowLeft,
   Clock,
-  MessageCircle,
-  FileText,
-  Link as LinkIcon,
-  Star,
-  FolderKanban,
   UserCheck,
   UserPlus,
   Trash2,
@@ -30,7 +25,7 @@ import {
   removeProjectMember,
   addProjectTimeline,
 } from '../api/projects';
-import type { ProjectDetail as IProjectDetail, ProjectStatus } from '../types/project';
+import type { ProjectDetail as IProjectDetail } from '../types/project';
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   normal: { label: '正常', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
@@ -39,7 +34,7 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 };
 
 function renderStatusBadge(statusStr: string) {
-  const config = STATUS_LABELS[statusStr] || { label: statusStr, className: 'bg-gray-100 text-gray-700' };
+  const config = STATUS_LABELS[statusStr] || { label: statusStr, className: 'bg-gray-100 text-gray-700 border-gray-200' };
   return (
     <span id="project-status-badge" className={`px-2.5 py-1 rounded-full text-xs font-bold border ${config.className}`}>
       {config.label}
@@ -60,396 +55,375 @@ function formatDate(dateStr: string | null): string {
   }
 }
 
-function formatDateTime(dateStr: string | null): string {
-  if (!dateStr) return '';
-  try {
-    const d = new Date(dateStr);
-    return `${d.toLocaleDateString('ja-JP')} ${d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
-  } catch {
-    return dateStr;
-  }
-}
-
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { token, user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
 
   const [project, setProject] = useState<IProjectDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const [is404, setIs404] = useState<boolean>(false);
 
-  // Edit Modal
-  const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
-  const [editName, setEditName] = useState<string>('');
-  const [editStatus, setEditStatus] = useState<ProjectStatus>('normal');
-  const [editProgress, setEditProgress] = useState<number>(0);
-  const [editDeadline, setEditDeadline] = useState<string>('');
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  // Edit Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editStatus, setEditStatus] = useState<string>('normal');
+  const [editProgress, setEditProgress] = useState(0);
+  const [editEndDate, setEditEndDate] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Add Member Modal
-  const [isMemberModalOpen, setIsMemberModalOpen] = useState<boolean>(false);
-  const [memberUserId, setMemberUserId] = useState<string>('');
-  const [memberRole, setMemberRole] = useState<string>('member');
-  const [memberError, setMemberError] = useState<string>('');
+  // Delete Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Add Timeline Input
-  const [newTimelineContent, setNewTimelineContent] = useState<string>('');
-  const [isPostingTimeline, setIsPostingTimeline] = useState<boolean>(false);
+  // Add Member Modal State
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [memberUserId, setMemberUserId] = useState('');
+  const [memberRole, setMemberRole] = useState('メンバー');
+  const [isAddingMember, setIsAddingMember] = useState(false);
 
-  // Delete Modal
-  const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  // Timeline Form State
+  const [timelineContent, setTimelineContent] = useState('');
+  const [isAddingTimeline, setIsAddingTimeline] = useState(false);
 
-  // Admin Role Check (semantic check using is_admin or role_name)
-  const isAdmin = user?.is_admin === true || user?.role_name === 'admin' || user?.role_name === 'system_admin';
+  const projectId = Number(id);
 
-  const loadProject = useCallback(async () => {
-    if (!id) return;
+  const canDelete =
+    user?.is_admin === true ||
+    user?.role_name === 'admin' ||
+    user?.role_name === 'system_admin';
+
+  const loadDetail = useCallback(async () => {
+    if (!projectId || isNaN(projectId)) {
+      setError('無効な案件IDです。');
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError('');
-    setIs404(false);
     try {
-      const data = await fetchProjectDetail(id, token);
+      const data = await fetchProjectDetail(projectId, token);
       setProject(data);
-      setEditName(data.name);
-      setEditStatus(data.status as ProjectStatus);
-      setEditProgress(data.progress_rate);
-      setEditDeadline(data.deadline ? data.deadline.split('T')[0] : '');
     } catch (err: unknown) {
       const errorObj = err as { status?: number; message?: string };
       if (errorObj.status === 401) {
         logout();
         return;
       }
-      if (errorObj.status === 404) {
-        setIs404(true);
-        setError('指定された案件が存在しないか、アクセス権限がありません。');
-      } else {
-        setError(errorObj.message || '案件詳細の取得に失敗しました。');
-      }
+      setError(errorObj.message || '案件詳細の取得に失敗しました。');
     } finally {
       setIsLoading(false);
     }
-  }, [id, token, logout]);
+  }, [projectId, token, logout]);
 
   useEffect(() => {
-    loadProject();
-  }, [loadProject]);
+    loadDetail();
+  }, [loadDetail]);
 
-  const handleUpdateProject = async (e: React.FormEvent) => {
+  const openEditModal = () => {
+    if (!project) return;
+    setEditName(project.name);
+    setEditStatus(project.status);
+    setEditProgress(project.progress_rate);
+    setEditEndDate(project.deadline || '');
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || !project) return;
-    setIsSaving(true);
+    if (!editName.trim()) return;
+    setIsUpdating(true);
     try {
       await updateProject(
-        id,
+        projectId,
         {
           name: editName.trim(),
           status: editStatus,
           progress_rate: Number(editProgress),
-          deadline: editDeadline ? new Date(editDeadline).toISOString() : null,
+          deadline: editEndDate || undefined,
         },
         token
       );
-      setIsEditOpen(false);
-      loadProject();
+      setIsEditModalOpen(false);
+      await loadDetail();
     } catch (err: unknown) {
       const errorObj = err as { message?: string };
       alert(errorObj.message || '更新に失敗しました。');
     } finally {
-      setIsSaving(false);
+      setIsUpdating(false);
     }
   };
 
-  const handleDeleteProject = async () => {
-    if (!id) return;
+  const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await deleteProject(id, token);
-      navigate('/projects');
+      await deleteProject(projectId, token);
+      setIsDeleteModalOpen(false);
+      navigate('/projects', { replace: true });
     } catch (err: unknown) {
       const errorObj = err as { message?: string };
-      alert(errorObj.message || '案件の削除に失敗しました。');
+      alert(errorObj.message || '削除に失敗しました。');
       setIsDeleting(false);
     }
   };
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || !memberUserId.trim()) return;
-    setMemberError('');
+    if (!memberUserId || isNaN(Number(memberUserId))) return;
+    setIsAddingMember(true);
     try {
-      await addProjectMember(id, Number(memberUserId.trim()), memberRole, token);
-      setIsMemberModalOpen(false);
+      await addProjectMember(
+        projectId,
+        Number(memberUserId),
+        memberRole,
+        token
+      );
+      setIsAddMemberModalOpen(false);
       setMemberUserId('');
-      loadProject();
+      setMemberRole('メンバー');
+      await loadDetail();
     } catch (err: unknown) {
       const errorObj = err as { message?: string };
-      setMemberError(errorObj.message || 'メンバーの追加に失敗しました。');
+      alert(errorObj.message || 'メンバーの追加に失敗しました。');
+    } finally {
+      setIsAddingMember(false);
     }
   };
 
   const handleRemoveMember = async (userId: number) => {
-    if (!id) return;
-    if (!confirm('このメンバーを案件から外しますか？')) return;
+    if (!window.confirm('このメンバーを案件から削除しますか？')) return;
     try {
-      await removeProjectMember(id, userId, token);
-      loadProject();
+      await removeProjectMember(projectId, userId, token);
+      await loadDetail();
     } catch (err: unknown) {
       const errorObj = err as { message?: string };
       alert(errorObj.message || 'メンバーの削除に失敗しました。');
     }
   };
 
-  const handlePostTimeline = async (e: React.FormEvent) => {
+  const handleAddTimeline = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || !newTimelineContent.trim()) return;
-    setIsPostingTimeline(true);
+    if (!timelineContent.trim() || isAddingTimeline) return;
+    setIsAddingTimeline(true);
     try {
-      await addProjectTimeline(id, 'note', newTimelineContent.trim(), token);
-      setNewTimelineContent('');
-      loadProject();
+      await addProjectTimeline(
+        projectId,
+        'comment',
+        timelineContent.trim(),
+        token
+      );
+      setTimelineContent('');
+      await loadDetail();
     } catch (err: unknown) {
       const errorObj = err as { message?: string };
       alert(errorObj.message || 'タイムラインの投稿に失敗しました。');
     } finally {
-      setIsPostingTimeline(false);
+      setIsAddingTimeline(false);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+      <div className="flex flex-col items-center justify-center py-24 text-gray-500 min-h-[300px]">
         <Loader2 className="h-10 w-10 animate-spin text-primary mb-3" />
-        <p className="text-sm font-medium">案件詳細を読み込み中...</p>
+        <p className="text-sm font-medium">案件情報を読み込み中...</p>
       </div>
     );
   }
 
-  if (is404 || error || !project) {
+  if (error || !project) {
     return (
-      <div className="space-y-6">
-        <Button id="btn-back-projects-404" variant="ghost" size="sm" onClick={() => navigate('/projects')} className="flex items-center gap-2 text-gray-600">
-          <ArrowLeft className="h-4 w-4" /> 案件一覧へ戻る
+      <div className="p-6 sm:p-8 max-w-lg mx-auto bg-rose-50 border border-rose-200 rounded-2xl text-center space-y-4 my-6 sm:my-10">
+        <AlertCircle className="h-10 w-10 text-rose-500 mx-auto" />
+        <h3 className="text-base sm:text-lg font-bold text-gray-800">エラーが発生しました</h3>
+        <p className="text-xs sm:text-sm text-gray-600">{error || '案件が見つかりません。'}</p>
+        <Button onClick={() => navigate('/projects')} className="bg-primary text-white font-bold min-h-[44px]">
+          <ArrowLeft className="h-4 w-4 mr-2" /> 案件一覧へ戻る
         </Button>
-        <Card className="border-rose-200 bg-rose-50/20 py-12">
-          <CardContent className="flex flex-col items-center justify-center text-center">
-            <AlertCircle className="h-12 w-12 text-rose-500 mb-3" />
-            <h3 id="error-title" className="text-lg font-bold text-gray-800 mb-1">{is404 ? '案件が見つかりませんでした' : 'エラーが発生しました'}</h3>
-            <p className="text-sm text-gray-600 mb-6">{error || '指定された案件にアクセスできません。'}</p>
-            <Button id="btn-return-projects" onClick={() => navigate('/projects')} className="bg-primary text-white font-bold">
-              案件一覧に戻る
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Top Header Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button id="btn-back-projects" variant="ghost" size="sm" onClick={() => navigate('/projects')} className="p-2 rounded-full hover:bg-gray-200">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h2 id="project-title" className="text-2xl font-black text-gray-800">{project.name}</h2>
-          {renderStatusBadge(project.status)}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button id="btn-edit-project" variant="outline" size="sm" onClick={() => setIsEditOpen(true)} className="flex items-center gap-1 cursor-pointer">
-            <Edit3 className="h-4 w-4" /> 編集
-          </Button>
-
-          {isAdmin && (
-            <Button
-              id="btn-delete-project"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsDeleteOpen(true)}
-              className="flex items-center gap-1 text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 cursor-pointer"
-            >
-              <Trash2 className="h-4 w-4" /> 削除
-            </Button>
-          )}
-
-          <Button variant="ghost" size="sm" className="text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50">
-            <Star className="h-5 w-5 fill-current" />
-          </Button>
-        </div>
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-10">
+      <div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/projects')}
+          className="text-gray-500 hover:text-primary gap-1.5 p-1 text-xs sm:text-sm"
+        >
+          <ArrowLeft className="h-4 w-4" /> 案件一覧に戻る
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Info & Members */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Main Info Card */}
-          <Card>
-            <CardHeader className="border-b py-4 bg-gray-50/50">
-              <CardTitle className="text-base font-bold text-gray-800">基本情報</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-sm">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">プロデューサー</p>
-                  <p id="producer-name" className="font-bold text-gray-800 flex items-center gap-1.5">
-                    <UserIcon className="h-4 w-4 text-primary" />
-                    {project.producer_name || '未設定'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">期日</p>
-                  <p id="project-deadline" className="font-bold text-gray-800">{formatDate(project.deadline)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">作成日</p>
-                  <p id="project-created-at" className="font-bold text-gray-800">{formatDate(project.created_at)}</p>
-                </div>
-
-                <div className="col-span-2 sm:col-span-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs text-gray-500">進捗状況</p>
-                    <p id="project-progress-rate" className="text-xs font-bold text-primary">{project.progress_rate}%</p>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div
-                      className="bg-primary h-3 rounded-full transition-all"
-                      style={{ width: `${Math.min(100, Math.max(0, project.progress_rate))}%` }}
-                    ></div>
-                  </div>
-                </div>
+      <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+        <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div className="space-y-2 min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                {renderStatusBadge(project.status)}
+                <span className="text-xs text-gray-400">ID: {project.id}</span>
               </div>
-            </CardContent>
-          </Card>
+              <h1 id="project-detail-name" className="text-xl sm:text-3xl font-black text-gray-900 tracking-tight break-words">
+                {project.name}
+              </h1>
+            </div>
 
-          {/* Members Card */}
-          <Card>
-            <CardHeader className="border-b py-4 bg-gray-50/50 flex flex-row items-center justify-between">
-              <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-primary" /> 案件メンバー ({project.members.length}名)
+            <div className="flex items-center gap-2 shrink-0 flex-wrap pt-2 md:pt-0">
+              <Button
+                id="btn-edit-project"
+                variant="outline"
+                size="sm"
+                onClick={openEditModal}
+                className="gap-1.5 font-bold border-gray-200 hover:bg-gray-50 text-xs sm:text-sm min-h-[40px]"
+              >
+                <Edit3 className="h-4 w-4 text-gray-500" /> 編集
+              </Button>
+              {canDelete && (
+                <Button
+                  id="btn-delete-project"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="gap-1.5 font-bold border-rose-200 text-rose-600 hover:bg-rose-50 text-xs sm:text-sm min-h-[40px]"
+                >
+                  <Trash2 className="h-4 w-4 text-rose-500" /> 削除
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-100 space-y-3">
+            <div className="flex items-center justify-between text-xs sm:text-sm font-bold">
+              <span className="text-gray-700">進捗状況</span>
+              <span className="text-primary text-base font-black">{project.progress_rate}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-primary h-full rounded-full transition-all duration-300"
+                style={{ width: `${project.progress_rate}%` }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 pt-1">
+              <div>
+                <span className="block text-[10px] text-gray-400">プロデューサー</span>
+                <span className="font-bold text-gray-700 truncate block">{project.producer_name || '未設定'}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] text-gray-400">完了予定日</span>
+                <span className="font-bold text-gray-700 truncate block">{formatDate(project.deadline)}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
+        {/* Members Column */}
+        <div className="md:col-span-4 space-y-4">
+          <Card className="border border-gray-100 shadow-sm rounded-2xl">
+            <CardHeader className="p-4 border-b border-gray-100 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm sm:text-base font-bold flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-primary" />
+                プロジェクトメンバー ({project.members.length})
               </CardTitle>
-              <Button id="btn-open-add-member" size="sm" variant="outline" onClick={() => setIsMemberModalOpen(true)} className="h-8 text-xs flex items-center gap-1 cursor-pointer">
-                <UserPlus className="h-3.5 w-3.5" /> メンバー追加
+              <Button
+                id="btn-add-member"
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsAddMemberModalOpen(true)}
+                className="text-primary hover:bg-orange-50 p-1 text-xs gap-1 h-8"
+              >
+                <UserPlus className="h-4 w-4" /> 追加
               </Button>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="p-3 sm:p-4">
               {project.members.length === 0 ? (
-                <p className="text-xs text-gray-400 py-4 text-center">メンバーがまだ割り当てられていません。</p>
+                <p className="text-xs text-gray-400 text-center py-4">メンバーがまだ割り当てられていません。</p>
               ) : (
-                <div id="members-list" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
                   {project.members.map((m) => (
                     <div
                       key={m.user_id}
-                      className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-xs hover:border-orange-200 transition-colors"
+                      className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100 text-xs"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center font-bold text-xs">
-                          {m.user_name ? m.user_name.charAt(0) : 'U'}
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary shrink-0">
+                          {m.user_name?.[0] || 'U'}
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-gray-800">{m.user_name || `ユーザー ID: ${m.user_id}`}</p>
-                          <p className="text-xs text-gray-400">役割: {m.role}</p>
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-800 truncate">{m.user_name || `ユーザー #${m.user_id}`}</p>
+                          <p className="text-[10px] text-gray-400 truncate">{m.role || 'メンバー'}</p>
                         </div>
                       </div>
-                      <Button
-                        id={`btn-remove-member-${m.user_id}`}
-                        variant="ghost"
-                        size="sm"
+                      <button
                         onClick={() => handleRemoveMember(m.user_id)}
-                        className="h-7 w-7 p-0 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-full cursor-pointer"
+                        className="text-gray-400 hover:text-red-500 p-1 rounded-md hover:bg-red-50 transition-colors shrink-0"
+                        title="メンバーから削除"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      </button>
                     </div>
                   ))}
                 </div>
               )}
             </CardContent>
           </Card>
-
-          {/* Connected Resources Links (UI Preserved) */}
-          <Card>
-            <CardHeader className="border-b py-4 bg-gray-50/50">
-              <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-                <LinkIcon className="h-5 w-5 text-primary" /> 連携リソース
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="flex flex-wrap gap-3">
-                <a
-                  href="#"
-                  onClick={(e) => e.preventDefault()}
-                  className="flex items-center gap-2 px-3.5 py-2 border rounded-md hover:bg-gray-50 font-bold text-xs text-[#4A154B] bg-purple-50/30"
-                >
-                  <MessageCircle className="h-4 w-4" /> Slackチャンネル (未接続)
-                </a>
-                <a
-                  href="#"
-                  onClick={(e) => e.preventDefault()}
-                  className="flex items-center gap-2 px-3.5 py-2 border rounded-md hover:bg-gray-50 font-bold text-xs text-blue-600 bg-blue-50/30"
-                >
-                  <FileText className="h-4 w-4" /> NotePM マニュアル (未接続)
-                </a>
-                <a
-                  href="#"
-                  onClick={(e) => e.preventDefault()}
-                  className="flex items-center gap-2 px-3.5 py-2 border rounded-md hover:bg-gray-50 font-bold text-xs text-emerald-600 bg-emerald-50/30"
-                >
-                  <FolderKanban className="h-4 w-4" /> Google Drive (未接続)
-                </a>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Right Column: Timeline & Post */}
-        <div className="space-y-6">
-          <Card className="h-full flex flex-col">
-            <CardHeader className="border-b py-4 bg-gray-50/50">
-              <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" /> タイムライン
+        {/* Timelines Column */}
+        <div className="md:col-span-8 space-y-4">
+          <Card className="border border-gray-100 shadow-sm rounded-2xl">
+            <CardHeader className="p-4 border-b border-gray-100">
+              <CardTitle className="text-sm sm:text-base font-bold flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                タイムライン・進捗記録 ({project.timelines.length})
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 flex-1 flex flex-col justify-between">
-              {/* Timeline Form */}
-              <form onSubmit={handlePostTimeline} className="mb-6 space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    id="timeline-input"
-                    value={newTimelineContent}
-                    onChange={(e) => setNewTimelineContent(e.target.value)}
-                    placeholder="進捗メモ・連絡を投稿..."
-                    className="text-xs bg-white border-gray-300"
-                  />
+            <CardContent className="p-4 space-y-4">
+              <form onSubmit={handleAddTimeline} className="space-y-2">
+                <Input
+                  id="timeline-input"
+                  type="text"
+                  placeholder="本日の進捗や共有メモを投稿..."
+                  value={timelineContent}
+                  onChange={(e) => setTimelineContent(e.target.value)}
+                  className="bg-gray-50 focus:bg-white text-xs sm:text-sm h-11"
+                  disabled={isAddingTimeline}
+                />
+                <div className="flex justify-end">
                   <Button
                     id="btn-post-timeline"
                     type="submit"
-                    disabled={isPostingTimeline || !newTimelineContent.trim()}
                     size="sm"
-                    className="bg-primary hover:bg-orange-600 text-white whitespace-nowrap cursor-pointer"
+                    className="bg-primary text-white font-bold gap-1.5 min-h-[40px]"
+                    disabled={isAddingTimeline || !timelineContent.trim()}
                   >
-                    {isPostingTimeline ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                    {isAddingTimeline ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    投稿する
                   </Button>
                 </div>
               </form>
 
-              {/* Timeline List */}
               {project.timelines.length === 0 ? (
-                <p className="text-xs text-gray-400 py-6 text-center">タイムライン履歴はありません。</p>
+                <div className="py-8 text-center bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                  <Clock className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-500 font-medium">まだタイムライン投稿はありません</p>
+                </div>
               ) : (
-                <div id="timelines-list" className="relative border-l-2 border-orange-100 ml-3 space-y-5 pb-2">
+                <div className="space-y-3 pt-2">
                   {project.timelines.map((t) => (
-                    <div key={t.id} className="relative pl-5">
-                      <div className="absolute w-2.5 h-2.5 bg-primary rounded-full -left-[6px] top-1.5 ring-4 ring-white"></div>
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-0.5">
-                        <span className="font-bold text-gray-600">{t.user_name || 'システム'}</span>
-                        <span>{formatDateTime(t.created_at)}</span>
+                    <div key={t.id} className="p-3.5 bg-gray-50 rounded-xl border border-gray-100 space-y-1">
+                      <div className="flex items-center justify-between text-[11px] text-gray-400">
+                        <span className="font-bold text-gray-700 flex items-center gap-1">
+                          <UserIcon className="h-3 w-3 text-primary" /> {t.user_name || '投稿者'}
+                        </span>
+                        <span>{formatDate(t.created_at)}</span>
                       </div>
-                      <p className="text-xs font-bold text-gray-800">{t.event_type}</p>
-                      {t.content && <p className="text-xs text-gray-600 bg-gray-50 p-2 rounded mt-1 border border-gray-100">{t.content}</p>}
+                      <p className="text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
+                        {t.content}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -459,120 +433,127 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      {/* Edit Project Modal */}
-      <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="案件情報の編集">
-        <form onSubmit={handleUpdateProject} className="space-y-4 pt-2">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">案件名</label>
-            <Input id="edit-project-name" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+      {/* Edit Modal */}
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="案件情報の編集">
+        <form onSubmit={handleUpdate} className="space-y-4 pt-2">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-700 block">案件名 <span className="text-red-500">*</span></label>
+            <Input
+              type="text"
+              required
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="w-full"
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">ステータス</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700 block">ステータス</label>
               <select
-                id="edit-project-status"
                 value={editStatus}
-                onChange={(e) => setEditStatus(e.target.value as ProjectStatus)}
-                className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                onChange={(e) => setEditStatus(e.target.value)}
+                className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-md text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="normal">正常 (normal)</option>
-                <option value="warning">注意 (warning)</option>
-                <option value="delayed">遅延 (delayed)</option>
+                <option value="normal">正常</option>
+                <option value="warning">注意</option>
+                <option value="delayed">遅延</option>
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">進捗率 (%)</label>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700 block">進捗率 (%)</label>
               <Input
-                id="edit-project-progress"
                 type="number"
-                min="0"
-                max="100"
+                min={0}
+                max={100}
                 value={editProgress}
                 onChange={(e) => setEditProgress(Number(e.target.value))}
+                className="w-full"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">期日</label>
-            <Input id="edit-project-deadline" type="date" value={editDeadline} onChange={(e) => setEditDeadline(e.target.value)} />
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-700 block">完了予定日</label>
+            <Input
+              type="date"
+              value={editEndDate}
+              onChange={(e) => setEditEndDate(e.target.value)}
+              className="w-full"
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="min-h-[44px]">
               キャンセル
             </Button>
-            <Button id="btn-save-edit-project" type="submit" disabled={isSaving} className="bg-primary text-white font-bold cursor-pointer">
-              {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              保存する
+            <Button type="submit" className="bg-primary text-white font-bold min-h-[44px]" disabled={isUpdating}>
+              {isUpdating ? '保存中...' : '更新を保存'}
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Add Member Modal */}
-      <Modal isOpen={isMemberModalOpen} onClose={() => setIsMemberModalOpen(false)} title="メンバーの追加">
-        <form onSubmit={handleAddMember} className="space-y-4 pt-2">
-          {memberError && (
-            <div className="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-md text-xs font-bold">
-              {memberError}
-            </div>
-          )}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">ユーザー ID</label>
-            <Input
-              id="member-user-id-input"
-              type="number"
-              value={memberUserId}
-              onChange={(e) => setMemberUserId(e.target.value)}
-              placeholder="配属するユーザーのID (例: 2)"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">役割 (Role)</label>
-            <Input
-              id="member-role-input"
-              value={memberRole}
-              onChange={(e) => setMemberRole(e.target.value)}
-              placeholder="例: developer, designer, member"
-            />
-          </div>
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => setIsMemberModalOpen(false)}>
-              キャンセル
-            </Button>
-            <Button id="btn-submit-add-member" type="submit" className="bg-primary text-white font-bold cursor-pointer">
-              追加
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Delete Project Modal */}
-      <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="案件の削除">
+      {/* Delete Modal */}
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="案件の削除確認">
         <div className="space-y-4 pt-2">
-          <p className="text-sm text-gray-700">
-            案件「<span className="font-bold text-rose-600">{project.name}</span>」を削除してもよろしいですか？
+          <p className="text-sm text-gray-700 leading-relaxed">
+            本当に案件「<span className="font-bold text-gray-900">{project.name}</span>」を削除しますか？<br />
+            この操作は取り消せません。
           </p>
-          <p className="text-xs text-gray-500">この操作は取り消せません。関連するメンバーおよびタイムラインデータも削除されます。</p>
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => setIsDeleteOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setIsDeleteModalOpen(false)} className="min-h-[44px]">
               キャンセル
             </Button>
             <Button
               id="btn-confirm-delete-project"
               type="button"
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold min-h-[44px]"
               disabled={isDeleting}
-              onClick={handleDeleteProject}
-              className="bg-rose-600 hover:bg-rose-700 text-white font-bold cursor-pointer"
             >
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              削除する
+              {isDeleting ? '削除中...' : '削除する'}
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Add Member Modal */}
+      <Modal isOpen={isAddMemberModalOpen} onClose={() => setIsAddMemberModalOpen(false)} title="メンバーの追加">
+        <form onSubmit={handleAddMember} className="space-y-4 pt-2">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-700 block">ユーザーID <span className="text-red-500">*</span></label>
+            <Input
+              type="number"
+              required
+              placeholder="例: 2"
+              value={memberUserId}
+              onChange={(e) => setMemberUserId(e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-700 block">案件内役割</label>
+            <Input
+              type="text"
+              placeholder="例: フロントエンド担当"
+              value={memberRole}
+              onChange={(e) => setMemberRole(e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={() => setIsAddMemberModalOpen(false)} className="min-h-[44px]">
+              キャンセル
+            </Button>
+            <Button type="submit" className="bg-primary text-white font-bold min-h-[44px]" disabled={isAddingMember}>
+              {isAddingMember ? '追加中...' : '追加する'}
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   );
