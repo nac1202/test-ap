@@ -7,6 +7,13 @@ class ProjectMemberBase(BaseModel):
     user_id: int
     role: str = Field(default="member", description="Role in project (e.g. producer, leader, member)")
 
+class ProducerResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+
+    model_config = ConfigDict(from_attributes=True)
+
 class ProjectMemberCreate(ProjectMemberBase):
     pass
 

@@ -1,4 +1,5 @@
 import type {
+  Producer,
   Project,
   ProjectDetail,
   ProjectListResponse,
@@ -39,6 +40,11 @@ async function handleResponse<T>(res: Response): Promise<T> {
     throw error;
   }
   return res.json() as Promise<T>;
+}
+
+export async function fetchProducers(token?: string | null): Promise<Producer[]> {
+  const res = await fetch(`${API_BASE}/producers`, { headers: getAuthHeaders(token) });
+  return handleResponse<Producer[]>(res);
 }
 
 export async function fetchProjects(

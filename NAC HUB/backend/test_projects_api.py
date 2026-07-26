@@ -105,6 +105,27 @@ try:
         normal_user.must_change_password = False
         normal_user.password_hash = security.get_password_hash("UserPassword123")
 
+    other_company = db.query(Company).filter(Company.name == "Other Company").first()
+    if not other_company:
+        other_company = Company(name="Other Company")
+        db.add(other_company)
+        db.commit()
+
+    other_user = db.query(User).filter(User.email == "other@othercompany.com").first()
+    if not other_user:
+        other_user = User(
+            company_id=other_company.id,
+            role_id=user_role.id,
+            email="other@othercompany.com",
+            first_name="Other",
+            last_name="User",
+            password_hash=security.get_password_hash("OtherPassword123"),
+            status="active",
+            must_change_password=False
+        )
+        db.add(other_user)
+        db.commit()
+
     db.commit()
 
     # Get Admin JWT Token
@@ -132,6 +153,20 @@ try:
     r_unauth = client.get("/api/v1/projects")
     assert r_unauth.status_code == 401
     print("Unauthenticated access correctly rejected with 401")
+
+    # Test Producers Endpoint & Isolation
+    print("\n--- Testing Producers Endpoint ---")
+    r_unauth_prod = client.get("/api/v1/projects/producers")
+    assert r_unauth_prod.status_code == 401
+    
+    r_producers = client.get("/api/v1/projects/producers", headers=user_headers)
+    assert r_producers.status_code == 200
+    producers_list = r_producers.json()
+    producer_ids = [p["id"] for p in producers_list]
+    assert admin_user.id in producer_ids
+    assert normal_user.id in producer_ids
+    assert other_user.id not in producer_ids
+    print("Producers list fetched and isolated by company successfully.")
 
     # 3. Test Create Project
     print("\n--- 3. Testing Create Project ---")

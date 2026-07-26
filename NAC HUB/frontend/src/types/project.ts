@@ -1,5 +1,11 @@
 export type ProjectStatus = 'normal' | 'warning' | 'delayed';
 
+export interface Producer {
+  id: number;
+  name: string;
+  email: string;
+}
+
 export interface ProjectMember {
   project_id: number;
   user_id: number;

@@ -102,8 +102,8 @@ export default function ProjectDetail() {
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-  // Admin Role Check (role_id 1 is admin)
-  const isAdmin = user?.role_id === 1;
+  // Admin Role Check (semantic check using is_admin or role_name)
+  const isAdmin = user?.is_admin === true || user?.role_name === 'admin' || user?.role_name === 'system_admin';
 
   const loadProject = useCallback(async () => {
     if (!id) return;

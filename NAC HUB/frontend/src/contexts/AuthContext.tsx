@@ -6,6 +6,8 @@ interface User {
   first_name: string;
   last_name: string;
   role_id: number;
+  role_name?: string;
+  is_admin?: boolean;
   company_id: number;
   must_change_password: boolean;
 }

@@ -9,6 +9,7 @@ from app.core import security
 from app.core.config import settings
 from app.db.database import get_db
 from app.models.user import User
+from app.models.role import Role
 from app.models.audit import AuditLog
 from app.api.deps import get_current_active_user, get_current_admin_user
 
@@ -74,16 +75,25 @@ def login_access_token(
     }
 
 @router.get("/me")
-def read_users_me(current_user: User = Depends(get_current_active_user)):
+def read_users_me(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
     """
     Get current user.
     """
+    role = db.query(Role).filter(Role.id == current_user.role_id).first()
+    role_name = role.name if role else "user"
+    is_admin = role_name in ("admin", "system_admin")
+
     return {
         "id": current_user.id,
         "email": current_user.email,
         "first_name": current_user.first_name,
         "last_name": current_user.last_name,
         "role_id": current_user.role_id,
+        "role_name": role_name,
+        "is_admin": is_admin,
         "company_id": current_user.company_id,
         "must_change_password": current_user.must_change_password
     }

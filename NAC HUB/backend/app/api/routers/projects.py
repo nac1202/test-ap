@@ -17,7 +17,8 @@ from app.schemas.project import (
     ProjectMemberCreate,
     ProjectMemberResponse,
     ProjectTimelineCreate,
-    ProjectTimelineResponse
+    ProjectTimelineResponse,
+    ProducerResponse
 )
 
 router = APIRouter()
@@ -32,6 +33,27 @@ def log_audit(db: Session, user_id: int, action: str, details: dict):
     audit = AuditLog(user_id=user_id, action=action, details=details)
     db.add(audit)
     db.commit()
+
+# --- Producers List ---
+
+@router.get("/producers", response_model=List[ProducerResponse])
+def list_producers(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    users = db.query(User).filter(
+        User.company_id == current_user.company_id,
+        User.status == "active"
+    ).order_by(User.id).all()
+
+    return [
+        ProducerResponse(
+            id=u.id,
+            name=get_user_display_name(u) or u.email,
+            email=u.email
+        )
+        for u in users
+    ]
 
 # --- Projects CRUD ---
 

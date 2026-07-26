@@ -7,8 +7,8 @@ import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Plus, Search, FolderKanban, Loader2, AlertCircle, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchProjects, createProject } from '../api/projects';
-import type { Project, ProjectStatus } from '../types/project';
+import { fetchProjects, createProject, fetchProducers } from '../api/projects';
+import type { Project, ProjectStatus, Producer } from '../types/project';
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   normal: { label: '正常', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
@@ -45,6 +45,8 @@ export default function Projects() {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [producerFilter, setProducerFilter] = useState<string>('all');
+  const [producers, setProducers] = useState<Producer[]>([]);
   const [searchInput, setSearchInput] = useState<string>('');
   const [activeSearch, setActiveSearch] = useState<string>('');
 
@@ -60,6 +62,19 @@ export default function Projects() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [modalError, setModalError] = useState<string>('');
 
+  // Fetch Producers list once
+  useEffect(() => {
+    async function loadProducersList() {
+      try {
+        const data = await fetchProducers(token);
+        setProducers(data);
+      } catch {
+        // Ignore fallback
+      }
+    }
+    if (token) loadProducersList();
+  }, [token]);
+
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
     setError('');
@@ -67,6 +82,7 @@ export default function Projects() {
       const res = await fetchProjects(
         {
           status: statusFilter,
+          producer_id: producerFilter !== 'all' ? Number(producerFilter) : undefined,
           search: activeSearch,
           page,
           size: pageSize,
@@ -85,7 +101,7 @@ export default function Projects() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, statusFilter, activeSearch, page, pageSize, logout]);
+  }, [token, statusFilter, producerFilter, activeSearch, page, pageSize, logout]);
 
   useEffect(() => {
     loadProjects();
@@ -99,6 +115,11 @@ export default function Projects() {
 
   const handleStatusChange = (newStatus: string) => {
     setStatusFilter(newStatus);
+    setPage(1);
+  };
+
+  const handleProducerChange = (newProducer: string) => {
+    setProducerFilter(newProducer);
     setPage(1);
   };
 
@@ -176,7 +197,7 @@ export default function Projects() {
           </form>
 
           {/* Filter */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Filter className="h-4 w-4 text-gray-500" />
             <select
               id="status-filter"
@@ -188,6 +209,20 @@ export default function Projects() {
               <option value="normal">正常</option>
               <option value="warning">注意</option>
               <option value="delayed">遅延</option>
+            </select>
+
+            <select
+              id="producer-filter"
+              value={producerFilter}
+              onChange={(e) => handleProducerChange(e.target.value)}
+              className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              <option value="all">すべてのプロデューサー</option>
+              {producers.map((prod) => (
+                <option key={prod.id} value={prod.id}>
+                  {prod.name}
+                </option>
+              ))}
             </select>
           </div>
         </CardHeader>
