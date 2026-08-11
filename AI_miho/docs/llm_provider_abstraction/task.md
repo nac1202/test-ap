@@ -1,0 +1,26 @@
+# Step 5C: LLM Provider抽象化とAzure OpenAI対応 タスクリスト
+
+- `[ ]` 1. **依存パッケージの更新**
+  - `[ ]` `requirements.txt` に `openai` を追加
+- `[ ]` 2. **Provider層の抽象化と設定の追加**
+  - `[ ]` `app/core/llm/provider.py` に `LLMProviderFactory` を実装
+  - `[ ]` `app/core/llm/provider.py` の `LLMProvider` インターフェースを微調整（必要に応じて）
+  - `[ ]` `app/core/config.py` (または相当箇所) に設定項目（`LLM_PROVIDER`, `AZURE_OPENAI_*`）を追加
+- `[ ]` 3. **既存Providerの修正**
+  - `[ ]` `app/core/llm/ollama.py` を新しい抽象化に適合させる
+  - `[ ]` `app/core/llm/mock.py` を新しい抽象化に適合させる
+- `[ ]` 4. **AzureOpenAIProviderの新規実装**
+  - `[ ]` `app/core/llm/azure_openai.py` を新規作成
+  - `[ ]` `AsyncAzureOpenAI` を用いた `generate_json_raw` の実装 (Structured Outputs対応)
+- `[ ]` 5. **RAGServiceの修正**
+  - `[ ]` `app/core/rag/service.py` の修正
+  - `[ ]` 開発デバッグモード（`DEBUG_LLM`等）でのクラウド送信内容のロギング機能の追加
+- `[ ]` 6. **テストの改修と追加**
+  - `[ ]` 既存のRAGテスト (`tests/test_rag_service.py` 等) のパス確認と修正
+  - `[ ]` `AzureOpenAIProvider` のモックテストを追加 (`tests/test_azure_openai.py` 等)
+- `[ ]` 7. **デモスクリプトの修正**
+  - `[ ]` `scripts/demo_rag.py` を更新し、Providerを引数で切り替え可能にする
+- `[ ]` 8. **ドキュメントの更新**
+  - `[ ]` `.env.example` の更新
+  - `[ ]` `README.md` へ構成パターンの追記
+  - `[ ]` `walkthrough.md` の作成と完了報告

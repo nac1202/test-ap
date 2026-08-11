@@ -1,0 +1,27 @@
+# Step 4A: DB永続化基盤 タスクリスト
+
+- `[x]` 1. 依存ライブラリの追加 (`sqlalchemy`, `alembic`)
+- `[x]` 2. SQLAlchemy モデル定義
+  - `[x]` `Organization`
+  - `[x]` `KnowledgeSource` (複合Unique制約, FK, 削除方針)
+  - `[x]` `KnowledgeDocument`
+  - `[x]` `TranscriptCue`
+  - `[x]` `KnowledgeChunk`
+  - `[x]` `EmbeddingModel`
+  - `[x]` `KnowledgeEmbedding`
+  - `[x]` `IngestionJob` (状態遷移)
+- `[x]` 3. Alembic マイグレーション環境構築
+  - `[x]` `alembic init`
+  - `[x]` 初回マイグレーションスクリプト作成
+  - `[x]` SQLite外部キー制約の有効化設定
+- `[x]` 4. SQLAlchemyKnowledgeRepository の実装
+  - `[x]` 組織分離 (すべてのクエリで `organization_id` をフィルタ)
+  - `[x]` トランザクション対応 (Source, Document, Cue, Chunkのアトミック保存)
+  - `[x]` バージョン更新アトミック処理
+  - `[x]` 取得・削除系メソッドの実装
+- `[x]` 5. 自動テストの作成
+  - `[x]` マイグレーションテスト (upgrade/downgrade/空DB適用)
+  - `[x]` Repository トランザクション・原子性テスト
+  - `[x]` 組織分離アクセステスト
+  - `[x]` SQLite外部キー制約・Unique制約テスト
+- `[x]` 6. Step 4A 完了報告作成 (walkthrough.md 更新)

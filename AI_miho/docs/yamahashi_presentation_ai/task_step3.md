@@ -1,0 +1,41 @@
+# Step 3 タスクリスト (Knowledge Import Foundation)
+
+- `[/]` 依存関係の追加 (`python-docx`, `pysrt`, `webvtt-py` 等)
+- `[x]` 1. データ構造 (Pydantic schemas)
+  - `[x]` `RightsStatus`, `SourceStatus`, `DuplicateStatus` 等の Enum
+  - `[x]` `KnowledgeSource` (is_eligible_for_production_rag, 期限管理)
+  - `[x]` `KnowledgeDocument`
+  - `[x]` `TranscriptCue`
+  - `[x]` `KnowledgeChunk`
+- `[x]` 2. インターフェース定義
+  - `[x]` `TokenCounter` / `HeuristicTokenCounter`
+  - `[x]` `KnowledgeRepository` インターフェース
+- `[x]` 3. インメモリRepository実装
+  - `[x]` 組織ごとのデータ分離
+  - `[x]` バージョン更新のトランザクション管理
+  - `[x]` 指定された全メソッド (`create_source`, `find_by_binary_hash` 等)
+- `[x]` 4. テキスト・セキュリティユーティリティ
+  - `[x]` ZIP爆弾・DOCX展開前検証
+  - `[x]` パストラバーサル対策、MIME検証
+  - `[x]` テキスト正規化 (NFC, 改行統一, 表・箇条書きの保持)
+  - `[x]` ページ番号タグ抽出・検証
+- `[x]` 5. パーサーの実装
+  - `[x]` `KnowledgeParser` (ABC)
+  - `[x]` `MarkdownParser` (見出しスタック, コードブロック, 表)
+  - `[x]` `TextParser`
+  - `[x]` `DocxParser` (`python-docx`)
+  - `[x]` `VttParser` (`webvtt-py`)
+  - `[x]` `SrtParser` (`pysrt`)
+- `[x]` 6. チャンク化・字幕ブロック結合の実装
+  - `[x]` 字幕のキュー統合 (無音、最大時間等の条件)
+  - `[x]` トークン推定ベースでの分割・結合・オーバーラップ
+- `[x]` 7. 重複・バージョン判定ロジック
+  - `[x]` バイナリハッシュ、正規化ハッシュの比較
+  - `[x]` Duplicate/Possible/New/Unique の分類
+- `[x]` 8. テスト (Pytest)
+  - `[x]` Markdown/TXT 異常系・正常系
+  - `[x]` DOCX 異常系・正常系
+  - `[x]` VTT/SRT 異常系・正常系
+  - `[x]` 重複登録・バージョン管理の挙動
+  - `[x]` ログへの原文非出力の確認
+- `[ ]` 9. 完了報告・Walkthrough更新

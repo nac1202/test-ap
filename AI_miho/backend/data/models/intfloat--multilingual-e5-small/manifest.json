@@ -1,0 +1,348 @@
+{
+  "model_id": "intfloat/multilingual-e5-small",
+  "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+  "created_at": "2026-06-25T11:11:29.526908+00:00",
+  "files": {
+    "README.md": {
+      "size": 497538,
+      "sha256": "0038de97aee16258cecbad7ffda4b4febd6953e747a00e0ddbc8e6ed241e9c1c"
+    },
+    "config.json": {
+      "size": 655,
+      "sha256": "69137736cab8b8903a07fe8afaafdda25aac55415a12a55d1bffa9f581abf959"
+    },
+    "model.safetensors": {
+      "size": 470641600,
+      "sha256": "1a55775f53449dac10a2bcbc312469fac40b96d53198c407081a831f81c98477"
+    },
+    "modules.json": {
+      "size": 387,
+      "sha256": "c6e29747481e8b5dd2b58401966aeac910de39092f90cda9a704b1545f902b04"
+    },
+    "pytorch_model.bin": {
+      "size": 470681649,
+      "sha256": "f0ccb64a2edc689fce7b1895f25146740e4075c3da28c8d0e672a8ba49c51167"
+    },
+    "sentence_bert_config.json": {
+      "size": 57,
+      "sha256": "948201d8329907aae938fa62f9ceeed53f5694dacc2b87b9f3b78b37ee986529"
+    },
+    "sentencepiece.bpe.model": {
+      "size": 5069051,
+      "sha256": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865"
+    },
+    "special_tokens_map.json": {
+      "size": 167,
+      "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7"
+    },
+    "tokenizer.json": {
+      "size": 17082730,
+      "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+    },
+    "tokenizer_config.json": {
+      "size": 443,
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+    },
+    ".cache\\huggingface\\CACHEDIR.TAG": {
+      "size": 195,
+      "sha256": "e8893e2dcb3f4545ef67a0a5b7b769113d38eef1aa61c7c7ba14659b02af955f"
+    },
+    ".cache\\huggingface\\download\\README.md.metadata": {
+      "size": 103,
+      "sha256": "416e4a0ded76bbdbcaedcccd5f844176054b075e6fa02e5d97056273c4c5532c"
+    },
+    ".cache\\huggingface\\download\\config.json.metadata": {
+      "size": 104,
+      "sha256": "6ac730b9c251595072005596c156e0eff86b2237a3155364b540457248133c62"
+    },
+    ".cache\\huggingface\\download\\model.safetensors.metadata": {
+      "size": 128,
+      "sha256": "bbb53f1015e8ad5991148aef494e56442c480bf4218c3a2523d80ba39cdb8a67"
+    },
+    ".cache\\huggingface\\download\\modules.json.metadata": {
+      "size": 104,
+      "sha256": "5b3506b512f917d4b4f27b9ad5faf9d9c476c0fe559021d4fa529728803d7f4c"
+    },
+    ".cache\\huggingface\\download\\pytorch_model.bin.metadata": {
+      "size": 128,
+      "sha256": "c105c80ce1c3315d6c719828eb8ccf3fb6d50e155f677d3884b24af962cce7c5"
+    },
+    ".cache\\huggingface\\download\\sentence_bert_config.json.metadata": {
+      "size": 104,
+      "sha256": "19e5682c55d24f86e7e2d70f3693cbd34ba8f34f90d4abd42d15bc849b7b3c66"
+    },
+    ".cache\\huggingface\\download\\sentencepiece.bpe.model.metadata": {
+      "size": 128,
+      "sha256": "fa7094099b333268fa4db82e9dbc786198503a2637e41052bb4d770949e51e10"
+    },
+    ".cache\\huggingface\\download\\special_tokens_map.json.metadata": {
+      "size": 104,
+      "sha256": "c8b6c6d6c940438143ad0d95a0fe31ccfd47bc19b5aabda12e829cbd1f7cd289"
+    },
+    ".cache\\huggingface\\download\\tokenizer.json.metadata": {
+      "size": 128,
+      "sha256": "314459f7303a4345b21c0ba6d459fa344318ae934629196f4c9c28f3910dfc3f"
+    },
+    ".cache\\huggingface\\download\\tokenizer_config.json.metadata": {
+      "size": 104,
+      "sha256": "15c1bf7e692758c50ac0afc8f14ea209b5e05336fec38494f3d9bbfdfa88d32c"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\ArguAna.yaml.metadata": {
+      "size": 103,
+      "sha256": "27aacaeffc3d96c62c5074681a1bdebf8a931fec6d4e8f8a5f9f181cde001afc"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightAopsRetrieval.yaml.metadata": {
+      "size": 103,
+      "sha256": "fe428d8d98fdd9bf4f4c4a192915261cbd16e92f372dbbc4fac7aad60c7ada0a"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightBiologyLongRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "9394b2ad14c5bad201d9e23f243c110ff193cdf6a7227abe59fb6971877bdaaf"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightBiologyRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "8d85ce251dab63444b64a062319b9776ba2312de8f2e27c3851526a594b6fd25"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightEarthScienceLongRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "445161bdc1445afccfcc96beb700fa5d833f174675c2c587da75ee7b90b22afe"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightEarthScienceRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "9108d9da1c02bea393220115d6a7aba5d476dd1ed9862db007f66e6eb80c48df"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightEconomicsLongRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "259f9aef5f7f58bb4369cfc87fbc8bcae868e13ba692cc5aae0778a20f8c6f71"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightEconomicsRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "44bc0433c52bca59c32990d12ee4fe31262f13dcc4f339c29da971fe059e1c3d"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightLeetcodeRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "52333199760849989f5cff60723530eae9b827cde53582075afa250d9425ae2f"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightPonyLongRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "d6d3f4cac56e0c48e85d4d6352b59bf6dd8300b89e2f14c923848ed73ab7eb8b"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightPonyRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "28c251abbbc427976f95dc8ee5c392c18a556e2ef79fffdaff5b7196034f6d86"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightPsychologyLongRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "f48f4bd6d872a8bf3b9da0d9e23c339e8e3253555929e63de2fba78f51047ec2"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightPsychologyRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "f08db5181c42ae663b903d674ac6ac8fb06e91f1679faa28e704cf59b77b3d18"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightRoboticsLongRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "c61c5bf90d2180cf950676314f16b2fe376474cdd61d56b543d57e270a0ee5d2"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightRoboticsRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "7b1100766b2a628544bfa53c8749e2b880ef4a32570d41ee2b44aef78360e975"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightStackoverflowLongRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "40c279e7c5d90927fe7eb55ebbf9d57e6eed082590fa4dddfb54a29a65de9188"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightStackoverflowRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "82594b54e9186d8709bbabebde94f5ac3d5e214806d15ee952b0419813db2c96"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightSustainableLivingLongRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "747ae24a25c512e6fbe69a5942eb22fe86f2a3a2cde871f11ddde537c3698b61"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightSustainableLivingRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "a467dcffecbead28213caad1141e15c89d1697bf8850c82cac9b2d65efd66f2a"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightTheoremQAQuestionsRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "b561dda02af6d7e6311317bf30c389f261378ef739e8a5729d434a99680ca55f"
+    },
+    ".cache\\huggingface\\download\\.eval_results\\BrightTheoremQATheoremsRetrieval.yaml.metadata": {
+      "size": 104,
+      "sha256": "ca29d72972bed4ea3e916b9257efbe8e444259c311867f927ca297765ce059c5"
+    },
+    ".cache\\huggingface\\download\\1_Pooling\\config.json.metadata": {
+      "size": 104,
+      "sha256": "e6b7d446f14df229876059f71fdac0f40f0b44856ce8e9275d2594b4d22b6284"
+    },
+    ".cache\\huggingface\\download\\onnx\\config.json.metadata": {
+      "size": 104,
+      "sha256": "ce4c4b84636a02367a6f5543885286bbcb3e2f3f28804d169635db420cb1b1fb"
+    },
+    ".cache\\huggingface\\download\\onnx\\model.onnx.metadata": {
+      "size": 128,
+      "sha256": "fd4bab7ee2b09d1d6b57ba9826a407d6bf1260f1b49318c9e16a2c353f7de60c"
+    },
+    ".cache\\huggingface\\download\\onnx\\model_O4.onnx.metadata": {
+      "size": 128,
+      "sha256": "d4b5a926bab9b5b18b485c0e49616b4bc726450062c0c1f937c01919545130f5"
+    },
+    ".cache\\huggingface\\download\\onnx\\model_qint8_avx512_vnni.onnx.metadata": {
+      "size": 127,
+      "sha256": "141f788c8ccde81d42fbcc394e8d633e55cc47f3c93eead1963b1a62af2e0b05"
+    },
+    ".cache\\huggingface\\download\\onnx\\sentencepiece.bpe.model.metadata": {
+      "size": 127,
+      "sha256": "d5d514b788030f21b0c99de7e73ae5c2fd5319d7bdc9c6da3bcd6137904c5efa"
+    },
+    ".cache\\huggingface\\download\\onnx\\special_tokens_map.json.metadata": {
+      "size": 104,
+      "sha256": "63418db4ba363b1fa92835e99765d0c012516a1d05b65088f467a93de5ead42c"
+    },
+    ".cache\\huggingface\\download\\onnx\\tokenizer.json.metadata": {
+      "size": 128,
+      "sha256": "441d656356963e88161cfc0d670626bfe062dba7d2965d420ffbd59779bcf786"
+    },
+    ".cache\\huggingface\\download\\onnx\\tokenizer_config.json.metadata": {
+      "size": 104,
+      "sha256": "51127b1607f6d91ee5c2d57b14b7f51b9bc189dd38ac1413bb52168a85ae5846"
+    },
+    ".cache\\huggingface\\download\\openvino\\openvino_model.bin.metadata": {
+      "size": 127,
+      "sha256": "1a3663588c97c2d9febf713e6e858c12a1a1390ecff33192a65562c1e3c84426"
+    },
+    ".cache\\huggingface\\download\\openvino\\openvino_model.xml.metadata": {
+      "size": 103,
+      "sha256": "ae97353a7e6d2e2c7cc08480cce4ec4d0dd0f467c065419a5e47999bdf773813"
+    },
+    ".eval_results\\ArguAna.yaml": {
+      "size": 575,
+      "sha256": "53c1be5a451d915708a64756b626b7a8772ce8a785d6f4be5a7652709092371c"
+    },
+    ".eval_results\\BrightAopsRetrieval.yaml": {
+      "size": 641,
+      "sha256": "6027ed1058e852c2c0a9d34fbce4c10d18252681de802a6082282f363651e599"
+    },
+    ".eval_results\\BrightBiologyLongRetrieval.yaml": {
+      "size": 651,
+      "sha256": "f4ebcfd606c3f1283907d8b4b434fa32848e0e4a122556e701919a95da75b439"
+    },
+    ".eval_results\\BrightBiologyRetrieval.yaml": {
+      "size": 647,
+      "sha256": "a68fca027604de4c877e7d86b1858c5025c64029c1cddfd351e5d05e010f15d4"
+    },
+    ".eval_results\\BrightEarthScienceLongRetrieval.yaml": {
+      "size": 663,
+      "sha256": "4256206ca8f244b911a94858b8a7d32854fcad90f701e814bfa808d252fb9a68"
+    },
+    ".eval_results\\BrightEarthScienceRetrieval.yaml": {
+      "size": 659,
+      "sha256": "5dd5cae91c338408a31ba5a5b824edb36e0d3b0d913e38ef678240deb274209b"
+    },
+    ".eval_results\\BrightEconomicsLongRetrieval.yaml": {
+      "size": 655,
+      "sha256": "891ee9ad5db6ef7708cc2f73f56bd498ba8ea4ad4b6e061eb33472642f5e9f4b"
+    },
+    ".eval_results\\BrightEconomicsRetrieval.yaml": {
+      "size": 651,
+      "sha256": "7f0c33852f1da36d56e041479ef085c0ef53ecf786bbe972fe4a7e4f1f7b51d9"
+    },
+    ".eval_results\\BrightLeetcodeRetrieval.yaml": {
+      "size": 651,
+      "sha256": "7d163f441cf3f929d684af2c9c9933e1d6090b25926d18f467e1b168c5123823"
+    },
+    ".eval_results\\BrightPonyLongRetrieval.yaml": {
+      "size": 645,
+      "sha256": "502c6c13dd57ae95f4eda6f19f88550b971e7fdb46f13b2873c65d796496e0ab"
+    },
+    ".eval_results\\BrightPonyRetrieval.yaml": {
+      "size": 641,
+      "sha256": "5b99465cbd9eb7df09b34dde9895f478a88abaa3b5ff4474b49a5d0f5155a72c"
+    },
+    ".eval_results\\BrightPsychologyLongRetrieval.yaml": {
+      "size": 655,
+      "sha256": "4ad33f80d26bb613e2def7584455f975c7466cdf61335348cf2159fff877dddd"
+    },
+    ".eval_results\\BrightPsychologyRetrieval.yaml": {
+      "size": 653,
+      "sha256": "fd43e8a64eb654e8773aa3ecbc947026edf42f92c629bdd9da87b8b56d12a137"
+    },
+    ".eval_results\\BrightRoboticsLongRetrieval.yaml": {
+      "size": 653,
+      "sha256": "9dcdf92946535dcf14304cb906cdec0d9db7bd4412a4a0158103cdb1435c64a3"
+    },
+    ".eval_results\\BrightRoboticsRetrieval.yaml": {
+      "size": 647,
+      "sha256": "71fdf00946b422675b53f598a22db9d3353cee4c4a153103f7cf7c2011b82f4f"
+    },
+    ".eval_results\\BrightStackoverflowLongRetrieval.yaml": {
+      "size": 665,
+      "sha256": "d7e90b118eae1abb7b55579913a8da02cf1d337b032c0c998777325910deadf2"
+    },
+    ".eval_results\\BrightStackoverflowRetrieval.yaml": {
+      "size": 659,
+      "sha256": "9dc868231ebc0a78b94b3f4e681d476d67fb9e9c630626832e0af21e840a5aae"
+    },
+    ".eval_results\\BrightSustainableLivingLongRetrieval.yaml": {
+      "size": 673,
+      "sha256": "7ddd8840466a84effef1df193ef79e1a6457567925b4e3b28b034832a6d6a45a"
+    },
+    ".eval_results\\BrightSustainableLivingRetrieval.yaml": {
+      "size": 667,
+      "sha256": "91644839f8ef7ebd5844b2f8ce6719f63af14656e2acef2403895c8b1f859c28"
+    },
+    ".eval_results\\BrightTheoremQAQuestionsRetrieval.yaml": {
+      "size": 669,
+      "sha256": "00408cfa91d8677d9c6eefd98d37786d4a6a03b2a8cbb9c8d8364633377d797c"
+    },
+    ".eval_results\\BrightTheoremQATheoremsRetrieval.yaml": {
+      "size": 667,
+      "sha256": "ecb1a69acecd2cb165ff9cd94aec3da58c63fcecd8972258b446f0dbcf5251f1"
+    },
+    "1_Pooling\\config.json": {
+      "size": 200,
+      "sha256": "987f7a67a38fa564c849bb5d277c52ab9088a84368fc0be31a354125aebb12a0"
+    },
+    "onnx\\config.json": {
+      "size": 653,
+      "sha256": "bbb7c1333fc4b3e27fbc9cd5d2070aabcc1d4dfb99917c3633e772f97545a6b6"
+    },
+    "onnx\\model.onnx": {
+      "size": 470268510,
+      "sha256": "ca456c06b3a9505ddfd9131408916dd79290368331e7d76bb621f1cba6bc8665"
+    },
+    "onnx\\model_O4.onnx": {
+      "size": 235052531,
+      "sha256": "4654c156f3e4171abc9c716cdb771bf9116455d15ac1aab364aeeede0e3205b0"
+    },
+    "onnx\\model_qint8_avx512_vnni.onnx": {
+      "size": 118346824,
+      "sha256": "dd476dd0c2514e9b9be83aeb3853fac0763e0bdf4a71645407587d77c48a2d88"
+    },
+    "onnx\\sentencepiece.bpe.model": {
+      "size": 5069051,
+      "sha256": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865"
+    },
+    "onnx\\special_tokens_map.json": {
+      "size": 167,
+      "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7"
+    },
+    "onnx\\tokenizer.json": {
+      "size": 17082730,
+      "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+    },
+    "onnx\\tokenizer_config.json": {
+      "size": 443,
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+    },
+    "openvino\\openvino_model.bin": {
+      "size": 470027936,
+      "sha256": "22f5a10ec005a1606ec42758dedd52b59dfcb6e3d85de0b6b86946d0bc6cf232"
+    },
+    "openvino\\openvino_model.xml": {
+      "size": 363385,
+      "sha256": "d5268b47f8d05ca885ffbc77f136c3406ac6acdf85c482caec66eebab7fa5176"
+    }
+  },
+  "manifest_hash": "a32cfe490135dfb57a9039bdcc0278acfb699dfda8c741f9d5ca26fcc8de2a59"
+}
