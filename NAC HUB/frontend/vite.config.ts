@@ -9,5 +9,9 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     allowedHosts: ['host.docker.internal'],
+    watch: {
+      usePolling: true,
+      interval: 300,
+    },
   },
 })

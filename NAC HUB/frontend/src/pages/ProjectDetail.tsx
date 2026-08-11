@@ -125,7 +125,7 @@ export default function ProjectDetail() {
     setEditName(project.name);
     setEditStatus(project.status);
     setEditProgress(project.progress_rate);
-    setEditEndDate(project.deadline || '');
+    setEditEndDate(project.deadline ? project.deadline.split('T')[0] : '');
     setIsEditModalOpen(true);
   };
 

@@ -60,6 +60,7 @@ export interface AuditLogEntry {
   user_display_name: string | null;
   action: string;
   details_summary: string;
+  display_details?: Record<string, unknown> | null;
   created_at: string | null;
 }
 

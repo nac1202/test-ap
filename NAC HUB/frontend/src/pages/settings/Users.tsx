@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../../components/ui/Table';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
-import { Users as UsersIcon, Plus, Search, RefreshCw, AlertCircle } from 'lucide-react';
+import { Users as UsersIcon, Plus, Search, RefreshCw, AlertCircle, X } from 'lucide-react';
 import {
   fetchAdminUsers,
   createAdminUser,
@@ -17,24 +17,28 @@ import type { AdminRoleResponse } from '../../types/admin';
 const PAGE_SIZE = 20;
 
 // ロール名の日本語表示
-function roleBadge(roleName: string | null) {
-  if (!roleName) return <span className="bg-gray-100 px-2 py-0.5 rounded text-[11px] font-bold text-gray-500">不明</span>;
+function roleLabel(roleName: string | null): string {
+  if (!roleName) return '不明';
   const map: Record<string, string> = {
     admin: 'システム管理者',
     system_admin: 'システム管理者',
     user: '一般ユーザー',
   };
+  return map[roleName] ?? roleName;
+}
+
+function RoleBadge({ roleName }: { roleName: string | null }) {
   return (
-    <span className="bg-gray-100 px-2 py-0.5 rounded text-[11px] font-bold text-gray-700">
-      {map[roleName] ?? roleName}
+    <span className="bg-gray-100 px-2 py-0.5 rounded text-[11px] font-bold text-gray-700 whitespace-nowrap inline-block">
+      {roleLabel(roleName)}
     </span>
   );
 }
 
-function statusBadge(status: string) {
+function StatusBadge({ status }: { status: string }) {
   return status === 'active'
-    ? <span className="text-green-600 font-bold text-xs">有効</span>
-    : <span className="text-red-500 font-bold text-xs">無効</span>;
+    ? <span className="text-green-600 font-bold text-xs whitespace-nowrap">有効</span>
+    : <span className="text-red-500 font-bold text-xs whitespace-nowrap">無効</span>;
 }
 
 export default function Users() {
@@ -44,7 +48,9 @@ export default function Users() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [search, setSearch] = useState('');
+  // 検索：入力中と確定済みを分離（Enterまたは検索ボタンで確定）
+  const [searchInput, setSearchInput] = useState('');
+  const [searchApplied, setSearchApplied] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -63,6 +69,7 @@ export default function Users() {
   const [editError, setEditError] = useState<string | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const loadUsers = useCallback(async () => {
@@ -70,7 +77,7 @@ export default function Users() {
     setError(null);
     try {
       const res = await fetchAdminUsers({
-        search: search || undefined,
+        search: searchApplied || undefined,
         role_id: roleFilter !== 'all' ? Number(roleFilter) : undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         page,
@@ -83,7 +90,7 @@ export default function Users() {
     } finally {
       setLoading(false);
     }
-  }, [search, roleFilter, statusFilter, page]);
+  }, [searchApplied, roleFilter, statusFilter, page]);
 
   useEffect(() => {
     fetchAdminRoles().then(setRoles).catch(() => {});
@@ -93,8 +100,22 @@ export default function Users() {
     loadUsers();
   }, [loadUsers]);
 
-  // フィルター変更時はpage=1に戻す
-  const handleSearch = (v: string) => { setSearch(v); setPage(1); };
+  // 検索を実行（Enterキーまたは検索ボタン）
+  const applySearch = () => {
+    setSearchApplied(searchInput);
+    setPage(1);
+  };
+
+  const clearSearch = () => {
+    setSearchInput('');
+    setSearchApplied('');
+    setPage(1);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') applySearch();
+  };
+
   const handleRoleFilter = (v: string) => { setRoleFilter(v); setPage(1); };
   const handleStatusFilter = (v: string) => { setStatusFilter(v); setPage(1); };
 
@@ -181,56 +202,103 @@ export default function Users() {
         </Button>
       </div>
 
-      {/* フィルターバー */}
-      <Card className="border border-gray-100 shadow-sm rounded-xl sm:rounded-2xl">
-        <CardContent className="p-3 sm:p-4">
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                id="user-search"
-                className="pl-9 bg-white text-xs sm:text-sm h-11"
-                placeholder="氏名・メールで検索..."
-                value={search}
-                onChange={e => handleSearch(e.target.value)}
-              />
-            </div>
-            <select
-              id="user-role-filter"
-              className="h-11 rounded-lg border border-gray-200 px-3 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
-              value={roleFilter}
-              onChange={e => handleRoleFilter(e.target.value)}
+      {/* ─── ユーザー専用検索バー ───
+          このInputはUsers.tsxのユーザー一覧検索専用です。
+          共通ヘッダーの検索欄とは独立しています。
+          Enterキーまたは「検索」ボタンで実行。
+      */}
+      <div className="flex gap-2 items-stretch">
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <Input
+            ref={searchInputRef}
+            id="user-search-input"
+            type="search"
+            className="pl-9 pr-9 bg-white text-sm h-11 w-full"
+            placeholder="氏名・メールアドレスで検索…"
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            aria-label="ユーザー検索"
+          />
+          {searchInput && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              aria-label="検索解除"
+              type="button"
             >
-              <option value="all">全ロール</option>
-              {roles.map(r => (
-                <option key={r.id} value={r.id}>
-                  {r.name === 'admin' || r.name === 'system_admin' ? 'システム管理者' : r.name === 'user' ? '一般ユーザー' : r.name}
-                </option>
-              ))}
-            </select>
-            <select
-              id="user-status-filter"
-              className="h-11 rounded-lg border border-gray-200 px-3 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
-              value={statusFilter}
-              onChange={e => handleStatusFilter(e.target.value)}
-            >
-              <option value="all">全ステータス</option>
-              <option value="active">有効</option>
-              <option value="inactive">無効</option>
-            </select>
-            <Button
-              id="btn-reload-users"
-              variant="ghost"
-              size="sm"
-              className="min-h-[44px] shrink-0"
-              onClick={loadUsers}
-              disabled={loading}
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <Button
+          id="btn-search-users"
+          className="min-h-[44px] px-4 shrink-0"
+          onClick={applySearch}
+          disabled={loading}
+        >
+          検索
+        </Button>
+        {searchApplied && (
+          <Button
+            id="btn-clear-search-users"
+            variant="ghost"
+            className="min-h-[44px] px-3 shrink-0 text-gray-500"
+            onClick={clearSearch}
+            type="button"
+          >
+            解除
+          </Button>
+        )}
+      </div>
+
+      {/* 検索中バナー */}
+      {searchApplied && (
+        <div className="text-xs text-primary font-bold flex items-center gap-1">
+          <Search className="h-3 w-3" />
+          「{searchApplied}」で絞り込み中
+          <button onClick={clearSearch} className="ml-1 underline text-gray-500" type="button">解除</button>
+        </div>
+      )}
+
+      {/* サブフィルター（利用区分・ステータス・更新） */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <select
+          id="user-role-filter"
+          className="h-9 rounded-lg border border-gray-200 px-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+          value={roleFilter}
+          onChange={e => handleRoleFilter(e.target.value)}
+        >
+          <option value="all">全利用区分</option>
+          {roles.map(r => (
+            <option key={r.id} value={r.id}>
+              {r.name === 'admin' || r.name === 'system_admin' ? 'システム管理者' : r.name === 'user' ? '一般ユーザー' : r.name}
+            </option>
+          ))}
+        </select>
+        <select
+          id="user-status-filter"
+          className="h-9 rounded-lg border border-gray-200 px-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+          value={statusFilter}
+          onChange={e => handleStatusFilter(e.target.value)}
+        >
+          <option value="all">全ステータス</option>
+          <option value="active">有効</option>
+          <option value="inactive">無効</option>
+        </select>
+        <Button
+          id="btn-reload-users"
+          variant="ghost"
+          size="sm"
+          className="h-9 w-9 p-0 shrink-0"
+          onClick={loadUsers}
+          disabled={loading}
+          aria-label="更新"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
 
       {/* エラー表示 */}
       {error && (
@@ -239,54 +307,103 @@ export default function Users() {
         </div>
       )}
 
-      {/* テーブル */}
-      <Card className="border border-gray-100 shadow-sm rounded-xl sm:rounded-2xl overflow-hidden">
-        <CardContent className="p-0 overflow-x-auto">
-          {loading ? (
-            <div className="py-16 text-center text-gray-400 text-sm">読み込み中...</div>
-          ) : users.length === 0 ? (
-            <div className="py-16 text-center text-gray-400 text-sm">ユーザーが見つかりません</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-bold text-xs sm:text-sm">氏名</TableHead>
-                  <TableHead className="font-bold text-xs sm:text-sm">メールアドレス</TableHead>
-                  <TableHead className="font-bold text-xs sm:text-sm">ロール</TableHead>
-                  <TableHead className="font-bold text-xs sm:text-sm">ステータス</TableHead>
-                  <TableHead className="font-bold text-xs sm:text-sm text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map(u => (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-bold text-xs sm:text-sm py-3">
-                      {u.last_name} {u.first_name}
-                      {u.must_change_password && (
-                        <span className="ml-1 text-[10px] text-amber-600 font-normal">（PW変更必要）</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm text-gray-600 py-3">{u.email}</TableCell>
-                    <TableCell className="py-3">{roleBadge(u.role_name)}</TableCell>
-                    <TableCell className="py-3">{statusBadge(u.status)}</TableCell>
-                    <TableCell className="text-right py-3">
-                      <Button
-                        id={`btn-edit-user-${u.id}`}
-                        variant="ghost"
-                        size="sm"
-                        className="min-h-[36px]"
-                        onClick={() => openEdit(u)}
-                      >
-                        編集
-                      </Button>
-                    </TableCell>
+      {/* ──────────────────────────────────────────
+          モバイル（sm未満）: カード表示
+          タブレット以上（sm以上）: テーブル表示
+          ────────────────────────────────────────── */}
+
+      {loading ? (
+        <div className="py-16 text-center text-gray-400 text-sm">読み込み中...</div>
+      ) : users.length === 0 ? (
+        <div className="py-16 text-center text-gray-400 text-sm">
+          {searchApplied
+            ? `「${searchApplied}」に一致するユーザーはいません`
+            : 'ユーザーが見つかりません'}
+        </div>
+      ) : (
+        <>
+          {/* ── モバイル: カードリスト（sm未満のみ表示） ── */}
+          <div className="sm:hidden space-y-3">
+            {users.map(u => (
+              <Card key={u.id} className="border border-gray-100 shadow-sm rounded-xl">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-gray-800 truncate">
+                        {u.last_name} {u.first_name}
+                        {u.must_change_password && (
+                          <span className="ml-1 text-[10px] text-amber-600 font-normal">（PW変更必要）</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{u.email}</p>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <RoleBadge roleName={u.role_name} />
+                        <StatusBadge status={u.status} />
+                      </div>
+                    </div>
+                    <Button
+                      id={`btn-edit-user-mobile-${u.id}`}
+                      variant="ghost"
+                      size="sm"
+                      className="min-h-[40px] min-w-[52px] shrink-0"
+                      onClick={() => openEdit(u)}
+                    >
+                      編集
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* ── タブレット以上: テーブル（sm以上のみ表示） ── */}
+          <Card className="hidden sm:block border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-bold text-sm">氏名</TableHead>
+                    <TableHead className="font-bold text-sm">メールアドレス</TableHead>
+                    <TableHead className="font-bold text-sm whitespace-nowrap">利用区分</TableHead>
+                    <TableHead className="font-bold text-sm whitespace-nowrap">ステータス</TableHead>
+                    <TableHead className="font-bold text-sm text-right whitespace-nowrap">操作</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {users.map(u => (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-bold text-sm py-3">
+                        {u.last_name} {u.first_name}
+                        {u.must_change_password && (
+                          <span className="ml-1 text-[10px] text-amber-600 font-normal">（PW変更必要）</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600 py-3">{u.email}</TableCell>
+                      <TableCell className="py-3 whitespace-nowrap">
+                        <RoleBadge roleName={u.role_name} />
+                      </TableCell>
+                      <TableCell className="py-3 whitespace-nowrap">
+                        <StatusBadge status={u.status} />
+                      </TableCell>
+                      <TableCell className="text-right py-3">
+                        <Button
+                          id={`btn-edit-user-${u.id}`}
+                          variant="ghost"
+                          size="sm"
+                          className="min-h-[36px]"
+                          onClick={() => openEdit(u)}
+                        >
+                          編集
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* ページネーション */}
       {totalPages > 1 && (
@@ -313,7 +430,7 @@ export default function Users() {
         </div>
       )}
 
-      {/* ユーザー追加モーダル */}
+      {/* ── ユーザー追加モーダル ── */}
       <Modal isOpen={showAddModal} onClose={closeAddModal} title="ユーザー追加">
         {createdUser ? (
           <div className="space-y-4">
@@ -325,7 +442,7 @@ export default function Users() {
               <div><span className="font-bold">氏名:</span> {createdUser.last_name} {createdUser.first_name}</div>
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="font-bold text-amber-800 mb-1">初期パスワード（一度だけ表示）</p>
-                <p className="font-mono text-lg tracking-widest text-amber-900">{createdUser.initial_password}</p>
+                <p className="font-mono text-lg tracking-widest text-amber-900 break-all">{createdUser.initial_password}</p>
                 <p className="text-xs text-amber-700 mt-1">ログイン後にパスワード変更が必要です。</p>
               </div>
             </div>
@@ -374,7 +491,7 @@ export default function Users() {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">ロール</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">利用区分</label>
               <select
                 id="add-user-role"
                 className="w-full h-11 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -400,13 +517,18 @@ export default function Users() {
         )}
       </Modal>
 
-      {/* 編集モーダル */}
+      {/* ── ユーザー編集モーダル ── */}
       <Modal isOpen={!!editUser} onClose={() => setEditUser(null)} title="ユーザー編集">
         <div className="space-y-3">
           {editError && (
             <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
               <AlertCircle className="h-3 w-3 shrink-0" /> {editError}
             </div>
+          )}
+          {editUser && (
+            <p className="text-xs text-gray-500 pb-1 border-b border-gray-100">
+              {editUser.email}
+            </p>
           )}
           <div className="flex gap-2">
             <div className="flex-1">
@@ -429,7 +551,7 @@ export default function Users() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">ロール</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1">利用区分</label>
             <select
               id="edit-user-role"
               className="w-full h-11 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"

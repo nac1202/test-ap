@@ -1,30 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../../components/ui/Table';
-import { Shield, RefreshCw, AlertCircle, Lock } from 'lucide-react';
+import { Shield, RefreshCw, AlertCircle, Lock, Users } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
-import { fetchAdminRoles, updateAdminRole } from '../../api/admin';
+import { fetchAdminRoles } from '../../api/admin';
 import type { AdminRoleResponse } from '../../types/admin';
 
-// ロール名の日本語表示
-function roleDisplayName(name: string): string {
-  const map: Record<string, string> = {
-    admin: 'システム管理者',
-    system_admin: 'システム管理者',
-    user: '一般ユーザー',
-  };
-  return map[name] ?? name;
+// ─────────────────────────────────────────────────────────
+// ロール表示設定（社内向け非SE表示）
+//
+// NOTE: permissions(JSON)フィールドはDBおよびAPI型として維持していますが、
+// 現段階では社内管理者にJSON直接編集をさせません。
+// 将来、社内で権限設計が決定した後、
+// 画面・操作単位のチェック式権限UIへマッピング予定です。
+// その段階でバックエンドの権限判定もpermissionsに連動させます。
+// ─────────────────────────────────────────────────────────
+
+interface RoleDisplayConfig {
+  displayName: string;
+  description: string;
+  detailDescription: string;
 }
 
-// ロールの説明
-function roleDescription(name: string): string {
-  const map: Record<string, string> = {
-    admin: '全モジュールへのフルアクセス、設定変更が可能',
-    system_admin: '全モジュールへのフルアクセス、設定変更が可能',
-    user: '案件の閲覧、チャット利用が可能',
+const ROLE_DISPLAY: Record<string, RoleDisplayConfig> = {
+  admin: {
+    displayName: 'システム管理者',
+    description: 'NAC HUBのすべての管理機能を利用できます。',
+    detailDescription:
+      'ユーザー管理・ロール管理・監査ログ閲覧・案件管理など、' +
+      'システム全体の設定と管理が行えます。',
+  },
+  system_admin: {
+    displayName: 'システム管理者',
+    description: 'NAC HUBのすべての管理機能を利用できます。',
+    detailDescription:
+      'ユーザー管理・ロール管理・監査ログ閲覧・案件管理など、' +
+      'システム全体の設定と管理が行えます。',
+  },
+  user: {
+    displayName: '一般ユーザー',
+    description: '案件の閲覧やなっくんチャットなど、通常業務に必要な機能を利用できます。',
+    detailDescription:
+      '案件一覧・案件詳細の閲覧、なっくんとのチャット機能を利用できます。' +
+      'システム設定・ユーザー管理などの管理機能は利用できません。',
+  },
+};
+
+function getRoleDisplay(name: string): RoleDisplayConfig {
+  return ROLE_DISPLAY[name] ?? {
+    displayName: name,
+    description: '—',
+    detailDescription: '—',
   };
-  return map[name] ?? '—';
+}
+
+// 種別バッジ
+function SystemBadge({ isSystem }: { isSystem: boolean }) {
+  return isSystem ? (
+    <span className="inline-flex items-center gap-1 bg-orange-100 px-2 py-0.5 rounded text-[11px] font-bold text-orange-700 whitespace-nowrap">
+      <Lock className="h-3 w-3 shrink-0" /> 標準の利用区分
+    </span>
+  ) : (
+    <span className="inline-block bg-gray-100 px-2 py-0.5 rounded text-[11px] font-bold text-gray-700 whitespace-nowrap">
+      カスタム利用区分
+    </span>
+  );
 }
 
 export default function Roles() {
@@ -32,13 +73,8 @@ export default function Roles() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 編集モーダル
-  const [editRole, setEditRole] = useState<AdminRoleResponse | null>(null);
-  const [editError, setEditError] = useState<string | null>(null);
-  const [editLoading, setEditLoading] = useState(false);
-  // permissionsをJSON文字列として編集
-  const [editPermJson, setEditPermJson] = useState('');
-  const [jsonError, setJsonError] = useState<string | null>(null);
+  // 詳細モーダル（読み取り専用）
+  const [detailRole, setDetailRole] = useState<AdminRoleResponse | null>(null);
 
   const loadRoles = async () => {
     setLoading(true);
@@ -47,7 +83,7 @@ export default function Roles() {
       const res = await fetchAdminRoles();
       setRoles(res);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'ロール一覧の取得に失敗しました');
+      setError(e instanceof Error ? e.message : '利用区分一覧の取得に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -57,53 +93,23 @@ export default function Roles() {
     loadRoles();
   }, []);
 
-  const openEdit = (r: AdminRoleResponse) => {
-    setEditRole(r);
-    setEditPermJson(JSON.stringify(r.permissions ?? {}, null, 2));
-    setEditError(null);
-    setJsonError(null);
-  };
-
-  const handleEdit = async () => {
-    if (!editRole) return;
-    setJsonError(null);
-    let parsedPerm: Record<string, unknown>;
-    try {
-      parsedPerm = JSON.parse(editPermJson);
-    } catch {
-      setJsonError('JSON形式が正しくありません');
-      return;
-    }
-    setEditError(null);
-    setEditLoading(true);
-    try {
-      await updateAdminRole(editRole.id, { permissions: parsedPerm });
-      setEditRole(null);
-      loadRoles();
-    } catch (e: unknown) {
-      setEditError(e instanceof Error ? e.message : '更新に失敗しました');
-    } finally {
-      setEditLoading(false);
-    }
-  };
-
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-10">
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-gray-800 flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary shrink-0" /> ロール・権限管理
+            <Shield className="h-6 w-6 text-primary shrink-0" /> 利用権限管理
           </h2>
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-            役職・アクセス権限ロールのグループ定義と割り当てを行います。
+            社員ごとに、NAC HUBで利用できる機能や範囲を管理します。
           </p>
         </div>
         <Button
           id="btn-reload-roles"
           variant="ghost"
           size="sm"
-          className="min-h-[44px] w-full sm:w-auto flex items-center gap-2"
+          className="min-h-[44px] w-full sm:w-auto flex items-center justify-center gap-2"
           onClick={loadRoles}
           disabled={loading}
         >
@@ -112,13 +118,13 @@ export default function Roles() {
         </Button>
       </div>
 
-      {/* 注記 */}
+      {/* お知らせバナー */}
       <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 flex items-start gap-2">
         <Lock className="h-4 w-4 shrink-0 mt-0.5" />
-        <span>
-          システムロール（admin / user）の名前は変更できません。
-          permissionsフィールドはJSON形式で管理されます。
-          細粒度の権限管理（画面・操作単位の制御）は今後の実装予定です。
+        <span className="break-words leading-relaxed">
+          現在は「システム管理者」と「一般ユーザー」の2つの利用区分で運用しています。
+          詳細な閲覧範囲や操作権限については、社内での運用方針を整理した後、
+          分かりやすいチェック式の設定画面を追加する予定です。
         </span>
       </div>
 
@@ -128,111 +134,166 @@ export default function Roles() {
         </div>
       )}
 
-      <Card className="border border-gray-100 shadow-sm rounded-xl sm:rounded-2xl overflow-hidden">
-        <CardContent className="p-0 overflow-x-auto">
-          {loading ? (
-            <div className="py-16 text-center text-gray-400 text-sm">読み込み中...</div>
-          ) : roles.length === 0 ? (
-            <div className="py-16 text-center text-gray-400 text-sm">ロールが見つかりません</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-bold text-xs sm:text-sm">ロール名</TableHead>
-                  <TableHead className="font-bold text-xs sm:text-sm">概要</TableHead>
-                  <TableHead className="font-bold text-xs sm:text-sm">利用者数</TableHead>
-                  <TableHead className="font-bold text-xs sm:text-sm">種別</TableHead>
-                  <TableHead className="font-bold text-xs sm:text-sm text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {roles.map(r => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-bold text-xs sm:text-sm py-3">
-                      {roleDisplayName(r.name)}
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm text-gray-600 py-3">
-                      {roleDescription(r.name)}
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm py-3 font-bold">
-                      {r.user_count}名
-                    </TableCell>
-                    <TableCell className="py-3">
-                      {r.is_system ? (
-                        <span className="bg-orange-100 px-2 py-0.5 rounded text-[11px] font-bold text-orange-700 flex items-center gap-1 w-fit">
-                          <Lock className="h-3 w-3" /> システム
-                        </span>
-                      ) : (
-                        <span className="bg-gray-100 px-2 py-0.5 rounded text-[11px] font-bold text-gray-700">カスタム</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right py-3">
-                      <Button
-                        id={`btn-edit-role-${r.id}`}
-                        variant="ghost"
-                        size="sm"
-                        className="min-h-[36px]"
-                        onClick={() => openEdit(r)}
-                      >
-                        設定
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {/* ──────────────────────────────────────────
+          モバイル（sm未満）: カードリスト
+          タブレット以上（sm以上）: テーブル
+          ────────────────────────────────────────── */}
 
-      {/* 編集モーダル */}
-      <Modal isOpen={!!editRole} onClose={() => setEditRole(null)} title={`ロール設定：${editRole ? roleDisplayName(editRole.name) : ''}`}>
-        <div className="space-y-3">
-          {editRole?.is_system && (
-            <div className="p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700 flex items-center gap-1">
-              <Lock className="h-3 w-3 shrink-0" />
-              システムロールのためロール名は変更できません。permissionsのみ更新できます。
-            </div>
-          )}
-          {editError && (
-            <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
-              <AlertCircle className="h-3 w-3 shrink-0" /> {editError}
-            </div>
-          )}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              permissions（JSON）
-            </label>
-            <textarea
-              id="edit-role-permissions"
-              className="w-full h-36 rounded-lg border border-gray-200 px-3 py-2 font-mono text-xs bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-              value={editPermJson}
-              onChange={e => { setEditPermJson(e.target.value); setJsonError(null); }}
-            />
-            {jsonError && <p className="text-red-600 text-xs mt-1">{jsonError}</p>}
-            <p className="text-xs text-gray-400 mt-1">
-              例: {`{"all": true}`} または {`{"projects": {"read": true, "write": false}}`}
-            </p>
+      {loading ? (
+        <div className="py-16 text-center text-gray-400 text-sm">読み込み中...</div>
+      ) : roles.length === 0 ? (
+        <div className="py-16 text-center text-gray-400 text-sm">利用区分が見つかりません</div>
+      ) : (
+        <>
+          {/* ── モバイル: カードリスト（sm未満のみ表示） ── */}
+          <div className="sm:hidden space-y-3">
+            {roles.map(r => {
+              const display = getRoleDisplay(r.name);
+              return (
+                <Card key={r.id} className="border border-gray-100 shadow-sm rounded-xl">
+                  <CardContent className="p-4">
+                    {/* ロール名 + 種別バッジ */}
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <p className="font-black text-base text-gray-800 leading-tight">
+                        {display.displayName}
+                      </p>
+                      <SystemBadge isSystem={r.is_system} />
+                    </div>
+
+                    {/* 説明 */}
+                    <p className="text-xs text-gray-500 leading-relaxed mb-3 break-words">
+                      {display.description}
+                    </p>
+
+                    {/* 利用者数 */}
+                    <div className="flex items-center gap-1 mb-3">
+                      <Users className="h-3.5 w-3.5 text-gray-400" />
+                      <span className="text-[11px] text-gray-400">現在の利用者数：</span>
+                      <span className="text-sm font-bold text-gray-700">{r.user_count}名</span>
+                    </div>
+
+                    {/* 詳細を見るボタン（読み取り専用） */}
+                    <Button
+                      id={`btn-detail-role-mobile-${r.id}`}
+                      variant="ghost"
+                      className="w-full min-h-[44px] border border-gray-200 text-sm"
+                      onClick={() => setDetailRole(r)}
+                    >
+                      詳細を見る
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-          <div className="flex gap-2 pt-1">
-            <Button
-              id="btn-cancel-edit-role"
-              variant="ghost"
-              className="flex-1 min-h-[44px]"
-              onClick={() => setEditRole(null)}
-            >
-              キャンセル
-            </Button>
-            <Button
-              id="btn-submit-edit-role"
-              className="flex-1 min-h-[44px]"
-              onClick={handleEdit}
-              disabled={editLoading}
-            >
-              {editLoading ? '更新中...' : '更新'}
-            </Button>
-          </div>
-        </div>
+
+          {/* ── タブレット以上: テーブル（sm以上のみ表示） ── */}
+          <Card className="hidden sm:block border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-bold text-sm whitespace-nowrap">利用区分名</TableHead>
+                    <TableHead className="font-bold text-sm">説明</TableHead>
+                    <TableHead className="font-bold text-sm whitespace-nowrap">利用者数</TableHead>
+                    <TableHead className="font-bold text-sm whitespace-nowrap">種別</TableHead>
+                    <TableHead className="font-bold text-sm text-right whitespace-nowrap" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {roles.map(r => {
+                    const display = getRoleDisplay(r.name);
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-bold text-sm py-3 whitespace-nowrap">
+                          {display.displayName}
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-600 py-3">
+                          {display.description}
+                        </TableCell>
+                        <TableCell className="text-sm py-3 font-bold whitespace-nowrap">
+                          {r.user_count}名
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <SystemBadge isSystem={r.is_system} />
+                        </TableCell>
+                        <TableCell className="text-right py-3">
+                          <Button
+                            id={`btn-detail-role-${r.id}`}
+                            variant="ghost"
+                            size="sm"
+                            className="min-h-[36px] text-gray-500"
+                            onClick={() => setDetailRole(r)}
+                          >
+                            詳細を見る
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* ── 詳細モーダル（読み取り専用） ──
+          現段階では変更できる設定項目がないため、
+          説明の読み取りのみ提供します。
+          permissions(JSON)はDB上維持されていますが、
+          社内管理者には表示・編集させません。
+      */}
+      <Modal
+        isOpen={!!detailRole}
+        onClose={() => setDetailRole(null)}
+        title={detailRole ? getRoleDisplay(detailRole.name).displayName : ''}
+      >
+        {detailRole && (() => {
+          const display = getRoleDisplay(detailRole.name);
+          return (
+            <div className="space-y-4">
+              {/* 種別 */}
+              <div className="flex items-center gap-2">
+                <SystemBadge isSystem={detailRole.is_system} />
+              </div>
+
+              {/* 説明 */}
+              <div>
+                <p className="text-xs font-bold text-gray-500 mb-1">この利用区分について</p>
+                <p className="text-sm text-gray-700 leading-relaxed">{display.detailDescription}</p>
+              </div>
+
+              {/* 利用者数 */}
+              <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-3">
+                <Users className="h-5 w-5 text-primary shrink-0" />
+                <div>
+                  <p className="text-[11px] text-gray-400">現在の利用者数</p>
+                  <p className="text-lg font-black text-gray-800">{detailRole.user_count}名</p>
+                </div>
+              </div>
+
+              {/* 権限情報（将来拡張予定） */}
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700 leading-relaxed">
+                <p className="font-bold mb-1">権限設定について</p>
+                <p>
+                  詳細な権限設定（画面・操作単位の制御）は、
+                  社内での運用設計が決まり次第、
+                  チェック式の分かりやすい画面で設定できるよう順次対応予定です。
+                </p>
+              </div>
+
+              <Button
+                id="btn-close-detail-role"
+                variant="ghost"
+                className="w-full min-h-[44px] border border-gray-200"
+                onClick={() => setDetailRole(null)}
+              >
+                閉じる
+              </Button>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );

@@ -2,7 +2,7 @@
 
 **プロジェクト情報:**
 - **プロジェクト名:** NAC HUB
-- **バージョン:** 1.4.0 (レスポンシブUI完成・手動E2E PASS)
+- **バージョン:** 1.5.0 (管理画面API化第1弾完了・手動E2E PASS)
 - **リポジトリパス:** `D:\Antigravity\data\NAC HUB`
 - **通常利用URL:** `http://localhost:5173`
 - **バックエンドURL:** `http://localhost:8000` (`http://localhost:8000/docs` でSwagger API仕様確認可能)
@@ -35,6 +35,7 @@ pie title PC版基本開発フェーズ進捗（100%）
 | ④ 案件一覧・詳細画面接続 | ✅ 完了 | `Projects.tsx` & `ProjectDetail.tsx` API接続（プロデューサーフィルタ・意味的管理者判定完備） |
 | ⑤ ウィジェット動的データ連携 | ✅ 完了 | `GET /api/v1/dashboard` 実装・ホーム画面実データ連携 |
 | **追加フェーズ5：スマホ・タブレット対応** | ✅ **完了** | 全14画面レスポンシブ対応・手動E2E PASS・タグ `v1.4-responsive-ui` 付与 |
+| **追加フェーズ6：管理画面API化 第1弾** | ✅ **完了** | ユーザー管理・利用権限管理・監査ログ API接続・手動E2E PASS・タグ `v1.5-admin-management-api` 付与 |
 
 ---
 
@@ -68,23 +69,56 @@ pie title PC版基本開発フェーズ進捗（100%）
 
 ---
 
-## テスト・検証結果まとめ（v1.4.0）
+## テスト・検証結果まとめ（v1.5.0）
 
 | テストスイート / 検証項目 | 内容 | 結果 |
 |---|---|---|
+| `backend/test_admin_management_api.py` | 管理画面API 26項目 | **ALL PASSED ✅** |
 | `backend/test_dashboard_api.py` | ダッシュボードAPI・マルチテナント・閲覧履歴 | **ALL PASSED ✅** |
 | `backend/test_projects_api.py` | 案件CRUD 11項目 + プロデューサーテスト | **ALL PASSED ✅** |
 | `backend/test_api.py` | 21項目 (認証・セキュリティ・チャット) | **ALL PASSED ✅** |
 | TypeScript 型チェック (`npx tsc`) | フロントエンド全体型検査 | **0 Error ✅** |
 | フロントエンドビルド (`npm run build`) | Vite プロダクションビルド | **成功 ✅** |
 | フロントエンド Lint (`npm run lint`) | `oxlint` コード品質検証 | **0 Error（警告2件）✅** |
-| **390 × 844 スマートフォン手動E2E** | 全画面・全操作確認 | **PASS ✅** |
-| **820 × 1180 タブレット手動E2E** | 全画面・全操作確認 | **PASS ✅** |
-| **1440 × 900 PC回帰確認** | 従来PC表示の崩れなし確認 | **PASS ✅** |
+| **390 × 844 スマートフォン手動E2E** | 管理3画面・案件編集・監査ログ確認 | **PASS ✅** |
 
 lint警告（既知・動作影響なし）:
 - `AuthContext.tsx` の `useAuth` export（Fast Refresh警告）
 - `Header.tsx` の `User` import未使用
+
+---
+
+## 主な成果と完了事項（v1.5.0追加分）
+
+### 6. 管理画面API化 第1弾（完了）
+
+#### ユーザー管理（`/settings/users`）
+- 実APIによるユーザー一覧・検索・フィルター（利用区分・状態）
+- ユーザー作成（初期パスワード自動生成・一度限り表示）
+- ユーザー編集（氏名・利用区分・状態変更）
+- 自分自身無効化防止・最後の管理者保護
+- モバイルカード表示（sm未満） / テーブル表示（sm以上）
+
+#### 利用権限管理（`/settings/roles`）
+- 実APIによる利用区分（ admin / user ）一覧表示
+- 画面表示名称を非SE向けへ統一：「ロール」→「利用区分 / 利用権限」
+- permissions(JSON)直接編集UIを非表示（将来のチェック式UIへ発展予定）
+- 読み取り中心の非SE向けUI
+
+#### 監査ログ（`/settings/audit`）
+- 実audit_logsテーブル接続
+- 検索・actionフィルター・期間フィルター・ページネーション
+- モバイルカード表示（sm未満） / テーブル表示（sm以上）
+- action日本語化・details日本語化（内部キー→日本語ラベル）
+- 内部ID（target_user_id / role_id / project_id等）を非表示
+- 秘密情報サニタイズ（password_hash等を完全除外）
+- `display_details` 構造化フィールドをAPIに追加（changes配列を真のJS配列で提供）
+- 案件更新ログ変更内容の日本語表示（「進捗率：0% → 50%」「状態：正常 → 注意」等）
+- ログイン失敗理由の日本語化
+
+#### その他補正
+- 案件編集時に完了予定日の既存値を正しく表示（datetime→YYYY-MM-DD変換）
+- ViteのWindows/WSL/Docker環境でHMRが安定するようusePollingを設定
 
 ---
 
@@ -93,11 +127,11 @@ lint警告（既知・動作影響なし）:
 ### 画面別個別API接続（残存 UI モック）
 1. お知らせ画面の個別API接続
 2. 通知センター画面のAPI接続
-3. ユーザー管理画面のAPI接続
-4. ロール・権限管理画面のAPI接続
-5. システム設定画面のAPI接続
-6. プラグイン管理画面のAPI接続
-7. 監査ログ画面のAPI接続
+3. システム設定画面のAPI接続
+4. プラグイン管理画面のAPI接続
+
+### 管理画面の将来拡張
+- 細粒度のチェック式利用権限設定（チェックボックス式権限UI）
 
 ### 外部サービス連携（本接続）
 - HotBiz 本接続（現在はリンク集/連携準備中表示）

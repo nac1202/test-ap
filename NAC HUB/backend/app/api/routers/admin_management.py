@@ -116,6 +116,7 @@ class AuditLogEntry(BaseModel):
     user_display_name: Optional[str]
     action: str
     details_summary: str
+    display_details: Optional[dict] = None  # 構造化詳細（秘密情報除外済み）フロント表示用
     created_at: Optional[datetime]
 
     class Config:
@@ -156,6 +157,19 @@ def sanitize_details(details: Optional[dict]) -> str:
         return summary[:200]
     except Exception:
         return ""
+
+
+def sanitize_details_dict(details: Optional[dict]) -> Optional[dict]:
+    """detailsから秘密情報を除外して構造化dictを返す（フロント表示用）"""
+    if not details:
+        return None
+    safe = {}
+    for k, v in details.items():
+        if any(s in k.lower() for s in SENSITIVE_KEYS):
+            pass  # 秘密情報は完全除外（***も出さない）
+        else:
+            safe[k] = v
+    return safe if safe else None
 
 
 def _get_admin_count(db: Session, company_id: int) -> int:
@@ -556,6 +570,7 @@ def list_audit_logs(
             user_display_name=f"{u.last_name} {u.first_name}" if u else "システム",
             action=log.action,
             details_summary=sanitize_details(log.details),
+            display_details=sanitize_details_dict(log.details),
             created_at=log.created_at,
         ))
 
