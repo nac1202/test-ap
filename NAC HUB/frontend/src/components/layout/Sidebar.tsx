@@ -32,7 +32,7 @@ export function Sidebar({ onCloseMobileMenu }: SidebarProps) {
 
   const settingItems = [
     { name: 'ユーザー管理', path: '/settings/users', icon: Users },
-    { name: 'ロール・権限管理', path: '/settings/roles', icon: Shield },
+    { name: '利用権限管理', path: '/settings/roles', icon: Shield },
     { name: 'システム設定', path: '/settings/system', icon: Settings },
     { name: 'プラグイン管理', path: '/settings/plugins', icon: Plug },
     { name: '監査ログ', path: '/settings/audit', icon: History },
@@ -108,7 +108,7 @@ export function Sidebar({ onCloseMobileMenu }: SidebarProps) {
         <div className="mt-auto pt-6 px-3 pb-2">
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
             <p className="text-xs font-black text-gray-800">NAC HUB</p>
-            <p className="text-[10px] text-gray-500 mt-0.5">Ver 1.4.0</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">Ver 1.5.0</p>
             <p className="text-[10px] text-gray-500">Build 20260726</p>
             <button className="w-full mt-3 py-2 border border-primary/30 text-primary text-xs font-bold rounded-full hover:bg-primary/5 transition-colors min-h-[36px]">
               システム情報

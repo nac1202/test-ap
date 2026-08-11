@@ -28,14 +28,14 @@ const ROLE_DISPLAY: Record<string, RoleDisplayConfig> = {
     displayName: 'システム管理者',
     description: 'NAC HUBのすべての管理機能を利用できます。',
     detailDescription:
-      'ユーザー管理・ロール管理・監査ログ閲覧・案件管理など、' +
+      'ユーザー管理・利用権限管理・監査ログ閲覧・案件管理など、' +
       'システム全体の設定と管理が行えます。',
   },
   system_admin: {
     displayName: 'システム管理者',
     description: 'NAC HUBのすべての管理機能を利用できます。',
     detailDescription:
-      'ユーザー管理・ロール管理・監査ログ閲覧・案件管理など、' +
+      'ユーザー管理・利用権限管理・監査ログ閲覧・案件管理など、' +
       'システム全体の設定と管理が行えます。',
   },
   user: {
