@@ -109,8 +109,8 @@ export function Sidebar({ onCloseMobileMenu, unreadCount = 0 }: SidebarProps) {
         <div className="mt-auto pt-6 px-3 pb-2">
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
             <p className="text-xs font-black text-gray-800">NAC HUB</p>
-            <p className="text-[10px] text-gray-500 mt-0.5">Ver 1.5.0</p>
-            <p className="text-[10px] text-gray-500">Build 20260726</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">Ver 1.6.0</p>
+            <p className="text-[10px] text-gray-500">Build 20260822</p>
             <button className="w-full mt-3 py-2 border border-primary/30 text-primary text-xs font-bold rounded-full hover:bg-primary/5 transition-colors min-h-[36px]">
               システム情報
             </button>

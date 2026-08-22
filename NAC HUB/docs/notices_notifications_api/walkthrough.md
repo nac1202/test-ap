@@ -21,10 +21,6 @@
   - `MockLayout.tsx` : ヘッダーの通知ベルアイコンに、実APIからの未読件数バッジを追加。
   - `Home.tsx` : 「重要なお知らせ」セクションを全社お知らせ(Notice)に変更し、リンク先を `/notices` へ修正。
 
-## テスト結果
-- **TypeScript 型チェック**: `npx tsc --noEmit` PASS
-- **ビルドテスト**: `npm run build` PASS
-- **Linter**: `npm run lint` PASS
 - **API Unit Test**: `test_notifications_api.py`, `test_notices_api.py` (※コード作成済。Docker/DB接続不可のため実行スキップ)
 
 ## 残項目 (手動E2E待ち)

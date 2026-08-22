@@ -54,12 +54,13 @@
 
 - [x] 追加開発フェーズ5：スマホ・タブレット対応（レスポンシブ最適化）
 - [x] 追加開発フェーズ6：管理系UI・監査ログの視認性向上とAPI実装
-- [/] 追加開発フェーズ7：お知らせ・通知センターAPI化 (自動実装完了・手動E2E待ち)
+- [x] 追加開発フェーズ7：お知らせ・通知センターAPI化 (完了: v1.6.0)
   - [x] Notice モデルおよびAPI (`/api/v1/notices`)
   - [x] Notification API (`/api/v1/notifications`)
   - [x] `Notifications.tsx` の実API化 (通知一覧・既読化)
   - [x] `Notices.tsx` の実API化 (全社お知らせ一覧)
   - [x] `Notices.tsx` 管理者用UI (お知らせ新規作成・編集モーダル) 実装
   - [x] `MockLayout.tsx` ヘッダー通知ベルの未読件数バッジ化
+  - [x] `Sidebar.tsx` 通知バッジの実データ同期化
   - [x] `Home.tsx` の「重要なお知らせ」セクションをNotice連携に変更
-  - [ ] ユーザーによるブラウザ手動E2Eテスト確認
+  - [x] ユーザーによるブラウザ手動E2Eテスト確認 (すべてPASS)
