@@ -24,6 +24,15 @@ export interface NotificationItem {
   created_at: string;
 }
 
+export interface NoticeItem {
+  id: number;
+  title: string;
+  content: string | null;
+  category: string;
+  is_important: boolean;
+  created_at: string;
+}
+
 export interface TaskItem {
   id: number;
   title: string;
@@ -44,6 +53,7 @@ export interface DashboardData {
   project_summary: ProjectSummary;
   recent_projects: RecentProjectItem[];
   notifications: NotificationItem[];
+  notices: NoticeItem[];
   tasks: TaskItem[];
   integrations: IntegrationsState;
 }

@@ -5,6 +5,7 @@ from app.models.setting import TenantSetting, PluginConfig
 from app.models.project import Project, ProjectMember, ProjectTimeline, RecentProject
 from app.models.ai import AIPrompt, AIChatHistory, AIExecutionLog
 from app.models.notification import Notification
+from app.models.notice import Notice
 from app.models.favorite import UserFavorite
 from app.models.workflow import Workflow
 from app.models.audit import AuditLog
@@ -24,6 +25,7 @@ __all__ = [
     "AIChatHistory",
     "AIExecutionLog",
     "Notification",
+    "Notice",
     "UserFavorite",
     "Workflow",
     "AuditLog"

@@ -104,7 +104,7 @@ export default function Home() {
     );
   }
 
-  const { project_summary, recent_projects, notifications, tasks } = data;
+  const { project_summary, recent_projects, notices, tasks } = data;
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
@@ -268,25 +268,25 @@ export default function Home() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-primary" />
-                <h3 className="font-bold text-gray-800 text-sm sm:text-base">重要なお知らせ</h3>
+                <h3 className="font-bold text-gray-800 text-sm sm:text-base">全社お知らせ一覧</h3>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/notifications')} className="text-xs text-primary font-bold p-1 h-7">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/notices')} className="text-xs text-primary font-bold p-1 h-7">
                 すべて見る <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </Button>
             </div>
 
-            {notifications.length === 0 ? (
+            {notices.length === 0 ? (
               <div className="py-8 text-center bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
                 <Bell className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-xs text-gray-500 font-medium">現在、重要なお知らせはありません</p>
+                <p className="text-xs text-gray-500 font-medium">現在、お知らせはありません</p>
               </div>
             ) : (
               <div className="space-y-2.5">
-                {notifications.map((n) => (
-                  <div key={n.id} className="p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                {notices.map((n) => (
+                  <div key={n.id} className="p-3 bg-gray-50 border border-gray-100 rounded-xl cursor-pointer hover:bg-orange-50/50 transition-colors" onClick={() => navigate('/notices')}>
                     <div className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
-                      <span>{n.created_at || '本日'}</span>
-                      {n.is_read && <span className="text-gray-400">既読</span>}
+                      <span>{n.created_at ? new Date(n.created_at).toLocaleDateString() : '本日'}</span>
+                      {n.is_important && <span className="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full text-[10px]">重要</span>}
                     </div>
                     <p className="text-xs font-bold text-gray-800 leading-snug break-words">{n.title}</p>
                     {n.content && <p className="text-[11px] text-gray-500 mt-1 line-clamp-2 break-words">{n.content}</p>}

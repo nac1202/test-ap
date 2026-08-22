@@ -7,6 +7,7 @@ from sqlalchemy import func, desc, or_
 from app.db.database import get_db
 from app.models.user import User
 from app.models.project import Project, RecentProject
+from app.models.notice import Notice
 from app.models.notification import Notification
 from app.models.workflow import Workflow
 from app.api.deps import get_current_active_user
@@ -15,6 +16,7 @@ from app.schemas.dashboard import (
     ProjectSummarySchema,
     RecentProjectSchema,
     NotificationSchema,
+    NoticeSchema,
     TaskSchema,
     IntegrationsSchema
 )
@@ -104,6 +106,28 @@ def get_dashboard_data(
             )
         )
 
+    # 3b. Notices (Company Scope)
+    notices_query = (
+        db.query(Notice)
+        .filter(Notice.company_id == current_user.company_id, Notice.is_active == True)
+        .order_by(desc(Notice.created_at))
+        .limit(5)
+        .all()
+    )
+
+    notices_list = []
+    for n in notices_query:
+        notices_list.append(
+            NoticeSchema(
+                id=n.id,
+                title=n.title,
+                content=n.body,
+                category=n.category,
+                is_important=n.is_important,
+                created_at=n.created_at
+            )
+        )
+
     # 4. Tasks / Workflows (User Scope)
     workflows_query = (
         db.query(Workflow)
@@ -138,6 +162,7 @@ def get_dashboard_data(
         project_summary=summary,
         recent_projects=recent_projects_list,
         notifications=notifications_list,
+        notices=notices_list,
         tasks=tasks_list,
         integrations=integrations
     )

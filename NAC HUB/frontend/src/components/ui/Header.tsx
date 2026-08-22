@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
-import { LogOut, User, KeyRound, ChevronDown } from "lucide-react";
+import { LogOut, KeyRound, ChevronDown } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 export function Header({ className, ...props }: React.HTMLAttributes<HTMLElement>) {

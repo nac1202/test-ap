@@ -13,6 +13,7 @@ export function MockLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   
   const menuRef = useRef<HTMLDivElement>(null);
   const hamburgerBtnRef = useRef<HTMLButtonElement>(null);
@@ -42,6 +43,25 @@ export function MockLayout() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Fetch unread count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!token) return;
+      try {
+        const res = await fetch('http://localhost:8000/api/v1/notifications/unread-count', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Failed to fetch unread count", err);
+      }
+    };
+    fetchUnreadCount();
+  }, [token]);
 
   // Handle drawer body scroll lock and Escape key press
   useEffect(() => {
@@ -169,7 +189,11 @@ export function MockLayout() {
                 aria-label="通知センター"
               >
                 <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
-                <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">12</span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </button>
 
               <button 

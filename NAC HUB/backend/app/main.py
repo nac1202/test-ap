@@ -71,10 +71,14 @@ from app.api.routers import ai_assistant
 from app.api.routers import projects
 from app.api.routers import dashboard
 from app.api.routers import admin_management
+from app.api.routers import notifications
+from app.api.routers import notices
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(ai_assistant.router, prefix="/api/v1/ai", tags=["ai"])
 app.include_router(projects.router, prefix="/api/v1/projects", tags=["projects"])
 app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboard"])
 app.include_router(admin_management.router, prefix="/api/v1/admin", tags=["admin"])
+app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
+app.include_router(notices.router, prefix="/api/v1/notices", tags=["notices"])
 

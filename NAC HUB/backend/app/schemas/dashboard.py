@@ -44,10 +44,21 @@ class IntegrationsSchema(BaseModel):
     notepm: bool = False
     google_drive: bool = False
 
+class NoticeSchema(BaseModel):
+    id: int
+    title: str
+    content: Optional[str] = None
+    category: str = "general"
+    is_important: bool = False
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
 class DashboardResponse(BaseModel):
     generated_at: datetime
     project_summary: ProjectSummarySchema
     recent_projects: List[RecentProjectSchema]
     notifications: List[NotificationSchema]
+    notices: List[NoticeSchema] = []
     tasks: List[TaskSchema]
     integrations: IntegrationsSchema
