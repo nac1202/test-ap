@@ -59,6 +59,7 @@
   - [x] Notification API (`/api/v1/notifications`)
   - [x] `Notifications.tsx` の実API化 (通知一覧・既読化)
   - [x] `Notices.tsx` の実API化 (全社お知らせ一覧)
+  - [x] `Notices.tsx` 管理者用UI (お知らせ新規作成・編集モーダル) 実装
   - [x] `MockLayout.tsx` ヘッダー通知ベルの未読件数バッジ化
   - [x] `Home.tsx` の「重要なお知らせ」セクションをNotice連携に変更
   - [ ] ユーザーによるブラウザ手動E2Eテスト確認

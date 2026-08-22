@@ -8,23 +8,28 @@ from app.db.database import get_db
 from app.models.user import User
 from app.models.notice import Notice
 from app.models.audit import AuditLog
-from app.api.deps import get_current_active_user, get_current_active_admin
+from app.api.deps import get_current_active_user, get_current_admin_user
 from app.schemas.notice import NoticeCreate, NoticeUpdate, NoticeResponse, NoticeList
 
 router = APIRouter()
 
 def log_audit(db: Session, request: Request, user: User, action: str, entity_name: str, entity_id: int, details: dict):
     client_ip = request.client.host if request.client else "unknown"
+    
+    full_details = {
+        "company_id": user.company_id,
+        "entity_type": "Notice",
+        "entity_name": entity_name,
+        "entity_id": entity_id,
+        "ip_address": client_ip,
+        "user_agent": request.headers.get("user-agent", "unknown"),
+        **details
+    }
+    
     audit = AuditLog(
         user_id=user.id,
-        company_id=user.company_id,
         action=action,
-        entity_type="Notice",
-        entity_name=entity_name,
-        entity_id=entity_id,
-        details=json.dumps(details),
-        ip_address=client_ip,
-        user_agent=request.headers.get("user-agent", "unknown")
+        details=full_details,
     )
     db.add(audit)
     db.commit()
@@ -67,7 +72,7 @@ def create_notice(
     notice_in: NoticeCreate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin)
+    current_user: User = Depends(get_current_admin_user)
 ):
     notice = Notice(
         **notice_in.model_dump(),
@@ -92,7 +97,7 @@ def update_notice(
     notice_in: NoticeUpdate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin)
+    current_user: User = Depends(get_current_admin_user)
 ):
     notice = db.query(Notice).filter(
         Notice.id == notice_id,

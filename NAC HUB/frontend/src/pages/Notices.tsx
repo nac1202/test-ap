@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { ClipboardList, Calendar, Bell, Loader2, AlertCircle } from 'lucide-react';
+import { Input } from '../components/ui/Input';
+import { Modal } from '../components/ui/Modal';
+import { ClipboardList, Calendar, Bell, Loader2, AlertCircle, Edit2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Notice {
@@ -10,6 +12,7 @@ interface Notice {
   body: string;
   category: string;
   is_important: boolean;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -18,6 +21,20 @@ export default function Notices() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    title: '',
+    body: '',
+    category: '全般',
+    is_important: false,
+    is_active: true,
+  });
 
   const fetchNotices = useCallback(async () => {
     if (!token) return;
@@ -45,6 +62,63 @@ export default function Notices() {
   }, [fetchNotices]);
 
   const isAdmin = user?.role_id === 1;
+
+  const handleOpenCreateModal = () => {
+    setEditingNotice(null);
+    setFormData({
+      title: '',
+      body: '',
+      category: '全般',
+      is_important: false,
+      is_active: true,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (notice: Notice) => {
+    setEditingNotice(notice);
+    setFormData({
+      title: notice.title,
+      body: notice.body,
+      category: notice.category,
+      is_important: notice.is_important,
+      is_active: notice.is_active,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const url = editingNotice 
+        ? `http://localhost:8000/api/v1/notices/${editingNotice.id}`
+        : 'http://localhost:8000/api/v1/notices';
+      
+      const method = editingNotice ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!res.ok) {
+        throw new Error('保存に失敗しました');
+      }
+
+      setIsModalOpen(false);
+      fetchNotices();
+    } catch (err) {
+      console.error(err);
+      alert('保存中にエラーが発生しました');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -76,7 +150,7 @@ export default function Notices() {
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5">社内の重要連絡事項、アナウンスメントを閲覧できます。</p>
         </div>
         {isAdmin && (
-          <Button variant="outline" size="sm" className="shrink-0 self-start sm:self-auto border-primary text-primary hover:bg-primary/5 h-9" onClick={() => alert('機能準備中')}>
+          <Button variant="outline" size="sm" className="shrink-0 self-start sm:self-auto border-primary text-primary hover:bg-primary/5 h-9" onClick={handleOpenCreateModal}>
             + 新規作成
           </Button>
         )}
@@ -91,9 +165,9 @@ export default function Notices() {
       ) : (
         <div className="space-y-3 sm:space-y-4">
           {notices.map((n) => (
-            <Card key={n.id} className="border border-gray-100 shadow-sm rounded-xl sm:rounded-2xl overflow-hidden hover:border-primary/30 transition-colors">
-              <CardContent className="p-4 sm:p-5 space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <Card key={n.id} className={`border border-gray-100 shadow-sm rounded-xl sm:rounded-2xl overflow-hidden hover:border-primary/30 transition-colors ${!n.is_active ? 'opacity-60' : ''}`}>
+              <CardContent className="p-4 sm:p-5 space-y-2 relative">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs pr-10">
                   <div className="flex items-center gap-2">
                     <span className="bg-primary/10 text-primary font-bold px-2.5 py-0.5 rounded-full text-[11px]">
                       {n.category}
@@ -103,13 +177,28 @@ export default function Notices() {
                         <Bell className="h-3 w-3" /> 重要
                       </span>
                     )}
+                    {!n.is_active && isAdmin && (
+                      <span className="bg-gray-100 text-gray-600 font-bold px-2.5 py-0.5 rounded-full text-[11px]">
+                        非公開
+                      </span>
+                    )}
                   </div>
                   <span className="text-gray-400 flex items-center gap-1 text-[11px]">
                     <Calendar className="h-3.5 w-3.5" /> {new Date(n.created_at).toLocaleDateString()}
                   </span>
                 </div>
 
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-snug break-words">
+                {isAdmin && (
+                  <button 
+                    onClick={() => handleOpenEditModal(n)}
+                    className="absolute top-4 right-4 p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
+                    title="編集"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                )}
+
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-snug break-words pr-8">
                   {n.title}
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words">
@@ -120,6 +209,83 @@ export default function Notices() {
           ))}
         </div>
       )}
+
+      {/* Create/Edit Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingNotice ? "お知らせの編集" : "お知らせの新規作成"}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-gray-700">タイトル <span className="text-red-500">*</span></label>
+            <Input 
+              value={formData.title}
+              onChange={e => setFormData({...formData, title: e.target.value})}
+              required
+              placeholder="お知らせのタイトル"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-gray-700">カテゴリ <span className="text-red-500">*</span></label>
+            <select 
+              className="flex h-11 md:h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              value={formData.category}
+              onChange={e => setFormData({...formData, category: e.target.value})}
+              required
+            >
+              <option value="全般">全般</option>
+              <option value="システム">システム</option>
+              <option value="メンテナンス">メンテナンス</option>
+              <option value="重要">重要</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-gray-700">本文 <span className="text-red-500">*</span></label>
+            <textarea 
+              className="flex w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-base md:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[120px] resize-y"
+              value={formData.body}
+              onChange={e => setFormData({...formData, body: e.target.value})}
+              required
+              placeholder="お知らせの内容を入力してください..."
+            />
+          </div>
+
+          <div className="flex gap-6 pt-2 pb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+              <input 
+                type="checkbox"
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                checked={formData.is_important}
+                onChange={e => setFormData({...formData, is_important: e.target.checked})}
+              />
+              重要なお知らせとしてマーク
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+              <input 
+                type="checkbox"
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                checked={formData.is_active}
+                onChange={e => setFormData({...formData, is_active: e.target.checked})}
+              />
+              公開する
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>
+              キャンセル
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> 保存中...</>
+              ) : '保存する'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
