@@ -18,15 +18,16 @@ import {
 
 interface SidebarProps {
   onCloseMobileMenu?: () => void;
+  unreadCount?: number;
 }
 
-export function Sidebar({ onCloseMobileMenu }: SidebarProps) {
+export function Sidebar({ onCloseMobileMenu, unreadCount = 0 }: SidebarProps) {
   const navItems = [
     { name: 'ホーム', path: '/', icon: Home, badge: null },
     { name: 'なっくん (AI)', path: '/chat', icon: MessageSquare, badge: null },
     { name: '案件管理', path: '/projects', icon: FolderKanban, badge: null },
     { name: 'お知らせ', path: '/notices', icon: ClipboardList, badge: null },
-    { name: '通知センター', path: '/notifications', icon: Bell, badge: '12' },
+    { name: '通知センター', path: '/notifications', icon: Bell, badge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount.toString()) : null },
     { name: 'HotBizリンク', path: '/hotbiz', icon: ExternalLink, badge: null },
   ];
 

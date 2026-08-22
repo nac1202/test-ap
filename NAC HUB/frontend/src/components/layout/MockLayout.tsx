@@ -44,24 +44,25 @@ export function MockLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch unread count
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      if (!token) return;
-      try {
-        const res = await fetch('http://localhost:8000/api/v1/notifications/unread-count', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadCount(data.unread_count);
-        }
-      } catch (err) {
-        console.error("Failed to fetch unread count", err);
+  const fetchUnreadCount = React.useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/notifications/unread-count', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.unread_count);
       }
-    };
-    fetchUnreadCount();
+    } catch (err) {
+      console.error("Failed to fetch unread count", err);
+    }
   }, [token]);
+
+  // Fetch unread count on mount and token change
+  useEffect(() => {
+    fetchUnreadCount();
+  }, [fetchUnreadCount]);
 
   // Handle drawer body scroll lock and Escape key press
   useEffect(() => {
@@ -126,7 +127,7 @@ export function MockLayout() {
       <div className="flex flex-1 min-h-0 w-full min-w-0 overflow-hidden">
         {/* Desktop Sidebar (lg screens only: >= 1024px) */}
         <aside className="hidden lg:block h-full shrink-0 w-64 z-20">
-          <Sidebar />
+          <Sidebar unreadCount={unreadCount} />
         </aside>
 
         {/* Mobile / Tablet Navigation Drawer (< 1024px) */}
@@ -149,7 +150,7 @@ export function MockLayout() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <Sidebar onCloseMobileMenu={closeMobileDrawer} />
+              <Sidebar onCloseMobileMenu={closeMobileDrawer} unreadCount={unreadCount} />
             </div>
           </div>
         )}
@@ -262,13 +263,13 @@ export function MockLayout() {
           {isChatPage ? (
             /* Chat page: no padding, no max-width constraint, overflow-hidden */
             <main className="flex-1 min-h-0 min-w-0 w-full flex flex-col overflow-hidden">
-              <Outlet />
+              <Outlet context={{ refreshUnreadCount: fetchUnreadCount }} />
             </main>
           ) : (
             /* Normal pages: padded, scrollable */
             <main className="flex-1 min-h-0 min-w-0 w-full overflow-y-auto overflow-x-hidden bg-[#f8f9fa]">
               <div className="max-w-[1200px] mx-auto w-full min-w-0 p-3 sm:p-6 md:p-8">
-                <Outlet />
+                <Outlet context={{ refreshUnreadCount: fetchUnreadCount }} />
               </div>
             </main>
           )}

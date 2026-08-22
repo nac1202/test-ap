@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Bell, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
@@ -15,6 +16,7 @@ interface Notification {
 
 export default function Notifications() {
   const { token } = useAuth();
+  const { refreshUnreadCount } = useOutletContext<{ refreshUnreadCount: () => void }>();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -53,6 +55,7 @@ export default function Notifications() {
       });
       if (res.ok) {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+        refreshUnreadCount();
       }
     } catch (err) {
       console.error(err);
@@ -68,6 +71,7 @@ export default function Notifications() {
       });
       if (res.ok) {
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        refreshUnreadCount();
       }
     } catch (err) {
       console.error(err);
