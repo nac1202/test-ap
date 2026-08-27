@@ -52,17 +52,24 @@ function initGuardianTrio() {
 
         let recentCount = 0;
         let lastDrawnDate = 0;
+        
+        const parseTarotDate = (dateStr) => {
+            if (!dateStr) return 0;
+            const parts = dateStr.split(' ');
+            if (parts.length !== 2) return 0;
+            const [y, m, d] = parts[0].split('/').map(Number);
+            const [h, min] = parts[1].split(':').map(Number);
+            return new Date(y, m - 1, d, h, min).getTime();
+        };
+
         if (stat.dates && Array.isArray(stat.dates)) {
             recentCount = stat.dates.filter(dateStr => {
-                const d = new Date(dateStr);
-                return !isNaN(d) && d >= twoWeeksAgo;
+                const time = parseTarotDate(dateStr);
+                return time > 0 && time >= twoWeeksAgo.getTime();
             }).length;
             
             if (stat.dates.length > 0) {
-                const latest = new Date(stat.dates[stat.dates.length - 1]);
-                if (!isNaN(latest)) {
-                    lastDrawnDate = latest.getTime();
-                }
+                lastDrawnDate = parseTarotDate(stat.dates[stat.dates.length - 1]);
             }
         }
 
