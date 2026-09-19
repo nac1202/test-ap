@@ -90,15 +90,33 @@ function initGuardianTrio() {
         });
     });
 
+    // カードの優先順位マッピング
+    const getCardPriority = (nameJs) => {
+        const priorityMap = {
+            "運命のオアシス": 1, // みりゅう
+            "聖なる守護神たち": 1, // ナイル
+            "世界": 1, "白虎": 1, "玄武": 1, "鳳凰": 1, "麒麟": 1, "青龍": 1, "朱雀": 1,
+            "太陽": 2, "星": 2, "皇帝": 2, "女帝": 2,
+            "恋人": 3, "審判": 3, "魔術師": 3,
+            "戦車": 4, "力": 4, "運命の輪": 4,
+            "隠者": 5, "女教皇": 5, "法王": 5, "節制": 5, "正義": 5,
+            "愚者": 6, "月": 6, "吊るされた男": 6,
+            "悪魔": 7, "死神": 7, "塔": 7
+        };
+        return priorityMap[nameJs] || 99;
+    };
+
     // 出現回数（count）の降順でソート
-    // 同数の場合は過去2週間の出現回数（recentCount）が多い方を優先
+    // 同数の場合は優先順位（数字が少ない順）でソート
     // それでも同じ場合は最後に出現した日付（lastDrawnDate）が新しい順
     cardStatsList.sort((a, b) => {
         if (b.count !== a.count) {
             return b.count - a.count;
         }
-        if (b.recentCount !== a.recentCount) {
-            return b.recentCount - a.recentCount;
+        const priorityA = getCardPriority(a.nameJs);
+        const priorityB = getCardPriority(b.nameJs);
+        if (priorityA !== priorityB) {
+            return priorityA - priorityB;
         }
         return b.lastDrawnDate - a.lastDrawnDate;
     });
