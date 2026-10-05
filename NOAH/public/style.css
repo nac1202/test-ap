@@ -1525,4 +1525,368 @@ body {
   0% { transform: translate(-50%, -50%) scale(0) rotate(var(--rot, 0deg)); opacity: 1; }
   20% { transform: translate(calc(-50% + var(--vx) * 0.2), calc(-50% + var(--vy) * 0.2)) scale(var(--flare-scale)) rotate(var(--rot, 0deg)); opacity: 1; }
   100% { transform: translate(calc(-50% + var(--vx)), calc(-50% + var(--vy))) scale(0) rotate(var(--rot, 0deg)); opacity: 0; }
-}
+}
+
+/* ==========================================
+   守護トリオ（Top3カード）＆属性アドバイス用スタイル
+   ========================================== */
+.trio-card-box {
+  background: rgba(16, 20, 38, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(197, 160, 89, 0.5);
+  border-radius: 16px;
+  padding: 1.25rem 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(197, 160, 89, 0.1);
+  box-sizing: border-box;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.trio-card-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #c5a059, transparent);
+  animation: trioHeaderShine 4s linear infinite;
+}
+
+@keyframes trioHeaderShine {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(50%); }
+}
+
+.trio-header {
+  margin-bottom: 1.2rem;
+}
+
+.trio-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: #c5a059;
+  margin: 0 0 0.3rem 0;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 10px rgba(197, 160, 89, 0.4);
+}
+
+.trio-subtitle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+/* --- カード3枚横並びコンテナ --- */
+.trio-cards-container {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.trio-card-item {
+  flex: 1;
+  max-width: 100px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  border-radius: 10px;
+  padding: 0.5rem 0.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.trio-card-item:hover {
+  transform: translateY(-3px);
+  border-color: #c5a059;
+}
+
+.trio-rank-badge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #c5a059, #8a6d3b);
+  color: #050a14;
+  font-weight: bold;
+  font-size: 0.65rem;
+  padding: 1px 7px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  letter-spacing: 0.05em;
+  z-index: 2;
+}
+
+.rank-1 .trio-rank-badge {
+  background: linear-gradient(135deg, #ffd700, #c5a059);
+  color: #000;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+.trio-img-wrapper {
+  width: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  margin-bottom: 0.4rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.trio-img-wrapper img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  border-radius: 4px;
+}
+
+.trio-card-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.trio-card-element {
+  font-size: 0.65rem;
+  color: #e8cca1;
+  background: rgba(197, 160, 89, 0.15);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+}
+
+.trio-card-name {
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
+}
+
+.trio-card-count {
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* --- アドバイス表示メッセージボックス --- */
+.trio-advice-box {
+  background: linear-gradient(135deg, rgba(30, 25, 45, 0.9), rgba(15, 12, 28, 0.95));
+  border: 1px solid rgba(197, 160, 89, 0.4);
+  border-radius: 12px;
+  padding: 0.9rem;
+  text-align: left;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.advice-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(197, 160, 89, 0.25);
+  padding-bottom: 0.5rem;
+}
+
+.advice-icons-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.advice-crystal {
+  font-size: 1.15rem;
+}
+
+.advice-element-symbols {
+  letter-spacing: 0.15em;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+}
+
+.advice-title-text {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #ffd700;
+  margin: 0;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  word-break: normal;
+  overflow-wrap: break-word;
+  width: 100%;
+  text-align: left;
+}
+
+.advice-content {
+  font-size: 0.78rem;
+  color: #e0e0e0;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+/* --- 未解放（ロック状態）のスタイル --- */
+.locked-box {
+  background: rgba(12, 14, 25, 0.85);
+}
+
+.trio-locked-slots {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.locked-slot {
+  width: 60px;
+  height: 90px;
+  border: 1px dashed rgba(197, 160, 89, 0.3);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.02);
+  position: relative;
+}
+
+.locked-slot.unlocked {
+  border-style: solid;
+  border-color: #c5a059;
+  background: rgba(197, 160, 89, 0.1);
+}
+
+.slot-rank {
+  font-size: 0.65rem;
+  color: #c5a059;
+  position: absolute;
+  top: 4px;
+  left: 6px;
+}
+
+.slot-icon {
+  font-size: 1.4rem;
+  opacity: 0.6;
+}
+
+.trio-locked-msg {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+.trio-locked-msg strong {
+  color: #ffd700;
+  font-size: 1rem;
+}
+
+/* --- 守護トリオ タップ時カード自体の波紋オーラ発光 --- */
+.trio-aura-pulse-passion {
+  animation: trioAuraPassion 0.8s ease-out;
+}
+.trio-aura-pulse-healing {
+  animation: trioAuraHealing 0.8s ease-out;
+}
+.trio-aura-pulse-fortune {
+  animation: trioAuraFortune 0.8s ease-out;
+}
+.trio-aura-pulse-miracle {
+  animation: trioAuraMiracle 0.8s ease-out;
+}
+
+@keyframes trioAuraPassion {
+  0% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.9), 0 0 15px rgba(255, 51, 51, 0.8); border-color: #ff3333; }
+  50% { box-shadow: 0 0 30px 10px rgba(255, 153, 0, 0.8), 0 0 25px rgba(255, 51, 51, 0.9); border-color: #ffd700; transform: scale(1.04); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0), 0 0 0 rgba(0,0,0,0); transform: scale(1); }
+}
+
+@keyframes trioAuraHealing {
+  0% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.9), 0 0 15px rgba(0, 229, 255, 0.8); border-color: #00e5ff; }
+  50% { box-shadow: 0 0 30px 10px rgba(112, 0, 255, 0.8), 0 0 25px rgba(0, 229, 255, 0.9); border-color: #e0f7fa; transform: scale(1.04); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0), 0 0 0 rgba(0,0,0,0); transform: scale(1); }
+}
+
+@keyframes trioAuraFortune {
+  0% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.9), 0 0 15px rgba(255, 215, 0, 0.8); border-color: #ffd700; }
+  50% { box-shadow: 0 0 30px 10px rgba(0, 255, 135, 0.8), 0 0 25px rgba(255, 215, 0, 0.9); border-color: #60efff; transform: scale(1.04); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0), 0 0 0 rgba(0,0,0,0); transform: scale(1); }
+}
+
+@keyframes trioAuraMiracle {
+  0% { box-shadow: 0 0 0 0 rgba(255, 102, 204, 0.9), 0 0 15px rgba(0, 255, 255, 0.8); border-color: #ff66cc; }
+  50% { box-shadow: 0 0 30px 10px rgba(255, 235, 59, 0.8), 0 0 25px rgba(255, 102, 204, 0.9); border-color: #00ffff; transform: scale(1.04); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 102, 204, 0), 0 0 0 rgba(0,0,0,0); transform: scale(1); }
+}
+
+/* --- 属性別超繊細キラメキ光粒（軽量・GPUアクセラレーション対応） --- */
+.trio-rich-sparkle {
+  mix-blend-mode: screen;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+/* 1. 極細4線クロススパーク (10px) */
+.trio-rich-sparkle.cross-star {
+  width: 10px;
+  height: 10px;
+  background-image: 
+    radial-gradient(ellipse 1px 10px at center, var(--color) 0%, transparent 100%),
+    radial-gradient(ellipse 10px 1px at center, var(--color) 0%, transparent 100%);
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* 2. 微細光オーブ (5px) */
+.trio-rich-sparkle.orb-star {
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle at center, #ffffff 0%, var(--color) 60%, transparent 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--color);
+}
+
+/* 3. 超微細星屑グリッター (2.5px) */
+.trio-rich-sparkle.tiny-star {
+  width: 2.5px;
+  height: 2.5px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 3px var(--color);
+}
+
+/* ⚡ 60fps ヌルヌル動作・広がり余韻アニメーション */
+@keyframes trioSmoothSparkleAnim {
+  0% {
+    transform: translate3d(-50%, -50%, 0) scale(0) rotate(var(--rot));
+    opacity: 1;
+  }
+  25% {
+    transform: translate3d(calc(-50% + var(--tx) * 0.45), calc(-50% + var(--ty) * 0.45), 0) scale(calc(var(--scale) * 1.25)) rotate(calc(var(--rot) + 40deg));
+    opacity: 1;
+  }
+  75% {
+    transform: translate3d(calc(-50% + var(--tx) * 0.95), calc(-50% + var(--ty) * 0.95), 0) scale(var(--scale)) rotate(calc(var(--rot) + 90deg));
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate3d(calc(-50% + var(--tx) * 1.08), calc(-50% + var(--ty) * 1.08 + 10px), 0) scale(0) rotate(calc(var(--rot) + 120deg));
+    opacity: 0;
+  }
+}
+
+
+
+
+

@@ -7,6 +7,10 @@
         {
             "source": "/admin",
             "destination": "/api/index.js"
+        },
+        {
+            "source": "/admin-logs",
+            "destination": "/api/index.js"
         }
     ]
 }

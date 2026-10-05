@@ -354,6 +354,394 @@
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+
+    /* みりゅう最終日 特設セクション */
+    .farewell-card {
+      background: linear-gradient(145deg, rgba(32, 18, 30, 0.95) 0%, rgba(15, 18, 30, 0.95) 100%);
+      border: 1px solid rgba(224, 150, 175, 0.55);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 25px rgba(224, 150, 175, 0.2);
+      border-radius: 14px;
+      padding: 1.6rem 1.1rem;
+      margin: 1.2rem auto 2rem auto;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+    .farewell-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -50%;
+      width: 200%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #ffb7c5, #ffd700, #ffb7c5, transparent);
+      animation: shine-bar 4s infinite linear;
+    }
+    @keyframes shine-bar {
+      0% { transform: translateX(-30%); }
+      100% { transform: translateX(30%); }
+    }
+    .farewell-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, rgba(255, 183, 197, 0.25), rgba(197, 160, 89, 0.25));
+      border: 1px solid rgba(255, 183, 197, 0.6);
+      color: #ffb7c5;
+      font-family: var(--font-serif);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 0.8rem;
+      box-shadow: 0 0 12px rgba(255, 183, 197, 0.3);
+    }
+    .farewell-badge-sparkle {
+      color: #ffd700;
+      font-size: 0.75rem;
+    }
+    .farewell-sub {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.15em;
+      margin-bottom: 0.2rem;
+    }
+    .farewell-title {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      line-height: 1.4;
+      color: #fff;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.05em;
+    }
+    .farewell-highlight {
+      background: linear-gradient(45deg, #ffd700, #ff8da1, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+      font-size: 1.55rem;
+      text-shadow: 0 0 20px rgba(255, 141, 161, 0.5);
+    }
+    .farewell-body {
+      text-align: left;
+    }
+    .farewell-text-block {
+      text-align: center;
+      margin-bottom: 1.2rem;
+      padding: 0.5rem 0;
+    }
+    .farewell-lead {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #fff;
+      margin-bottom: 0.6rem;
+    }
+    .farewell-strong {
+      color: #ff8da1;
+      font-size: 1.25rem;
+      display: inline-block;
+      text-shadow: 0 0 10px rgba(255, 141, 161, 0.4);
+    }
+    .farewell-desc {
+      font-size: 0.92rem;
+      color: #ddd;
+      line-height: 1.6;
+    }
+    .farewell-notice-box {
+      background: rgba(30, 25, 45, 0.7);
+      border: 1px dashed rgba(197, 160, 89, 0.5);
+      border-radius: 10px;
+      padding: 0.9rem;
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1.3rem;
+      align-items: flex-start;
+    }
+    .farewell-notice-icon {
+      font-size: 1.4rem;
+      line-height: 1.2;
+    }
+    .farewell-notice-content {
+      flex: 1;
+    }
+    .farewell-notice-title {
+      color: #ffd700;
+      font-size: 0.9rem;
+      margin-bottom: 0.3rem;
+      font-weight: bold;
+    }
+    .farewell-notice-desc {
+      font-size: 0.85rem;
+      color: #ccc;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .farewell-notice-desc strong {
+      color: #ffb7c5;
+    }
+    .farewell-system-box {
+      background: rgba(10, 14, 25, 0.85);
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      border-radius: 12px;
+      padding: 1rem 0.8rem;
+      margin-bottom: 1.3rem;
+      text-align: center;
+    }
+    .farewell-system-title {
+      color: #ffd700;
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.2rem;
+    }
+    .farewell-system-sub {
+      color: #ff8da1;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 0.3rem;
+    }
+    .farewell-system-note {
+      color: #aaa;
+      font-size: 0.75rem;
+      margin-bottom: 0.9rem;
+      line-height: 1.4;
+    }
+    .farewell-parts-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    @media (min-width: 520px) {
+      .farewell-parts-grid {
+        flex-direction: row;
+      }
+    }
+    .farewell-part-item {
+      flex: 1;
+      background: rgba(25, 20, 35, 0.9);
+      border: 1px solid rgba(255, 183, 197, 0.25);
+      border-radius: 8px;
+      padding: 0.75rem 0.4rem;
+      text-align: center;
+    }
+    .farewell-part-item.highlight {
+      border-color: rgba(255, 215, 0, 0.55);
+      background: rgba(35, 25, 30, 0.9);
+    }
+    .farewell-part-tag {
+      color: #ff8da1;
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+    .farewell-part-time {
+      font-family: var(--font-serif);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: bold;
+      margin-bottom: 0.2rem;
+    }
+    .farewell-part-plan {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-bottom: 0.3rem;
+    }
+    .farewell-part-price {
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+    .farewell-part-price span {
+      color: #ffd700;
+      font-size: 1.05rem;
+      font-weight: bold;
+    }
+    .farewell-part-price small {
+      font-size: 0.7rem;
+    }
+    .farewell-perks-container {
+      background: linear-gradient(135deg, rgba(30, 20, 40, 0.75), rgba(20, 30, 40, 0.75));
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      border-radius: 12px;
+      padding: 1rem 0.8rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .farewell-perk-badge {
+      display: inline-block;
+      background: linear-gradient(90deg, #ff4d6d, #f77f00);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: bold;
+      padding: 3px 12px;
+      border-radius: 12px;
+      margin-bottom: 0.8rem;
+      letter-spacing: 0.05em;
+      box-shadow: 0 0 10px rgba(255, 77, 109, 0.5);
+    }
+    .farewell-perk-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      text-align: left;
+      margin-bottom: 0.8rem;
+    }
+    .farewell-perk-card {
+      display: flex;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      padding: 0.65rem 0.8rem;
+      align-items: center;
+    }
+    .farewell-perk-icon {
+      font-size: 1.4rem;
+    }
+    .farewell-perk-text strong {
+      display: block;
+      color: #ffd700;
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+    .farewell-perk-text p {
+      color: #ddd;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .farewell-cheer {
+      color: #ffb7c5;
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin: 0.4rem 0 0 0;
+    }
+    /* Form */
+    .farewell-form-wrapper {
+      background: rgba(10, 10, 18, 0.95);
+      border: 1px solid rgba(197, 160, 89, 0.4);
+      border-radius: 12px;
+      padding: 1.2rem 1rem;
+    }
+    .farewell-form-title {
+      color: #ffd700;
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.05em;
+    }
+    .farewell-form-group {
+      margin-bottom: 1rem;
+    }
+    .farewell-form-label {
+      display: block;
+      font-size: 0.85rem;
+      color: #ccc;
+      margin-bottom: 0.4rem;
+    }
+    .farewell-req {
+      color: #ff4d6d;
+      font-weight: bold;
+    }
+    .farewell-part-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .farewell-radio-label {
+      cursor: pointer;
+      display: block;
+    }
+    .farewell-radio-label input[type="radio"] {
+      display: none;
+    }
+    .farewell-radio-content {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(20, 20, 30, 0.8);
+      border-radius: 8px;
+      padding: 0.6rem 0.2rem;
+      text-align: center;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .farewell-radio-label input[type="radio"]:checked + .farewell-radio-content {
+      border-color: #ffd700;
+      background: linear-gradient(145deg, rgba(224, 150, 175, 0.25), rgba(197, 160, 89, 0.3));
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+    .farewell-radio-content .part-name {
+      color: #ff8da1;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+    .farewell-radio-label input[type="radio"]:checked + .farewell-radio-content .part-name {
+      color: #ffd700;
+    }
+    .farewell-radio-content .part-hours {
+      color: #eee;
+      font-size: 0.72rem;
+    }
+    .farewell-radio-content .part-cost {
+      color: #ffd700;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .farewell-input, .farewell-select {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      background: #141824;
+      border: 1px solid rgba(197, 160, 89, 0.4);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+    }
+    .farewell-input:focus, .farewell-select:focus {
+      outline: none;
+      border-color: #ffd700;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+    }
+    .farewell-form-row {
+      display: flex;
+      gap: 8px;
+    }
+    .farewell-submit-btn {
+      width: 100%;
+      padding: 0.85rem;
+      margin-top: 0.5rem;
+      background: linear-gradient(135deg, #e94560 0%, #c5a059 100%);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .farewell-submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(233, 69, 96, 0.6);
+    }
+    .farewell-submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .farewell-form-note {
+      font-size: 0.72rem;
+      color: #888;
+      text-align: center;
+      margin-top: 0.6rem;
+      line-height: 1.3;
+    }
   </style>
 </head>
 
@@ -424,6 +812,161 @@
 
     <!-- Content Containers -->
     <div id="tab-home" class="tab-content active">
+    <!-- みりゅう最終日 お知らせ＆専用予約フォーム -->
+    <section id="miryu-farewell-section" class="farewell-card">
+      <div class="farewell-badge">
+        <span class="farewell-badge-sparkle">✦</span>
+        <span>SPECIAL ANNOUNCEMENT</span>
+        <span class="farewell-badge-sparkle">✦</span>
+      </div>
+
+      <div class="farewell-header">
+        <p class="farewell-sub">会員制BAR 銀座NOA</p>
+        <h2 class="farewell-title">10月31日<br><span class="farewell-highlight">みりゅう最終日</span>のお知らせ</h2>
+      </div>
+
+      <div class="farewell-body">
+        <div class="farewell-text-block">
+          <p class="farewell-lead">10月31日をもちまして<br><strong class="farewell-strong">みりゅう卒業します！</strong></p>
+          <p class="farewell-desc">
+            最終日もしくは10月中に<br>是非遊びに来てくださいね！
+          </p>
+        </div>
+
+        <div class="farewell-notice-box">
+          <div class="farewell-notice-icon">🍾</div>
+          <div class="farewell-notice-content">
+            <h4 class="farewell-notice-title">【ボトルキープのお客様へ】</h4>
+            <p class="farewell-notice-desc">
+              もし31日まで来られないボトルキープのお客様のボトルは、<strong>最終日皆さんで飲み干します</strong>ので、マイボトルがある方は是非31日までに飲みに来てくださいね！
+            </p>
+          </div>
+        </div>
+
+        <div class="farewell-system-box">
+          <div class="farewell-system-title">特別最終日のみ【3部制】営業</div>
+          <p class="farewell-system-sub">ご予約はお早めに！(入れ替え制)</p>
+          <p class="farewell-system-note">※人数によっては立ち飲みスタイルになる可能性もございますのでご了承ください！</p>
+
+          <div class="farewell-parts-grid">
+            <!-- 1部 -->
+            <div class="farewell-part-item">
+              <div class="farewell-part-tag">🌸 1部</div>
+              <div class="farewell-part-time">13:00 〜 16:00</div>
+              <div class="farewell-part-plan">3時間飲み放題</div>
+              <div class="farewell-part-price">おひとり様 <span>10,000円</span><small>(税込)</small></div>
+            </div>
+
+            <!-- 2部 -->
+            <div class="farewell-part-item">
+              <div class="farewell-part-tag">🌸 2部</div>
+              <div class="farewell-part-time">16:00 〜 19:00</div>
+              <div class="farewell-part-plan">3時間飲み放題</div>
+              <div class="farewell-part-price">おひとり様 <span>10,000円</span><small>(税込)</small></div>
+            </div>
+
+            <!-- 3部 -->
+            <div class="farewell-part-item highlight">
+              <div class="farewell-part-tag">🌸 3部</div>
+              <div class="farewell-part-time">19:00 〜 22:00</div>
+              <div class="farewell-part-plan">3時間飲み放題</div>
+              <div class="farewell-part-price">おひとり様 <span>15,000円</span><small>(税込)</small></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- スペシャル特典 -->
+        <div class="farewell-perks-container">
+          <div class="farewell-perk-badge">※最終日のみ スペシャル特典！！ (3部全ての方OK)</div>
+          <div class="farewell-perk-cards">
+            <div class="farewell-perk-card">
+              <span class="farewell-perk-icon">🍷</span>
+              <div class="farewell-perk-text">
+                <strong>当日ワイン・ボトル【半額】</strong>
+                <p>当日メニューのワイン、ボトルの金額から半額にてご購入出来ます。皆さんで飲むのもあり、持って帰るのもありです！</p>
+              </div>
+            </div>
+            <div class="farewell-perk-card">
+              <span class="farewell-perk-icon">🍱</span>
+              <div class="farewell-perk-text">
+                <strong>食べ物【持ち込み無料】</strong>
+                <p>当日食べ物の持ち込み代は取りませんので、是非持ち込んでください笑</p>
+              </div>
+            </div>
+          </div>
+          <p class="farewell-cheer">是非皆さま 遊びに来てください！✨</p>
+        </div>
+
+        <!-- 予約フォーム -->
+        <div class="farewell-form-wrapper">
+          <div class="farewell-form-title">
+            <span>🌸</span> 10月31日 最終日ご予約フォーム <span>🌸</span>
+          </div>
+
+          <form id="farewell-form" onsubmit="submitFarewellReservation(event)">
+            <div class="farewell-form-group">
+              <label class="farewell-form-label">参加する部を選択 <span class="farewell-req">*</span></label>
+              <div class="farewell-part-selector">
+                <label class="farewell-radio-label">
+                  <input type="radio" name="farewell-part" value="part1" checked>
+                  <div class="farewell-radio-content">
+                    <span class="part-name">🌸 1部</span>
+                    <span class="part-hours">13:00~16:00</span>
+                    <span class="part-cost">¥10,000</span>
+                  </div>
+                </label>
+                <label class="farewell-radio-label">
+                  <input type="radio" name="farewell-part" value="part2">
+                  <div class="farewell-radio-content">
+                    <span class="part-name">🌸 2部</span>
+                    <span class="part-hours">16:00~19:00</span>
+                    <span class="part-cost">¥10,000</span>
+                  </div>
+                </label>
+                <label class="farewell-radio-label">
+                  <input type="radio" name="farewell-part" value="part3">
+                  <div class="farewell-radio-content">
+                    <span class="part-name">🌸 3部</span>
+                    <span class="part-hours">19:00~22:00</span>
+                    <span class="part-cost">¥15,000</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="farewell-form-group">
+              <label class="farewell-form-label" for="farewell-name">お名前 (ニックネーム可) <span class="farewell-req">*</span></label>
+              <input type="text" id="farewell-name" class="farewell-input" required placeholder="例: みりゅうファン">
+            </div>
+
+            <div class="farewell-form-row">
+              <div class="farewell-form-group" style="flex: 1;">
+                <label class="farewell-form-label" for="farewell-count">ご参加人数 <span class="farewell-req">*</span></label>
+                <select id="farewell-count" class="farewell-select">
+                  <option value="1">1名様</option>
+                  <option value="2">2名様</option>
+                  <option value="3">3名様</option>
+                  <option value="4">4名様</option>
+                  <option value="5">5名様</option>
+                  <option value="6">6名様以上</option>
+                </select>
+              </div>
+
+              <div class="farewell-form-group" style="flex: 1.4;">
+                <label class="farewell-form-label" for="farewell-contact">連絡先 (任意)</label>
+                <input type="text" id="farewell-contact" class="farewell-input" placeholder="電話番号またはLINE ID">
+              </div>
+            </div>
+
+            <button type="submit" id="farewell-submit-btn" class="farewell-submit-btn">
+              <span class="btn-text">10月31日の予約を申し込む ✦</span>
+            </button>
+            <p class="farewell-form-note">※ご予約完了後、自動的にお席（または立ち飲み枠）を確保いたします。<br>「スケジュール/予約」タブの予約履歴からもいつでもご確認いただけます。</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <!-- 1. ENDED View -->
     <div id="view-ended" class="state-message hidden">
       <h2>本日の営業は終了いたしました</h2>
@@ -517,6 +1060,12 @@
       <!-- Weekly Schedule Section -->
       <section id="weekly-section" class="weekly-section">
         <h3 class="weekly-title">キャストスケジュールと<br>お客様ご予約</h3>
+        <!-- 予約履歴ボタン -->
+        <div style="text-align: center; margin: 0 0 1.2rem 0;">
+          <button onclick="openReservationHistoryModal()" style="display: inline-flex; align-items: center; gap: 8px; padding: 0.5rem 1.3rem; background: linear-gradient(135deg, rgba(16,21,40,0.95), rgba(15,52,96,0.8)); border: 1px solid rgba(197,160,89,0.5); border-radius: 8px; color: #c5a059; font-family: var(--font-serif); font-size: 0.85rem; cursor: pointer; letter-spacing: 0.05em; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#c5a059'; this.style.boxShadow='0 0 12px rgba(197,160,89,0.3)'" onmouseout="this.style.borderColor='rgba(197,160,89,0.5)'; this.style.boxShadow='none'">
+            <span style="font-size: 1.1em;">📋</span> 予約履歴を見る <span id="history-badge" style="background: #e94560; color: #fff; font-size: 0.7rem; padding: 1px 7px; border-radius: 10px; font-family: var(--font-sans); display: none;"></span>
+          </button>
+        </div>
         <div id="weekly-list" class="weekly-list">
           <!-- JS will populate -->
         </div>
@@ -536,6 +1085,9 @@
           <span class="btn-text" style="flex-grow: 1; text-align: center; font-size: 0.95rem;">カードコレクション</span> 
           <span class="star-icon">✦</span>
         </button>
+
+        <!-- 守護トリオ＆総合アドバイス表示エリア -->
+        <div id="guardian-trio-section" style="width: 100%; max-width: 500px; margin-top: 1.5rem;"></div>
       </div>
     </div>
 
@@ -637,12 +1189,53 @@
       </div>
     </div>
 
+    <!-- Trio Card Detail Modal -->
+    <div id="trio-detail-modal" class="modal hidden" style="z-index: 5000; position: fixed;">
+      <div class="modal-content trio-modal-content" style="max-width: 90%; width: 360px; background: rgba(10, 12, 24, 0.95); border: 1px solid #c5a059; padding: 1.5rem 1.2rem; border-radius: 16px; position: relative; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(197,160,89,0.15);">
+        <button onclick="closeTrioDetailModal()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #c5a059; font-size: 1.8rem; cursor: pointer; line-height: 1; padding: 0; margin: 0; z-index: 10;">&times;</button>
+        
+        <div id="trio-modal-rank-badge" class="trio-rank-badge" style="position: relative; top: 0; left: 0; transform: none; display: inline-block; margin-bottom: 0.3rem;">1st</div>
+        <div id="trio-modal-role" style="font-size: 0.82rem; color: #c5a059; font-weight: bold; margin-bottom: 0.5rem; letter-spacing: 0.05em;">【主守護】あなたの基本となる強み・本質</div>
+        
+        <div id="trio-modal-img-wrapper" style="max-width: 170px; width: 48%; margin: 0.5rem auto; border-radius: 4px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.7);">
+          <img id="trio-modal-img" src="" alt="Card Image" style="width: 100%; height: auto; object-fit: contain; display: block; border-radius: 4px;">
+        </div>
+        
+        <h3 id="trio-modal-card-name" style="font-family: var(--font-serif); color: #ffd700; font-size: 1.2rem; margin: 0.5rem 0 0.2rem 0; letter-spacing: 0.05em;">カード名</h3>
+        <div id="trio-modal-element-badge" class="trio-card-element" style="font-size: 0.75rem; padding: 2px 10px; margin-bottom: 0.8rem;">属性</div>
+
+        <div id="trio-modal-desc" style="font-size: 0.82rem; color: #e0e0e0; line-height: 1.55; background: rgba(255,255,255,0.04); padding: 0.8rem 1rem; border-radius: 10px; border: 1px solid rgba(197,160,89,0.2); text-align: left; margin-bottom: 0.8rem;">
+          説明
+        </div>
+        
+        <div id="trio-modal-stats" style="font-size: 0.78rem; color: rgba(255,255,255,0.6);">
+          これまでの獲得回数: <span id="trio-modal-count" style="color: #ffd700; font-weight: bold; font-size: 0.9rem;">0</span> 回
+        </div>
+      </div>
+    </div>
+
     <!-- Success Modal -->
     <div id="success-modal" class="modal hidden">
       <div class="modal-content">
         <h3 style="color:#e94560; margin-bottom:1rem;">予約完了</h3>
         <p id="success-message" class="modal-message"></p>
-        <button class="modal-ok-btn" onclick="closeSuccessModal()">閉じる</button>
+        <div style="display: flex; gap: 0.8rem; margin-top: 1rem;">
+          <button class="modal-ok-btn" onclick="closeSuccessModal()" style="flex: 1;">閉じる</button>
+          <button class="modal-ok-btn" onclick="closeSuccessModal(); openReservationHistoryModal();" style="flex: 1; background: rgba(197,160,89,0.15); border: 1px solid #c5a059; color: #c5a059;">📋 予約履歴</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reservation History Modal -->
+    <div id="reservation-history-modal" class="modal hidden" style="z-index: 3500; position: fixed;">
+      <div class="modal-content" style="max-width: 90%; width: 400px; max-height: 85vh; overflow-y: auto; background: #0a0a0f; border: 1px solid rgba(197,160,89,0.5); padding: 1.5rem 1rem; position: relative;">
+        <button onclick="closeReservationHistoryModal()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #c5a059; font-size: 1.8rem; cursor: pointer; line-height: 1; padding: 0; margin: 0; z-index: 10;">&times;</button>
+        <h3 style="color: #c5a059; font-family: var(--font-serif); font-size: 1.2rem; text-align: center; margin-bottom: 0.3rem; letter-spacing: 0.1em;">📋 予約履歴</h3>
+        <p style="font-size: 0.75rem; color: #888; text-align: center; margin-bottom: 1rem;">このブラウザから予約した履歴です</p>
+        <div id="reservation-history-list" style="margin-bottom: 1rem;">
+          <!-- JS will populate -->
+        </div>
+        <button class="modal-ok-btn" onclick="closeReservationHistoryModal()" style="width:100%; padding:0.8rem; background: transparent; border: 1px solid #c5a059; color: #c5a059; font-family: var(--font-serif); letter-spacing: 0.1em; cursor: pointer;">閉じる</button>
       </div>
     </div>
 
@@ -683,7 +1276,29 @@
 
         <!-- マスター時メッセージ -->
         <p id="collection-desc-master" class="hidden" style="font-size:0.85rem; color:#c5a059; margin-bottom:1rem; text-align: center; text-shadow: 0 0 5px rgba(197,160,89,0.5);">すべてのアルカナとSPカードを解き明かした<br>真理の到達者の証。<br>コンプリート達成 (24/24)</p>
-        
+
+        <!-- 累計スタッツ & ランク進捗 -->
+        <div id="collection-stats-bar" style="margin-bottom: 1rem; padding: 0.8rem; background: linear-gradient(135deg, rgba(197,160,89,0.08) 0%, rgba(10,10,15,0.9) 100%); border: 1px solid rgba(197,160,89,0.25); border-radius: 8px;">
+          <!-- 累計占い回数 -->
+          <div style="display: flex; align-items: baseline; justify-content: center; gap: 6px; margin-bottom: 0.6rem;">
+            <span style="font-size: 0.7rem; color: #999; letter-spacing: 0.05em;">累計占い回数</span>
+            <span id="total-draws-count" style="font-size: 1.6rem; font-family: var(--font-serif); color: #c5a059; font-weight: bold; text-shadow: 0 0 8px rgba(197,160,89,0.4); min-width: 2ch; text-align: center;">0</span>
+            <span style="font-size: 0.75rem; color: #999;">回</span>
+          </div>
+          <!-- 次ランク進捗 -->
+          <div id="next-rank-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span id="next-rank-label" style="font-size: 0.7rem; color: #c5a059; letter-spacing: 0.03em;"></span>
+              <span id="next-rank-progress-text" style="font-size: 0.7rem; color: #999;"></span>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-bottom: 4px;">
+              <div id="next-rank-progress-fill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #c5a059, #e8d5a3); border-radius: 3px; transition: width 1s ease-out;"></div>
+            </div>
+            <p id="next-rank-hint" style="font-size: 0.65rem; color: #888; text-align: center; margin: 0;"></p>
+          </div>
+        </div>
+
+
         <div class="collection-grid" id="collection-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem;">
           <!-- JS will populate -->
         </div>
@@ -826,10 +1441,32 @@
     setInterval(updateClock, 1000);
     updateClock();
 
+    /* Visitor ID: localStorageに固有IDを生成・保存 */
+    function getOrCreateVisitorId() {
+      try {
+        let vid = localStorage.getItem('noa_visitor_id');
+        if (!vid) {
+          // UUID v4 形式で生成
+          vid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+          localStorage.setItem('noa_visitor_id', vid);
+        }
+        return vid;
+      } catch (e) {
+        return 'unknown';
+      }
+    }
+    const VISITOR_ID = getOrCreateVisitorId();
+
     /* Main Logic */
     async function fetchStatus() {
       try {
-        const res = await fetch('/api/status-v2');
+        const res = await fetch('/api/status-v2', {
+          headers: { 'X-Visitor-Id': VISITOR_ID }
+        });
         if (!res.ok) return;
         const data = await res.json();
         updateUI(data);
@@ -940,6 +1577,17 @@
       // Always render weekly schedule regardless of state
       // Pass state to handle "ENDED" logic (skip today)
       renderSchedule(data.schedules, castMaster, state, data.logicalDate);
+
+      // 営業終了後（11月1日以降）はみりゅう最終日予約フォームも受付終了表示にする
+      const farewellFormWrapper = document.querySelector('.farewell-form-wrapper');
+      if (farewellFormWrapper && data.logicalDate && data.logicalDate > '2026-10-31') {
+        farewellFormWrapper.innerHTML = `
+          <div style="text-align: center; padding: 2rem 1rem; color: #aaa; background: rgba(0,0,0,0.3); border-radius: 8px;">
+            <p style="font-size: 1.05rem; color: #ff6b8b; font-weight: bold; margin-bottom: 0.5rem; font-family: var(--font-serif);">【ご予約受付終了】</p>
+            <p style="font-size: 0.85rem; color: #ccc; line-height: 1.6;">10月31日をもちまして銀座NOAの営業は終了いたしました。<br>長らくのご愛顧誠にありがとうございました。</p>
+          </div>
+        `;
+      }
     }
 
     function renderSeats(seats, isReserved) {
@@ -1017,7 +1665,8 @@
       // If ENDED, start from tomorrow (i=1), else today (i=0)
       const startIndex = (currentState === 'ENDED') ? 1 : 0;
 
-      // Loop 30 days starting depending on state
+      // Loop 30 days starting depending on state (ただし10月31日の営業終了日まで)
+      let renderedCount = 0;
       for (let i = startIndex; i < 30; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
@@ -1026,6 +1675,11 @@
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const d = String(date.getDate()).padStart(2, '0');
         const dateKey = `${y}-${m}-${d}`;
+
+        // 営業終了日 (2026-10-31) を超えた日付は表示しない
+        if (dateKey > '2026-10-31') {
+          break;
+        }
 
         const days = ['日', '月', '火', '水', '木', '金', '土'];
         const dayLabel = `${Number(m)}月${Number(d)}日(${days[date.getDay()]})`;
@@ -1043,7 +1697,8 @@
         let boxLeft = 0;
         let isZeroSeats = false;
 
-        if (sched.type !== 'holiday' && sched.type !== 'reserved' && sched.type !== 'full') {
+        // 10月31日以内の営業日のみ予約可能
+        if (dateKey <= '2026-10-31' && sched.type !== 'holiday' && sched.type !== 'reserved' && sched.type !== 'full') {
           canReserve = true;
           const reservations = sched.reservations || [];
 
@@ -1120,11 +1775,26 @@
             `;
 
         listEl.appendChild(card);
+        renderedCount++;
+      }
+
+      // 営業終了後（11月以降）または表示枠がない場合の案内
+      if (renderedCount === 0) {
+        listEl.innerHTML = `
+          <div style="text-align:center; padding: 2.5rem 1rem; color: #aaa; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(197,160,89,0.3);">
+            <p style="font-size: 1.1rem; color: #c5a059; font-weight: bold; margin-bottom: 0.5rem; font-family: var(--font-serif);">営業終了のお知らせ</p>
+            <p style="font-size: 0.85rem; line-height: 1.6; color: #ccc;">銀座NOAは2026年10月31日をもちまして営業を終了いたしました。<br>これまで温かいご愛顧をいただき、誠にありがとうございました。</p>
+          </div>
+        `;
       }
     }
 
     // Reservation Logic
     function openReservationModal(date) {
+      if (date > '2026-10-31') {
+        alert('銀座NOAは10月31日をもちまして営業終了のため、11月以降のご予約は受け付けておりません。');
+        return;
+      }
       document.getElementById('res-date-label').textContent = date;
       document.getElementById('res-form').reset();
       document.getElementById('reservation-modal').classList.remove('hidden');
@@ -1151,6 +1821,131 @@
       document.getElementById('success-modal').classList.add('hidden');
     }
 
+    // --- 予約履歴機能 ---
+    const HISTORY_KEY = 'noa_reservation_history';
+
+    function saveReservationHistory(reservation) {
+      let history = [];
+      try {
+        const stored = localStorage.getItem(HISTORY_KEY);
+        if (stored) history = JSON.parse(stored);
+      } catch(e) {}
+
+      history.unshift({
+        ...reservation,
+        createdAt: new Date().toISOString()
+      });
+
+      // 最大50件
+      if (history.length > 50) history.length = 50;
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      updateHistoryBadge();
+    }
+
+    function getReservationHistory() {
+      try {
+        const stored = localStorage.getItem(HISTORY_KEY);
+        if (stored) return JSON.parse(stored);
+      } catch(e) {}
+      return [];
+    }
+
+    function getDayOfWeek(dateStr) {
+      const days = ['日', '月', '火', '水', '木', '金', '土'];
+      const d = new Date(dateStr + 'T00:00:00+09:00');
+      return days[d.getDay()];
+    }
+
+    function isUpcoming(dateStr) {
+      const now = new Date();
+      // JST today
+      const jstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+      const todayStr = jstNow.toISOString().split('T')[0];
+      return dateStr >= todayStr;
+    }
+
+    function openReservationHistoryModal() {
+      const modal = document.getElementById('reservation-history-modal');
+      if (!modal) return;
+      renderReservationHistory();
+      modal.classList.remove('hidden');
+    }
+
+    function closeReservationHistoryModal() {
+      const modal = document.getElementById('reservation-history-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderReservationHistory() {
+      const list = document.getElementById('reservation-history-list');
+      if (!list) return;
+
+      const history = getReservationHistory();
+
+      if (history.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 2rem 1rem; color: #666;"><p style="font-size: 0.9rem; margin-bottom: 0.5rem;">予約履歴はまだありません</p><p style="font-size: 0.75rem; color: #555;">スケジュール画面から予約すると\u003cbr\u003eこちらに履歴が表示されます</p></div>';
+        return;
+      }
+
+      let html = '';
+      let hasUpcoming = false;
+      let hasPast = false;
+
+      history.forEach(function(r) {
+        const upcoming = isUpcoming(r.date);
+        const dow = getDayOfWeek(r.date);
+        let seatLabel = r.type === 'counter' ? 'カウンター' : 'ボックス';
+        if (r.type === 'part1') seatLabel = '🌸1部(13:00~16:00)';
+        else if (r.type === 'part2') seatLabel = '🌸2部(16:00~19:00)';
+        else if (r.type === 'part3') seatLabel = '🌸3部(19:00~22:00)';
+
+        if (upcoming && !hasUpcoming) {
+          html += '<div style="font-size: 0.7rem; color: #c5a059; margin-bottom: 0.5rem; letter-spacing: 0.05em; padding-left: 4px;">▼ 今後の予約</div>';
+          hasUpcoming = true;
+        }
+        if (!upcoming && !hasPast) {
+          html += '<div style="font-size: 0.7rem; color: #666; margin-bottom: 0.5rem; margin-top: ' + (hasUpcoming ? '1rem' : '0') + '; letter-spacing: 0.05em; padding-left: 4px;">▼ 過去の予約</div>';
+          hasPast = true;
+        }
+
+        const opacity = upcoming ? '1' : '0.5';
+        const borderColor = upcoming ? 'rgba(197,160,89,0.5)' : 'rgba(100,100,100,0.3)';
+        const bgColor = upcoming ? 'rgba(197,160,89,0.06)' : 'rgba(30,30,30,0.5)';
+        const dateColor = upcoming ? '#c5a059' : '#888';
+
+        html += '<div style="opacity: ' + opacity + '; background: ' + bgColor + '; border: 1px solid ' + borderColor + '; border-radius: 8px; padding: 0.8rem; margin-bottom: 0.6rem;">';
+        html += '  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">';
+        html += '    <span style="color: ' + dateColor + '; font-family: var(--font-serif); font-size: 1rem; font-weight: bold;">📅 ' + r.date + ' (' + dow + ')</span>';
+        html += '    <span style="color: #aaa; font-size: 0.8rem;">⏰ ' + r.time + '</span>';
+        html += '  </div>';
+        html += '  <div style="display: flex; justify-content: space-between; align-items: center;">';
+        html += '    <span style="color: #ddd; font-size: 0.85rem;">💺 ' + seatLabel + ' / ' + r.count + '名</span>';
+        html += '    <span style="color: #999; font-size: 0.8rem;">👤 ' + r.name + '</span>';
+        html += '  </div>';
+        html += '</div>';
+      });
+
+      list.innerHTML = html;
+    }
+
+    function updateHistoryBadge() {
+      const badge = document.getElementById('history-badge');
+      if (!badge) return;
+      const history = getReservationHistory();
+      const upcomingCount = history.filter(function(r) { return isUpcoming(r.date); }).length;
+      if (upcomingCount > 0) {
+        badge.textContent = upcomingCount;
+        badge.style.display = 'inline';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    // ページ読み込み時にバッジ更新
+    document.addEventListener('DOMContentLoaded', function() {
+      updateHistoryBadge();
+    });
+
     function saveIntroCast() {
       const select = document.getElementById('intro-cast-select');
       if (select && select.value) {
@@ -1159,8 +1954,115 @@
       }
     }
 
+    /* みりゅう最終日 特別予約送信処理 */
+    async function submitFarewellReservation(event) {
+      if (event) event.preventDefault();
+
+      const partRadio = document.querySelector('input[name="farewell-part"]:checked');
+      const type = partRadio ? partRadio.value : 'part1';
+      const name = document.getElementById('farewell-name').value.trim();
+      const count = document.getElementById('farewell-count').value;
+      const contact = document.getElementById('farewell-contact').value.trim();
+      const btn = document.getElementById('farewell-submit-btn');
+
+      if (!name) {
+        alert('お名前を入力してください');
+        return;
+      }
+
+      const date = '2026-10-31';
+      let time = '13:00';
+      let partLabel = '🌸第1部 (13:00〜16:00)';
+      if (type === 'part2') {
+        time = '16:00';
+        partLabel = '🌸第2部 (16:00〜19:00)';
+      } else if (type === 'part3') {
+        time = '19:00';
+        partLabel = '🌸第3部 (19:00〜22:00)';
+      }
+
+      // LIFF ID check
+      let lineUserId = '';
+      try {
+        if (window.liff && liff.id && liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          lineUserId = profile.userId;
+        }
+      } catch (e) {
+        console.log('LIFF info skipped:', e);
+      }
+
+      const introCast = localStorage.getItem('noa_intro_cast') || '';
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-text">送信中...</span>';
+
+      try {
+        const res = await fetch('/api/reserve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date,
+            name,
+            type,
+            count: parseInt(count, 10),
+            time,
+            contact,
+            lineUserId,
+            introCast
+          })
+        });
+        const json = await res.json();
+        if (json.error) {
+          alert('エラー: ' + json.error);
+        } else {
+          // 予約回数をカウントアップ
+          let resCount = parseInt(localStorage.getItem('noa_reservation_count') || '0', 10);
+          localStorage.setItem('noa_reservation_count', resCount + 1);
+
+          // 予約履歴をlocalStorageに保存
+          saveReservationHistory({
+            date,
+            name,
+            type,
+            count: parseInt(count, 10),
+            time
+          });
+
+          // フォームリセット
+          document.getElementById('farewell-name').value = '';
+          document.getElementById('farewell-contact').value = '';
+
+          openSuccessModal(`【10月31日 みりゅう最終日】
+ご予約ありがとうございます！
+お席を確保いたしました。
+
+【ご予約内容】
+日時：2026年10月31日 ${partLabel}
+お名前：${name} 様
+ご人数：${count}名様
+
+当日はみりゅうママ卒業特別営業となります。
+お会いできるのを心より楽しみにしております！
+
+※予約履歴は「スケジュール/予約」画面からいつでもご確認いただけます。
+※変更・キャンセルの際は店舗までご連絡ください。`);
+          fetchStatus();
+        }
+      } catch (e) {
+        alert('通信エラーが発生しました');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-text">10月31日の予約を申し込む ✦</span>';
+      }
+    }
+
     async function submitReservation() {
       const date = document.getElementById('res-date-label').textContent;
+      if (date > '2026-10-31') {
+        alert('銀座NOAは10月31日をもちまして営業終了のため、11月以降のご予約は受け付けておりません。');
+        return;
+      }
       const name = document.getElementById('res-name').value;
       const typeRaw = document.querySelector('input[name="res-type"]:checked');
       const type = typeRaw ? typeRaw.value : 'counter';
@@ -1201,6 +2103,9 @@
           let resCount = parseInt(localStorage.getItem('noa_reservation_count') || '0', 10);
           localStorage.setItem('noa_reservation_count', resCount + 1);
 
+          // 予約履歴をlocalStorageに保存
+          saveReservationHistory({ date, name, type, count: parseInt(count, 10), time });
+
           closeReservationModal();
           openSuccessModal(`ご予約ありがとうございます。
 お席を確保いたしました。
@@ -1210,8 +2115,7 @@
 お名前：${name} 様
 席タイプ：${type === 'counter' ? 'カウンター' : 'ボックス'} (${count}名)
 
-恐れ入りますが、予約完了メール等は送信されませんので、
-この画面のスクリーンショットを保存していただくようお願いいたします。
+予約履歴は「スケジュール/予約」画面からいつでも確認できます。
 
 当日お会いできるのを楽しみにしております。
 ※変更・キャンセルの際は店舗までご連絡ください。`);
@@ -1355,6 +2259,8 @@
     });
   </script>
   <script src="/js/tarot-data.js"></script>
+  <script src="/js/guardian-trio-data.js"></script>
+  <script src="/js/guardian-trio.js"></script>
   <script src="/js/collection.js"></script>
   <script src="/fireflies.js"></script>
 </body>

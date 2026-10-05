@@ -1,15 +1,14 @@
 // マスターランクの判定（全24カードの最小引取回数）
 function getMasterRank() {
+    let stats = {};
+    try {
+        const storedStats = localStorage.getItem('noa_tarot_stats');
+        if (storedStats) stats = JSON.parse(storedStats);
+    } catch(e) {}
+
     let minCount = Infinity;
     for (let i = 0; i < 24; i++) {
-        let count = 0;
-        try {
-            const statStr = localStorage.getItem(`tarot_card_${i}`);
-            if (statStr) {
-                const stat = JSON.parse(statStr);
-                count = stat.count || 0;
-            }
-        } catch(e) {}
+        const count = (stats[i] && stats[i].count) ? stats[i].count : 0;
         if (count < minCount) minCount = count;
     }
     if (minCount === Infinity) minCount = 0;
@@ -214,6 +213,9 @@ function openCollectionModal() {
 
     // Render grid
     renderCollectionGrid();
+
+    // Update stats display
+    updateCollectionStats();
     
     // Show modal
     modal.classList.remove('hidden');
@@ -257,22 +259,30 @@ function renderCollectionGrid() {
 
     countSpan.textContent = collection.length;
 
+    const isMaster = localStorage.getItem('noa_tarot_master') === 'true';
+
     // tarotDeck comes from tarot-data.js
     for (let i = 0; i < tarotDeck.length; i++) { // Include all cards including SP
+        if (i >= 24 && !isMaster) continue; // マスターでない場合、SRカードは図鑑に表示しない
+
         const isCollected = collection.includes(i);
         const cardData = tarotDeck[i];
         
         const cardItem = document.createElement('div');
         cardItem.className = 'collection-item ' + (isCollected ? 'collected' : 'locked');
         
-        const imgName = cardData.name.toLowerCase().replace(/\s+/g, '_') + '.png';
+        let imgName = cardData.name.toLowerCase().replace(/\s+/g, '_') + '.png';
+        if (i >= 24) {
+            imgName = 'sr_' + imgName;
+        }
         const imgPath = `/images/${imgName}`;
 
         if (isCollected) {
             const cardStats = stats[i] || { count: 1, dates: [] }; // fallback for older saves
             
             let glowClass = '';
-            if (cardStats.count >= 20) glowClass = 'glow-rainbow';
+            if (i >= 24) glowClass = 'card-sr glow-rainbow';
+            else if (cardStats.count >= 20) glowClass = 'glow-rainbow';
             else if (cardStats.count >= 10) glowClass = 'glow-gold';
             else if (cardStats.count >= 7) glowClass = 'glow-strong';
             else if (cardStats.count >= 5) glowClass = 'glow-weak';
@@ -328,12 +338,19 @@ function renderCollectionGrid() {
                 document.getElementById('card-detail-modal').classList.remove('hidden');
             };
         } else {
-            const isSP = i >= 22; // Indices 22 and 23 are SP/Guardian cards
+            const isSR = i >= 24;
+            const isSP = i === 22 || i === 23;
+            const isSpecial = isSR || isSP;
+            
+            let iconText = '?';
+            if (isSR) iconText = 'SR';
+            else if (isSP) iconText = 'SP';
+            
             cardItem.innerHTML = `
-                <div class="col-img-wrapper locked-wrapper ${isSP ? 'sp-locked-wrapper' : ''}">
-                    <div class="${isSP ? 'sp-locked-icon' : 'locked-icon'}">${isSP ? 'SP' : '?'}</div>
+                <div class="col-img-wrapper locked-wrapper ${isSpecial ? 'sp-locked-wrapper' : ''}">
+                    <div class="${isSpecial ? 'sp-locked-icon' : 'locked-icon'}">${iconText}</div>
                 </div>
-                <div class="col-name ${isSP ? 'sp-locked-name' : 'locked-name'}">${isSP ? 'SECRET' : 'LOCKED'}</div>
+                <div class="col-name ${isSpecial ? 'sp-locked-name' : 'locked-name'}">${isSpecial ? 'SECRET' : 'LOCKED'}</div>
             `;
         }
 
@@ -363,4 +380,127 @@ function openFullscreenImage(src) {
 
 function closeFullscreenImage() {
     document.getElementById('fullscreen-image-modal').classList.add('hidden');
+}
+
+// --- 累計スタッツ & ランク進捗 ---
+
+function animateCountUp(element, target, duration) {
+    duration = duration || 800;
+    if (target === 0) {
+        element.textContent = '0';
+        return;
+    }
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // ease-out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        element.textContent = Math.floor(eased * target);
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.textContent = target;
+        }
+    }
+
+    requestAnimationFrame(update);
+}
+
+function updateCollectionStats() {
+    let stats = {};
+    try {
+        const storedStats = localStorage.getItem('noa_tarot_stats');
+        if (storedStats) stats = JSON.parse(storedStats);
+    } catch(e) {}
+
+    // --- 累計占い回数 ---
+    let totalDraws = 0;
+    Object.values(stats).forEach(function(s) { totalDraws += (s.count || 0); });
+
+    const totalEl = document.getElementById('total-draws-count');
+    if (totalEl) {
+        animateCountUp(totalEl, totalDraws);
+    }
+
+    // --- 次ランク進捗 ---
+    const rank = getMasterRank();
+    const nextRankLabel = document.getElementById('next-rank-label');
+    const nextRankProgressText = document.getElementById('next-rank-progress-text');
+    const nextRankProgressFill = document.getElementById('next-rank-progress-fill');
+    const nextRankHint = document.getElementById('next-rank-hint');
+
+    if (!nextRankLabel) return;
+
+    var nextRankName = '';
+    var nextThreshold = 0;
+    var qualifiedCount = 0;
+
+    if (rank >= 20) {
+        // PERFECT MASTER 達成済み
+        nextRankLabel.textContent = '✦ PERFECT MASTER ✦';
+        nextRankProgressText.textContent = '24/24';
+        nextRankProgressFill.style.width = '100%';
+        nextRankProgressFill.style.background = 'linear-gradient(90deg, #ff6666, #ffaa44, #ffff66, #66ff66, #6688ff, #aa66ff)';
+        nextRankHint.textContent = '究極の称号を手にした者';
+        nextRankHint.style.color = '#c5a059';
+        return;
+    }
+
+    if (rank >= 10) {
+        nextRankName = 'PERFECT MASTER';
+        nextThreshold = 20;
+    } else if (rank >= 5) {
+        nextRankName = 'ROYAL MASTER';
+        nextThreshold = 10;
+    } else if (rank >= 1) {
+        nextRankName = 'GRAND MASTER';
+        nextThreshold = 5;
+    } else {
+        nextRankName = 'MASTER';
+        nextThreshold = 1;
+    }
+
+    // 条件を満たしているカード数をカウント
+    for (var i = 0; i < 24; i++) {
+        var count = (stats[i] && stats[i].count) ? stats[i].count : 0;
+        if (count >= nextThreshold) qualifiedCount++;
+    }
+
+    var remaining = 24 - qualifiedCount;
+    var percent = Math.round((qualifiedCount / 24) * 100);
+
+    nextRankLabel.textContent = '次: ' + nextRankName;
+    nextRankProgressText.textContent = qualifiedCount + '/24';
+
+    // プログレスバーのアニメーション（少し遅延させて視覚効果を出す）
+    nextRankProgressFill.style.width = '0%';
+    setTimeout(function() {
+        nextRankProgressFill.style.width = percent + '%';
+    }, 100);
+
+    // ランクに応じたプログレスバーの色
+    if (rank >= 10) {
+        // ROYAL → PERFECT: 虹色に近い煌びやかさ
+        nextRankProgressFill.style.background = 'linear-gradient(90deg, #dfc5a0, #fff0d0, #dfc5a0)';
+    } else if (rank >= 5) {
+        // GRAND → ROYAL: シャンパンゴールド
+        nextRankProgressFill.style.background = 'linear-gradient(90deg, #e6e6e6, #ffffff, #e6e6e6)';
+    } else if (rank >= 1) {
+        // MASTER → GRAND: シルバー
+        nextRankProgressFill.style.background = 'linear-gradient(90deg, #c5a059, #e8d5a3)';
+    } else {
+        // 未達 → MASTER: 通常ゴールド
+        nextRankProgressFill.style.background = 'linear-gradient(90deg, #c5a059, #e8d5a3)';
+    }
+
+    // ヒントテキスト
+    if (rank === 0) {
+        nextRankHint.textContent = 'あと' + remaining + '種のカードを引こう';
+    } else {
+        nextRankHint.textContent = 'あと' + remaining + '枚のカードが' + nextThreshold + '回以上必要';
+    }
+    nextRankHint.style.color = '#888';
 }

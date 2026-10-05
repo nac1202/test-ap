@@ -75,64 +75,209 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ====================================================
+    //  魔法陣 Canvas Particle Engine
+    // ====================================================
+    let magicCanvasAnim = null;
+
     function triggerMagicCircle() {
         isAnimating = true;
-        
+
         // 魔法陣SE再生
         try {
             const magicAudio = new Audio('/audio/magic_circle.mp3');
             magicAudio.volume = 0.8;
             magicAudio.play().catch(e => console.log(e));
         } catch(e) {}
-        
-        // 魔法陣表示
+
+        // 魔法陣画像を表示
         const magicCircle = document.getElementById('magic-circle-container');
         if (magicCircle) {
             magicCircle.classList.add('magic-circle-active');
-
-            // コア発光を追加
-            const coreLight = document.createElement('div');
-            coreLight.classList.add('magic-core-light');
-            magicCircle.appendChild(coreLight);
-
-            // パーティクル発生ループ
-            magicParticleInterval = setInterval(() => {
-                spawnMagicParticle(magicCircle);
-                spawnMagicParticle(magicCircle); // 2個ずつ出して派手に
-            }, 100);
         }
-        
-        // 展開を待ってから占いスタート
+
+        // Canvasパーティクルエンジン起動
+        startMagicCanvasEffect();
+
+        // 2秒待機後に占い开始
         setTimeout(() => {
             playMagicSound();
             startDivination();
         }, 2000);
     }
 
-    function spawnMagicParticle(container) {
-        const particle = document.createElement('div');
-        particle.classList.add('magic-particle');
-        
-        // ランダムな方向と距離
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 150 + Math.random() * 200; // 150px〜350px飛ばす
-        const tx = Math.cos(angle) * distance;
-        const ty = Math.sin(angle) * distance;
-        
-        // 色をランダムに設定（ゴールド、白、たまにシアン）
-        const colors = ['#c5a059', '#ffffff', '#ffffff', '#e8cca1', '#00ffff'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        
-        particle.style.setProperty('--tx', `${tx}px`);
-        particle.style.setProperty('--ty', `${ty}px`);
-        particle.style.setProperty('--particle-color', color);
-        
-        container.appendChild(particle);
-        
-        // アニメーション終了後に削除
-        particle.addEventListener('animationend', () => {
-            particle.remove();
+    function startMagicCanvasEffect() {
+        const canvas = document.getElementById('magic-canvas');
+        if (!canvas) return;
+
+        // ── Adaptive Quality: デバイス性能に応じて品質を調整 ──
+        // スマホ / 低スペックPC判定（CPU数4以下 or 画面幅480px以下）
+        const isLowEnd = (navigator.hardwareConcurrency <= 4) || (window.innerWidth <= 480);
+        const Q = isLowEnd ? {
+            particleCount : 120,
+            trailLen      : 6,
+            shadowBlur    : false,
+        } : {
+            particleCount : 280,
+            trailLen      : 14,
+            shadowBlur    : true,
+        };
+
+        // Canvasリサイズ
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.opacity = '1';
+
+        const ctx    = canvas.getContext('2d');
+        const cx     = canvas.width  / 2;
+        const cy     = canvas.height / 2;
+        const startT = performance.now();
+        const DURATION = 3200; // ms
+
+        // --- パレット（ゴールド＆ホワイト系のみ）---
+        const ALL = [
+            '#ffffff',  // 純白
+            '#fff8dc',  // クリーム白
+            '#ffd700',  // ゴールド
+            '#ffc432',  // ブライトゴールド
+            '#ffb347',  // アンバーゴールド
+            '#c5a059',  // ディープゴールド
+            '#e8cca1',  // ライトゴールド
+            '#fffacd',  // レモンシフォン（白に近い）
+            '#ffeaa0',  // ペールゴールド
+        ];
+
+        // --- 1. パーティクル群 ---
+        const particles = Array.from({length: Q.particleCount}, () => {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 4 + Math.random() * 10;
+            const col   = ALL[Math.floor(Math.random() * ALL.length)];
+            return {
+                x: cx, y: cy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                r: 1.8 + Math.random() * 3.5,
+                alpha: 1.0,
+                col,
+                decay: 0.003 + Math.random() * 0.004,
+                trail: [],
+                gravity: 0.015 + Math.random() * 0.015,
+                friction: 0.992,
+            };
         });
+
+        // --- 2. リング波動 ---
+        const rings = [
+            { r: 0, maxR: Math.max(cx, cy) * 1.4, alpha: 0.9, width: 4, col: '#ffd700', delay: 0 },
+            { r: 0, maxR: Math.max(cx, cy) * 1.2, alpha: 0.6, width: 2, col: '#ffffff', delay: 200 },
+            { r: 0, maxR: Math.max(cx, cy) * 1.6, alpha: 0.4, width: 2, col: '#ffc432', delay: 400 },
+        ];
+
+        // --- 3. コアフラッシュ ---
+        let coreAlpha = 0;
+
+        function drawMagic(now) {
+            const elapsed = now - startT;
+            const progress = Math.min(elapsed / DURATION, 1);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'lighter';
+
+            // ⑤ コアフラッシュ
+            coreAlpha = progress < 0.15
+                ? progress / 0.15
+                : Math.max(0, 1 - (progress - 0.15) / 0.4);
+            if (coreAlpha > 0) {
+                const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 120 * (1 + progress));
+                grad.addColorStop(0,   `rgba(255,255,255,${coreAlpha})`);
+                grad.addColorStop(0.3, `rgba(255,220,100,${coreAlpha * 0.8})`);
+                grad.addColorStop(0.7, `rgba(0,255,255,${coreAlpha * 0.3})`);
+                grad.addColorStop(1,   'rgba(0,0,0,0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // ① リング波動
+            rings.forEach(ring => {
+                if (elapsed < ring.delay) return;
+                const t = (elapsed - ring.delay) / (DURATION * 0.9);
+                ring.r = Math.min(ring.maxR * t * 2, ring.maxR);
+                const fadeAlpha = ring.alpha * Math.max(0, 1 - ring.r / ring.maxR);
+                if (fadeAlpha > 0.01) {
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, ring.r, 0, Math.PI * 2);
+                    ctx.strokeStyle = ring.col;
+                    ctx.globalAlpha = fadeAlpha;
+                    ctx.lineWidth   = ring.width;
+                    ctx.shadowBlur  = 20;
+                    ctx.shadowColor = ring.col;
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur  = 0;
+                }
+            });
+
+            // ③ パーティクル（ソフトグロウ版）
+            particles.forEach(p => {
+                if (p.alpha <= 0.01) return;
+
+                // トレイル記録
+                p.trail.push({ x: p.x, y: p.y });
+                if (p.trail.length > Q.trailLen) p.trail.shift();
+
+                // 移動
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity;
+                p.vx *= p.friction;
+                p.vy *= p.friction;
+                p.alpha = Math.max(0, p.alpha - p.decay);
+
+                // ── トレイル：各点にソフトグロウ円を描く
+                for (let i = 0; i < p.trail.length; i++) {
+                    const ratio = i / p.trail.length;          // 古い点ほど0に近い
+                    const ta    = ratio * p.alpha * 0.55;      // 先端に向かって明るく
+                    if (ta < 0.005) continue;
+
+                    const pt  = p.trail[i];
+                    const gr  = p.r * (0.6 + ratio * 1.2);    // 先端ほど大きいグロウ
+                    const rg  = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, gr);
+                    rg.addColorStop(0,   `rgba(255,255,230,${ta})`);    // 白コア
+                    rg.addColorStop(0.4, `rgba(255,210,80,${ta * 0.6})`); // ゴールド
+                    rg.addColorStop(1,   'rgba(255,180,0,0)');           // 外側フェード
+                    ctx.fillStyle = rg;
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, gr, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // ── パーティクル本体：大きなソフトグロウ
+                const glowR = p.r * (3 + p.alpha * 3);        // ふわっと大きく
+                const rg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
+                rg.addColorStop(0,    `rgba(255,255,255,${p.alpha})`);         // 白コア
+                rg.addColorStop(0.25, `rgba(255,240,160,${p.alpha * 0.85})`);  // ライトゴールド
+                rg.addColorStop(0.6,  `rgba(255,200,50,${p.alpha * 0.4})`);   // ゴールド
+                rg.addColorStop(1,    'rgba(220,160,0,0)');                    // 外側フェード
+                ctx.fillStyle = rg;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.globalCompositeOperation = 'source-over';
+
+            if (progress < 1) {
+                magicCanvasAnim = requestAnimationFrame(drawMagic);
+            } else {
+                // フェードアウト
+                canvas.style.opacity = '0';
+                setTimeout(() => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }, 350);
+            }
+        }
+
+        magicCanvasAnim = requestAnimationFrame(drawMagic);
     }
 
     function playMagicSound() {
@@ -144,14 +289,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // カードがめくれた瞬間のSE（SPと通常で分岐）
+    // カードがめくれた瞬間のSE（SP/SRと通常で分岐）
     function playRevealSound(cardIndex) {
         try {
             drawWaitAudio.pause();
             drawWaitAudio.currentTime = 0;
 
-            const isSp = (cardIndex === 22 || cardIndex === 23);
-            const audio = isSp ? drawSpAudio : drawNormalAudio;
+            const isSpecial = (cardIndex >= 22);
+            const audio = isSpecial ? drawSpAudio : drawNormalAudio;
             audio.currentTime = 0;
             audio.play().catch(e => console.log('Audio error:', e));
         } catch(e) {
@@ -163,6 +308,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startDivination() {
         isAnimating = true;
+
+        // Canvas\u30a2\u30cb\u30e1\u30fc\u30b7\u30e7\u30f3\u3092\u505c\u6b62\u30fb\u30af\u30ea\u30fc\u30f3\u30a2\u30c3\u30d7
+        if (magicCanvasAnim) {
+            cancelAnimationFrame(magicCanvasAnim);
+            magicCanvasAnim = null;
+        }
+        const canvas = document.getElementById('magic-canvas');
+        if (canvas) {
+            canvas.style.opacity = '0';
+            const ctx = canvas.getContext('2d');
+            setTimeout(() => ctx && ctx.clearRect(0, 0, canvas.width, canvas.height), 350);
+        }
+
+        // \u9b54\u6cd5\u9663\u753b\u50cf\u3092\u975e\u8868\u793a\u306b
+        const magicCircle = document.getElementById('magic-circle-container');
+        if (magicCircle) {
+            magicCircle.classList.remove('magic-circle-active');
+            magicCircle.querySelectorAll('.magic-core-light').forEach(el => el.remove());
+        }
 
         // 1. Shuffle Animation
         cardDeck.classList.add('shuffling');
@@ -234,11 +398,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let newIndex;
         let rand = Math.random();
+        const isMaster = localStorage.getItem('noa_tarot_master') === 'true';
+        const srProbability = 0.02; // Fixed 2% for SR
 
-        if (tarotDeck.length > 23 && rand < spProbability) {
+        if (isMaster && tarotDeck.length >= 30 && rand < srProbability) {
+            // Draw SR Card (24 to 29)
+            newIndex = 24 + Math.floor(Math.random() * 6);
+        } else if (tarotDeck.length > 23 && rand < (isMaster ? srProbability : 0) + spProbability) {
             // Draw THE SANCTUARY (SP)
             newIndex = 23;
-        } else if (tarotDeck.length > 22 && rand < (spProbability * 2)) {
+        } else if (tarotDeck.length > 22 && rand < (isMaster ? srProbability : 0) + (spProbability * 2)) {
             // Draw GUARDIAN DEITY (SP)
             newIndex = 22;
         } else {
@@ -325,10 +494,24 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('noa_tarot_master', 'true');
 
         setTimeout(() => {
+            // ピカッと光るフラッシュを追加
+            const flash = document.createElement('div');
+            flash.className = 'flash-overlay';
+            document.body.appendChild(flash);
+            setTimeout(() => flash.remove(), 1500);
+
             // モーダルを表示
             const completeModal = document.getElementById('complete-modal');
             if (completeModal) {
                 completeModal.classList.remove('hidden');
+            }
+            
+            // 盾（モーダル内画像コンテナ）にズームイン＆グロウのアニメーションを追加
+            const shieldContainer = document.getElementById('master-shield-container');
+            if (shieldContainer) {
+                shieldContainer.classList.remove('shield-zoom-glow');
+                void shieldContainer.offsetWidth; // リフロー強制
+                shieldContainer.classList.add('shield-zoom-glow');
             }
 
             // SEを再生
@@ -348,16 +531,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 canvas.height = window.innerHeight;
                 
                 let particles = [];
-                const particleCount = 150;
+                const particleCount = 400; // 派手に: 150 -> 400
+                
+                const colorPalette = [
+                    { r: 255, g: 255, b: 255, hex: '#ffffff' }, // 白
+                    { r: 197, g: 160, b:  89, hex: '#c5a059' }, // ゴールド
+                    { r: 232, g: 204, b: 161, hex: '#e8cca1' }, // ライトゴールド
+                    { r:   0, g: 255, b: 255, hex: '#00ffff' }, // シアン（魔法陣カラー）
+                    { r: 255, g: 200, b:  50, hex: '#ffc832' }  // ブライトゴールド
+                ];
                 
                 for (let i = 0; i < particleCount; i++) {
                     particles.push({
                         x: Math.random() * canvas.width,
-                        y: canvas.height + Math.random() * 300,
-                        radius: Math.random() * 3 + 1,
-                        speed: Math.random() * 1.5 + 0.5,
+                        y: canvas.height + Math.random() * 800, // 初期配置を広めに
+                        radius: Math.random() * 4 + 1.5, // 少し大きく
+                        speed: Math.random() * 3 + 1, // スピードアップ
                         opacity: Math.random(),
-                        drift: Math.random() * 1 - 0.5
+                        drift: Math.random() * 2 - 1, // 横揺れを大きく
+                        c: colorPalette[Math.floor(Math.random() * colorPalette.length)] // 色を事前決定
                     });
                 }
                 
@@ -366,28 +558,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 function drawOrbs() {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     
+                    // 重なり合った光が加算合成されて強く光る演出
+                    ctx.globalCompositeOperation = 'lighter';
+                    
                     particles.forEach(p => {
                         p.y -= p.speed;
-                        p.x += Math.sin(p.y * 0.02) * p.drift;
+                        p.x += Math.sin(p.y * 0.01) * p.drift;
                         
                         p.opacity += (Math.random() - 0.5) * 0.05;
                         if (p.opacity > 1) p.opacity = 1;
                         if (p.opacity < 0.1) p.opacity = 0.1;
                         
-                        if (p.y < -20) {
-                            p.y = canvas.height + 20;
+                        if (p.y < -30) {
+                            p.y = canvas.height + 30;
                             p.x = Math.random() * canvas.width;
                         }
                         
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                        // ゴールドと白が入り混じる
-                        const isWhite = Math.random() > 0.8;
-                        ctx.fillStyle = isWhite ? `rgba(255, 255, 255, ${p.opacity})` : `rgba(255, 223, 128, ${p.opacity})`;
-                        ctx.shadowBlur = 15;
-                        ctx.shadowColor = isWhite ? '#ffffff' : '#c5a059';
+                        
+                        ctx.fillStyle = `rgba(${p.c.r}, ${p.c.g}, ${p.c.b}, ${p.opacity})`;
+                        ctx.shadowBlur = p.radius * 4; // 大きさに比例した強めのグロウ
+                        ctx.shadowColor = p.c.hex;
                         ctx.fill();
                     });
+                    
+                    // リセット
+                    ctx.globalCompositeOperation = 'source-over';
                     
                     animationFrameId = requestAnimationFrame(drawOrbs);
                 }
@@ -467,7 +664,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Dynamically load image
         // File format: lower_case_snake_case (e.g. "the_fool.png", "death.png")
-        const imgName = card.name.toLowerCase().replace(/\s+/g, '_') + '.png';
+        let imgName = card.name.toLowerCase().replace(/\s+/g, '_') + '.png';
+        if (cardIndex >= 24) {
+            imgName = 'sr_' + imgName;
+        }
         const imgPath = `/images/${imgName}`;
 
         const STATS_KEY = 'noa_tarot_stats';
@@ -479,10 +679,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const cardStats = stats[cardIndex] || { count: 1 };
         
         let glowClass = '';
-        if (cardStats.count >= 20) glowClass = 'glow-rainbow';
+        if (cardIndex >= 24) glowClass = 'card-sr glow-rainbow';
+        else if (cardStats.count >= 20) glowClass = 'glow-rainbow';
         else if (cardStats.count >= 10) glowClass = 'glow-gold';
         else if (cardStats.count >= 7) glowClass = 'glow-strong';
         else if (cardStats.count >= 5) glowClass = 'glow-weak';
+
+        const resultCard = document.getElementById('result-card');
+        if (resultCard) {
+            if (cardIndex >= 24) {
+                resultCard.classList.add('sr-style');
+            } else {
+                resultCard.classList.remove('sr-style');
+            }
+        }
 
         const wrapper = document.createElement('div');
         wrapper.className = 'card-image-wrapper ' + glowClass;

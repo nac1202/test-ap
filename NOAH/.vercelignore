@@ -1,0 +1,6 @@
+.vercel
+.env*.local
+*.zip
+backup_*
+node_modules
+docs/

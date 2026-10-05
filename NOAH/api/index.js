@@ -11,6 +11,9 @@ const STATUS_FILE = path.join('/tmp', 'status.json');
 const ADMIN_USER = process.env.ADMIN_USER || 'miryu';
 const ADMIN_PASS = process.env.ADMIN_PASS || '0418';
 
+const LOG_USER = process.env.LOG_USER || 'logadmin';
+const LOG_PASS = process.env.LOG_PASS || 'noalog2026';
+
 // Default Memory State
 let memoryData = {
     // Current Seat Status (Manual)
@@ -109,6 +112,13 @@ function authMiddleware(req, res, next) {
     return res.status(401).send('Authentication required');
 }
 
+function logAuthMiddleware(req, res, next) {
+    const cred = parseBasicAuth(req.headers.authorization);
+    if (cred && cred.user === LOG_USER && cred.pass === LOG_PASS) return next();
+    res.set('WWW-Authenticate', 'Basic realm="NOA Logs"');
+    return res.status(401).send('Authentication required for Logs');
+}
+
 app.use(express.json());
 
 // Main Public API
@@ -158,6 +168,21 @@ app.get('/api/status-v2', async (req, res) => {
     const todaySchedule = data.schedules[targetDateStr] || {
         openTime: '18:00', closeTime: '23:30', type: 'normal', cast: []
     };
+
+    // 訪問者ログを記録
+    try {
+        let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || 'Unknown';
+        if (ip && ip.includes(',')) ip = ip.split(',')[0].trim();
+        const ua = req.headers['user-agent'] || 'Unknown';
+        const visitorId = req.headers['x-visitor-id'] || 'unknown';
+        const timestamp = new Date().toISOString(); // UTC で保存（フロントが Asia/Tokyo に変換）
+        if (!data.adminLogs) data.adminLogs = [];
+        data.adminLogs.unshift({ timestamp, ip, userAgent: ua, visitorId });
+        if (data.adminLogs.length > 500) data.adminLogs.length = 500;
+        await writeData(data);
+    } catch (e) {
+        console.error('Failed to log visitor access:', e);
+    }
 
     res.json({
         displayState,
@@ -254,21 +279,35 @@ app.post('/api/reserve', async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
+        // 営業終了チェック (10月31日で営業終了)
+        if (date > '2026-10-31') {
+            return res.status(400).json({ error: '銀座NOAは10月31日をもって営業終了のため、11月以降のご予約は受け付けておりません。' });
+        }
+
         // Logic Constraints
         const seatCount = parseInt(count, 10);
-        if (type === 'box' && seatCount < 2) {
+        const isSpecialEvent = (date === '2026-10-31') || ['part1', 'part2', 'part3'].includes(type);
+
+        if (!isSpecialEvent && type === 'box' && seatCount < 2) {
             return res.status(400).json({ error: 'Box seats require at least 2 people.' });
         }
 
         // Capacity Limits
         const MAX_COUNTER = 5;
         const MAX_BOX = 6;
-        const maxCapacity = (type === 'counter') ? MAX_COUNTER : MAX_BOX;
+        const MAX_EVENT_PART = 20; // 立ち飲みスタイル対応のイベント定員枠 (各部20名)
+        const maxCapacity = isSpecialEvent ? MAX_EVENT_PART : (type === 'counter' ? MAX_COUNTER : MAX_BOX);
 
         const data = await readData();
         if (!data.schedules) data.schedules = {};
         if (!data.schedules[date]) {
-            data.schedules[date] = { type: 'normal', openTime: '18:00', closeTime: '23:30', cast: [], reservations: [] };
+            data.schedules[date] = {
+                type: 'normal',
+                openTime: isSpecialEvent ? '13:00' : '18:00',
+                closeTime: isSpecialEvent ? '22:00' : '23:30',
+                cast: [],
+                reservations: []
+            };
         }
         const schedule = data.schedules[date];
         if (!schedule.reservations) schedule.reservations = [];
@@ -279,16 +318,21 @@ app.post('/api/reserve', async (req, res) => {
             .reduce((sum, r) => sum + (r.count || 0), 0);
 
         if (currentUsage + seatCount > maxCapacity) {
-            return res.status(400).json({ error: 'Not enough seats available.' });
+            return res.status(400).json({ error: isSpecialEvent ? 'この部は定員に達しました。' : 'Not enough seats available.' });
         }
 
         // Add Reservation
+        let defaultTime = '18:00';
+        if (type === 'part1') defaultTime = '13:00';
+        else if (type === 'part2') defaultTime = '16:00';
+        else if (type === 'part3') defaultTime = '19:00';
+
         const newReservation = {
             id: 'res_' + Date.now(),
             name,
             type,
             count: seatCount,
-            time: time || '18:00',
+            time: time || defaultTime,
             contact: contact || '',
             lineUserId: lineUserId || '',
             introCast: introCast || '',
@@ -309,9 +353,62 @@ app.post('/api/reserve', async (req, res) => {
 });
 
 // Admin Route
-app.get('/admin', authMiddleware, (req, res) => {
+app.get('/admin', authMiddleware, async (req, res) => {
+    // Log access
+    try {
+        const data = await readData();
+        let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || 'Unknown';
+        // x-forwarded-for can be a comma-separated list, take the first one
+        if (ip && ip.includes(',')) ip = ip.split(',')[0].trim();
+        
+        const ua = req.headers['user-agent'] || 'Unknown';
+        const timestamp = new Date().toISOString(); // UTC で保存（フロントが Asia/Tokyo に変換）
+        
+        if (!data.adminLogs) data.adminLogs = [];
+        data.adminLogs.unshift({ timestamp, ip, userAgent: ua });
+        if (data.adminLogs.length > 500) {
+            data.adminLogs.length = 500;
+        }
+        await writeData(data);
+    } catch (e) {
+        console.error('Failed to log admin access:', e);
+    }
+
     const adminPath = path.join(__dirname, '../public', 'admin.html');
     res.sendFile(adminPath);
+});
+
+// Admin Logs UI Route
+app.get('/admin-logs', logAuthMiddleware, (req, res) => {
+    const logsPath = path.join(__dirname, '../public', 'admin_logs.html');
+    res.sendFile(logsPath);
+});
+
+// Admin Logs API
+app.get('/api/admin-logs', logAuthMiddleware, async (req, res) => {
+    try {
+        const data = await readData();
+        const logs = data.adminLogs || [];
+
+        // タイムスタンプの自動補正:
+        // 修正デプロイ前 (2026-08-01T07:21:00Z 以前) は getJSTNow().toISOString() を使っており、
+        // JST時刻をUTCとして保存してしまっていた（9時間ズレ）。
+        // 補正後の時刻が修正デプロイ前なら旧バグ形式と判定し、9時間引いて正しいUTCに戻す。
+        const FIX_DEPLOY = new Date('2026-08-01T07:21:00Z');
+        const correctedLogs = logs.map(log => {
+            const ts = new Date(log.timestamp);
+            const corrected = new Date(ts.getTime() - 9 * 60 * 60 * 1000);
+            if (corrected < FIX_DEPLOY) {
+                return { ...log, timestamp: corrected.toISOString() };
+            }
+            return log;
+        });
+
+        res.json(correctedLogs);
+    } catch (e) {
+        console.error('API Error:', e);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 module.exports = app;

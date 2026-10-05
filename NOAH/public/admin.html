@@ -551,7 +551,10 @@
           li.style.alignItems = 'center';
 
           const info = document.createElement('div');
-          const typeLabel = (r.type === 'counter') ? 'C' : 'B';
+          let typeLabel = (r.type === 'counter') ? 'C' : 'B';
+          if (r.type === 'part1') typeLabel = '🌸1部(13-16時)';
+          else if (r.type === 'part2') typeLabel = '🌸2部(16-19時)';
+          else if (r.type === 'part3') typeLabel = '🌸3部(19-22時)';
           const introCastName = r.introCast ? (master[r.introCast] || r.introCast) : '';
           const introHtml = introCastName ? `<span style="margin-left: 0.5rem; color:#e94560; font-size:0.8rem; font-weight:bold;">[紹介: ${introCastName}]</span>` : '';
           info.innerHTML = `

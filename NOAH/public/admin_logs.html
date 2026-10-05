@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOA - Access Logs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1c2128;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #7d8590;
+            --accent: #58a6ff;
+            --accent2: #3fb950;
+            --header-bg: #21262d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .back-btn:hover {
+            background: var(--header-bg);
+            border-color: var(--accent);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+        h1 span {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 400;
+            margin-left: 8px;
+        }
+
+        /* ── Stats Bar ── */
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+
+        /* ── Legend ── */
+        .legend {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+        }
+        .legend-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ── Table ── */
+        .table-wrapper {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--header-bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 11px 16px;
+            border-bottom: 1px solid #21262d;
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        tbody tr {
+            transition: background 0.1s;
+        }
+        tbody tr:hover {
+            background: rgba(88, 166, 255, 0.05);
+        }
+
+        /* ── Visitor ID Badge ── */
+        .vid-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            cursor: default;
+        }
+        .vid-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ── Other Cols ── */
+        .date-col {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .ip-col {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .ip-link {
+            color: #a5d6ff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background 0.15s, color 0.15s;
+            border: 1px solid transparent;
+        }
+        .ip-link:hover {
+            background: rgba(88, 166, 255, 0.12);
+            border-color: rgba(88, 166, 255, 0.3);
+            color: #58a6ff;
+        }
+        .ip-link .map-icon { font-size: 0.85em; opacity: 0.7; }
+
+        /* ── IP Map Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 560px;
+            overflow: hidden;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+            animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--header-bg);
+        }
+        .modal-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-ip-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--accent);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.15s, color 0.15s;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+        #ip-map { height: 260px; background: #1c2128; }
+        .leaflet-container { background: #1a1f2e; }
+
+        .modal-info {
+            padding: 16px 20px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px 16px;
+            font-size: 0.85rem;
+        }
+        .modal-info-label { color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+        .modal-info-value { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; word-break: break-all; }
+        .modal-info-value.na { color: var(--text-muted); font-style: italic; }
+
+        .modal-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 48px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .modal-error { padding: 24px 20px; color: #ff5757; font-size: 0.85rem; text-align: center; }
+        .flag { font-size: 1.1em; }
+
+        .ua-col {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            max-width: 380px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .ua-col:hover {
+            white-space: normal;
+            word-break: break-all;
+            color: var(--text);
+        }
+
+        /* ── Loading / Empty ── */
+        .status-row td {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Mobile ── */
+        @media screen and (max-width: 700px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            tbody tr {
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                margin-bottom: 12px;
+                background: var(--surface2);
+                padding: 8px 0;
+            }
+            td {
+                border: none;
+                border-bottom: 1px solid var(--border);
+                position: relative;
+                padding: 10px 16px 10px 110px;
+                font-size: 0.82rem;
+            }
+            td:last-child { border-bottom: 0; }
+            td::before {
+                position: absolute;
+                top: 10px;
+                left: 16px;
+                width: 90px;
+                font-weight: 600;
+                color: var(--text-muted);
+                font-size: 0.7rem;
+                text-transform: uppercase;
+            }
+            td:nth-of-type(1)::before { content: "日時"; }
+            td:nth-of-type(2)::before { content: "IP"; }
+            td:nth-of-type(3)::before { content: "訪問者ID"; }
+            td:nth-of-type(4)::before { content: "ブラウザ"; }
+            .ua-col { white-space: normal; word-break: break-all; max-width: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/admin" class="back-btn">← 管理画面</a>
+            <h1>アクセスログ <span id="log-count-header"></span></h1>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">総アクセス数</div>
+                <div class="stat-value" id="stat-total">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">ユニーク訪問者</div>
+                <div class="stat-value" id="stat-unique">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">ユニークIP</div>
+                <div class="stat-value" id="stat-ip">—</div>
+            </div>
+        </div>
+
+        <!-- Visitor ID Legend -->
+        <div class="legend" id="visitor-legend" style="display:none">
+            <div class="legend-title">訪問者ID 凡例</div>
+            <div class="legend-items" id="legend-items"></div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table id="logs-table">
+                <thead>
+                    <tr>
+                        <th>アクセス日時 (JST)</th>
+                        <th>IPアドレス</th>
+                        <th>訪問者ID</th>
+                        <th>ブラウザ情報 (User-Agent)</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-body">
+                    <tr class="status-row">
+                        <td colspan="4"><span class="spinner"></span>読み込み中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── IP Map Modal ── -->
+    <div class="modal-overlay" id="map-modal" role="dialog" aria-modal="true">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>🗺️ IP 位置情報 &nbsp;<span class="modal-ip-title" id="modal-ip-display"></span></h2>
+                <button class="modal-close" id="modal-close-btn" aria-label="閉じる">✕</button>
+            </div>
+            <div id="modal-body">
+                <div class="modal-loading"><span class="spinner"></span>取得中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Visitor ID カラーパレット ──
+        // 視認性の高い12色セット（ダークテーマ向け）
+        const VISITOR_COLORS = [
+            { bg: 'rgba(88,166,255,0.15)', border: 'rgba(88,166,255,0.4)', dot: '#58a6ff', text: '#a5d6ff' },   // blue
+            { bg: 'rgba(63,185,80,0.15)',  border: 'rgba(63,185,80,0.4)',  dot: '#3fb950', text: '#7ee787' },   // green
+            { bg: 'rgba(240,136,62,0.15)', border: 'rgba(240,136,62,0.4)', dot: '#f0883e', text: '#ffb380' },   // orange
+            { bg: 'rgba(188,140,255,0.15)',border: 'rgba(188,140,255,0.4)',dot: '#bc8cff', text: '#d2a8ff' },   // purple
+            { bg: 'rgba(255,121,198,0.15)',border: 'rgba(255,121,198,0.4)',dot: '#ff79c6', text: '#ffaad9' },   // pink
+            { bg: 'rgba(86,211,255,0.15)', border: 'rgba(86,211,255,0.4)', dot: '#56d3ff', text: '#90e8ff' },   // cyan
+            { bg: 'rgba(255,215,0,0.15)',  border: 'rgba(255,215,0,0.4)',  dot: '#ffd700', text: '#ffe566' },   // yellow
+            { bg: 'rgba(255,87,87,0.15)',  border: 'rgba(255,87,87,0.4)',  dot: '#ff5757', text: '#ff9494' },   // red
+            { bg: 'rgba(0,210,150,0.15)',  border: 'rgba(0,210,150,0.4)',  dot: '#00d296', text: '#4dffcb' },   // teal
+            { bg: 'rgba(255,165,0,0.15)',  border: 'rgba(255,165,0,0.4)',  dot: '#ffa500', text: '#ffcd6b' },   // amber
+            { bg: 'rgba(130,80,255,0.15)', border: 'rgba(130,80,255,0.4)', dot: '#8250ff', text: '#b197fc' },   // violet
+            { bg: 'rgba(32,201,151,0.15)', border: 'rgba(32,201,151,0.4)', dot: '#20c997', text: '#63e6be' },   // emerald
+        ];
+
+        const visitorColorMap = {};  // visitorId -> color object
+        let colorIndex = 0;
+
+        function getVisitorColor(vid) {
+            if (!vid || vid === 'unknown') {
+                return { bg: 'rgba(125,133,144,0.15)', border: 'rgba(125,133,144,0.4)', dot: '#7d8590', text: '#7d8590' };
+            }
+            if (!visitorColorMap[vid]) {
+                visitorColorMap[vid] = VISITOR_COLORS[colorIndex % VISITOR_COLORS.length];
+                colorIndex++;
+            }
+            return visitorColorMap[vid];
+        }
+
+        function shortId(vid) {
+            if (!vid || vid === 'unknown') return '不明';
+            // UUIDの前8文字だけ表示
+            return vid.length > 8 ? vid.substring(0, 8) + '…' : vid;
+        }
+
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/admin-logs');
+                if (!response.ok) throw new Error('Failed to fetch logs');
+                const logs = await response.json();
+
+                const tbody = document.getElementById('logs-body');
+                tbody.innerHTML = '';
+
+                // Stats
+                document.getElementById('stat-total').textContent = logs.length.toLocaleString();
+                const uniqueVisitors = new Set(logs.map(l => l.visitorId).filter(v => v && v !== 'unknown'));
+                const uniqueIPs = new Set(logs.map(l => l.ip).filter(Boolean));
+                document.getElementById('stat-unique').textContent = uniqueVisitors.size.toLocaleString();
+                document.getElementById('stat-ip').textContent = uniqueIPs.size.toLocaleString();
+                document.getElementById('log-count-header').textContent = `(最新 ${logs.length} 件)`;
+
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr class="status-row"><td colspan="4">ログがありません</td></tr>';
+                    return;
+                }
+
+                // 訪問者IDのカラーを事前確定（登場順で色を割り当て）
+                logs.forEach(log => getVisitorColor(log.visitorId));
+
+                // テーブル行の生成
+                logs.forEach(log => {
+                    const tr = document.createElement('tr');
+                    const dateObj = new Date(log.timestamp);
+                    const formattedDate = dateObj.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+                    const color = getVisitorColor(log.visitorId);
+                    const vid = log.visitorId || 'unknown';
+                    const ipText = log.ip || 'Unknown';
+
+                    tr.innerHTML = `
+                        <td class="date-col">${formattedDate}</td>
+                        <td class="ip-col">
+                            <span class="ip-link" role="button" tabindex="0" data-ip="${ipText}" title="クリックして地図を表示">
+                                ${ipText} <span class="map-icon">🗺️</span>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="vid-badge"
+                                title="${vid}"
+                                style="background:${color.bg}; border-color:${color.border}; color:${color.text}">
+                                <span class="vid-dot" style="background:${color.dot}"></span>
+                                ${shortId(vid)}
+                            </span>
+                        </td>
+                        <td class="ua-col" title="${(log.userAgent || '').replace(/"/g, '&quot;')}">${log.userAgent || 'Unknown'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // IP クリックイベント（イベント委譲）
+                tbody.addEventListener('click', function(e) {
+                    const link = e.target.closest('.ip-link');
+                    if (link) {
+                        const ip = link.dataset.ip;
+                        if (ip && ip !== 'Unknown') openMapModal(ip);
+                    }
+                });
+                tbody.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        const link = e.target.closest('.ip-link');
+                        if (link) { const ip = link.dataset.ip; if (ip && ip !== 'Unknown') openMapModal(ip); }
+                    }
+                });
+
+                // 凡例を生成
+                buildLegend();
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('logs-body').innerHTML =
+                    `<tr class="status-row"><td colspan="4" style="color:#ff5757">エラーが発生しました: ${error.message}</td></tr>`;
+            }
+        }
+
+        function buildLegend() {
+            const entries = Object.entries(visitorColorMap);
+            if (entries.length === 0) return;
+
+            const container = document.getElementById('legend-items');
+            const legendBox = document.getElementById('visitor-legend');
+            container.innerHTML = '';
+            legendBox.style.display = '';
+
+            entries.forEach(([vid, color]) => {
+                const item = document.createElement('span');
+                item.className = 'legend-item';
+                item.title = vid;
+                item.style.color = color.text;
+                item.innerHTML = `<span class="legend-dot" style="background:${color.dot}"></span>${shortId(vid)}`;
+                container.appendChild(item);
+            });
+        }
+
+        // ── IP ジオロケーション & 地図モーダル ──
+        const geoCache = {};
+        let leafletMap = null;
+
+        async function fetchGeoInfo(ip) {
+            if (geoCache[ip]) return geoCache[ip];
+            // ipapi.co: HTTPS対応・無料（1000req/日）
+            const res = await fetch(`https://ipapi.co/${ip}/json/`);
+            const raw = await res.json();
+            if (raw.error) {
+                return { status: 'fail', message: raw.reason || '不明なエラー' };
+            }
+            // 共通フォーマットに正規化
+            const data = {
+                status: 'success',
+                country: raw.country_name,
+                countryCode: raw.country_code,
+                regionName: raw.region,
+                city: raw.city,
+                zip: raw.postal,
+                lat: raw.latitude,
+                lon: raw.longitude,
+                isp: raw.org,
+                org: raw.org,
+            };
+            geoCache[ip] = data;
+            return data;
+        }
+
+        function countryCodeToEmoji(code) {
+            if (!code || code.length !== 2) return '';
+            return code.toUpperCase().split('').map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('');
+        }
+
+        function openMapModal(ip) {
+            const modal = document.getElementById('map-modal');
+            const modalBody = document.getElementById('modal-body');
+            document.getElementById('modal-ip-display').textContent = ip;
+            modalBody.innerHTML = '<div class="modal-loading"><span class="spinner"></span>取得中...</div>';
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            fetchGeoInfo(ip).then(data => {
+                if (data.status === 'fail') {
+                    modalBody.innerHTML = `<div class="modal-error">⚠️ 位置情報を取得できませんでした。<br><small>${data.message || 'プライベートIPまたは未登録IP'}</small></div>`;
+                    return;
+                }
+
+                const flag = data.countryCode ? `<span class="flag">${countryCodeToEmoji(data.countryCode)}</span>` : '';
+                modalBody.innerHTML = `
+                    <div id="ip-map"></div>
+                    <div class="modal-info">
+                        <span class="modal-info-label">国</span>
+                        <span class="modal-info-value">${flag} ${data.country || '—'}</span>
+                        <span class="modal-info-label">地域</span>
+                        <span class="modal-info-value">${[data.regionName, data.city].filter(Boolean).join(' / ') || '—'}</span>
+                        <span class="modal-info-label">郵便番号</span>
+                        <span class="modal-info-value ${data.zip ? '' : 'na'}">${data.zip || '—'}</span>
+                        <span class="modal-info-label">ISP</span>
+                        <span class="modal-info-value">${data.isp || '—'}</span>
+                        <span class="modal-info-label">組織</span>
+                        <span class="modal-info-value">${data.org || '—'}</span>
+                        <span class="modal-info-label">座標</span>
+                        <span class="modal-info-value">${data.lat}, ${data.lon}</span>
+                    </div>
+                `;
+
+                if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+
+                leafletMap = L.map('ip-map', { center: [data.lat, data.lon], zoom: 10 });
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+                    maxZoom: 19,
+                }).addTo(leafletMap);
+
+                const customIcon = L.divIcon({
+                    html: '<div style="width:14px;height:14px;background:#58a6ff;border:2px solid #fff;border-radius:50%;box-shadow:0 0 8px rgba(88,166,255,0.8);"></div>',
+                    className: '', iconSize: [14, 14], iconAnchor: [7, 7],
+                });
+                L.marker([data.lat, data.lon], { icon: customIcon })
+                    .addTo(leafletMap)
+                    .bindPopup(`<b>${ip}</b><br>${[data.city, data.regionName, data.country].filter(Boolean).join(', ')}`)
+                    .openPopup();
+
+                setTimeout(() => leafletMap && leafletMap.invalidateSize(), 100);
+
+            }).catch(err => {
+                modalBody.innerHTML = `<div class="modal-error">⚠️ エラーが発生しました: ${err.message}</div>`;
+            });
+        }
+
+        function closeMapModal() {
+            document.getElementById('map-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('modal-close-btn').addEventListener('click', closeMapModal);
+        document.getElementById('map-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeMapModal();
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMapModal(); });
+
+        fetchLogs();
+    </script>
+</body>
+</html>
