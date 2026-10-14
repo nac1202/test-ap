@@ -284,6 +284,11 @@ app.post('/api/reserve', async (req, res) => {
             return res.status(400).json({ error: '銀座NOAは10月31日をもって営業終了のため、11月以降のご予約は受け付けておりません。' });
         }
 
+        // 10月31日は特別イベント（3部制）専用
+        if (date === '2026-10-31' && !['part1', 'part2', 'part3'].includes(type)) {
+            return res.status(400).json({ error: '10月31日は特別イベント営業のため、トップページの専用予約フォームよりお申し込みください。' });
+        }
+
         // Logic Constraints
         const seatCount = parseInt(count, 10);
         const isSpecialEvent = (date === '2026-10-31') || ['part1', 'part2', 'part3'].includes(type);
