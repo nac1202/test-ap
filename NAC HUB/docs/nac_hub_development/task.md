@@ -64,13 +64,18 @@
   - [x] `Sidebar.tsx` 通知バッジの実データ同期化
   - [x] `Home.tsx` の「重要なお知らせ」セクションをNotice連携に変更
   - [x] ユーザーによるブラウザ手動E2Eテスト確認 (すべてPASS)
-- [ ] 追加開発フェーズ8：システム設定API化 (実装済み・手動E2E待ち)
+- [x] 追加開発フェーズ8：システム設定API化 (完了: v1.7.0)
   - [x] 既存UI・DBモデル監査 (`System.tsx`, `Company`, `TenantSetting`)
   - [x] システム設定API実装 (`GET/PUT /api/v1/admin/system-settings`, `GET /api/v1/system-settings/public`)
   - [x] 監査ログ記録処理（非SE向け日本語変更差分）
   - [x] フロントエンド型定義・APIクライアント追加 (`types/admin.ts`, `api/admin.ts`)
   - [x] `System.tsx` の実API化・非SE日本語化・状態表示・レスポンシブ最適化
-  - [x] 新規自動テストコード作成 (`test_system_settings_api.py`)
+  - [x] 共通設定Context新設 (`SystemConfigContext.tsx`) によるシステム表示名の共通UI動的反映
+  - [x] バージョン・ビルド番号表示の統一 (`Ver 1.7.0` / `Build 20261021`)
+  - [x] お知らせ表示件数とダッシュボードAPIの連携動的化
+  - [x] メンテナンス案内バナー実装 (`MaintenanceBanner.tsx`) と全共通画面・ログイン画面反映
+  - [x] 新規自動テストコード作成 (`test_system_settings_api.py` 全12ケース)
   - [x] TypeScript型チェック・プロダクションビルド・Lint検証 (全PASS)
-  - [ ] ユーザーによるブラウザ手動E2Eテスト確認
+  - [x] ユーザーによるブラウザ手動E2Eテスト確認 (全項目PASS)
+
 

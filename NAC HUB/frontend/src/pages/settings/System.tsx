@@ -301,7 +301,7 @@ export default function System() {
             <div className="flex justify-between py-2 border-b border-gray-100">
               <span className="text-gray-500">システムバージョン</span>
               <span className="font-bold text-gray-800 font-mono">
-                Ver {(versionInfo?.version ?? '1.6.0').replace(/^v/i, '')}
+                Ver {(versionInfo?.version ?? '1.7.0').replace(/^v/i, '')}
               </span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
