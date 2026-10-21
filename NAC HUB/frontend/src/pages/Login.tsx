@@ -5,11 +5,12 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useAuth } from '../contexts/AuthContext';
 import { useSystemConfig } from '../contexts/SystemConfigContext';
+import { MaintenanceBanner } from '../components/ui/MaintenanceBanner';
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { systemName } = useSystemConfig();
+  const { systemName, maintenanceMode } = useSystemConfig();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -74,13 +75,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-gray-50 p-4 relative overflow-y-auto">
-      {/* Decorative background shapes */}
-      <div className="absolute top-[-10%] left-[-10%] w-72 sm:w-96 h-72 sm:h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-72 sm:w-96 h-72 sm:h-96 bg-orange-300/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-[100dvh] flex flex-col bg-gray-50 relative overflow-y-auto">
+      {/* Maintenance Banner */}
+      {maintenanceMode && <MaintenanceBanner />}
 
-      <div className="w-full max-w-md relative z-10 my-auto">
-        <div className="text-center mb-6 sm:mb-10">
+      <div className="flex-1 flex items-center justify-center p-4 relative">
+        {/* Decorative background shapes */}
+        <div className="absolute top-[-10%] left-[-10%] w-72 sm:w-96 h-72 sm:h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-72 sm:w-96 h-72 sm:h-96 bg-orange-300/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="w-full max-w-md relative z-10 my-auto">
+          <div className="text-center mb-6 sm:mb-10">
           <h1 className="text-4xl sm:text-5xl font-black text-primary mb-2 sm:mb-3 tracking-tighter">{systemName}</h1>
           <p className="text-xs sm:text-sm text-text-muted font-medium">社員が毎朝最初に開く業務OS</p>
         </div>
@@ -129,6 +134,7 @@ export default function Login() {
             </form>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

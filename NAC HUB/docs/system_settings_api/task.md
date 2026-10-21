@@ -45,7 +45,16 @@
     - [x] 監査ログ詳細キーの日本語化定義追加 (`frontend/src/pages/settings/Audit.tsx`) <!-- id: 44 -->
     - [x] バックエンド新規テスト追加＆全回帰テスト実行 <!-- id: 45 -->
     - [x] フロントエンド静的検証 (tsc, build, lint) <!-- id: 46 -->
-    - [x] コミット (`fix: apply public system settings across shared UI`) <!-- id: 47 -->
+    - [x] コミット (`fix: apply public system settings across shared UI` c37bd7b) <!-- id: 47 -->
+- [x] 10. メンテナンス案内バナーの実装と共通画面反映 <!-- id: 48 -->
+    - [x] メンテナンス案内バナーコンポーネント新設 (`frontend/src/components/ui/MaintenanceBanner.tsx`) <!-- id: 49 -->
+    - [x] 共通レイアウトへのバナー配置 (`frontend/src/components/layout/MockLayout.tsx`) <!-- id: 50 -->
+    - [x] ログイン画面へのバナー配置 (`frontend/src/pages/Login.tsx`) <!-- id: 51 -->
+    - [x] public APIのmaintenance_modeテスト追加・実行 (`backend/test_system_settings_api.py`) <!-- id: 52 -->
+    - [x] 全バックエンド回帰テスト実行 <!-- id: 53 -->
+    - [x] フロントエンド静的検証 (tsc, build, lint) <!-- id: 54 -->
+    - [x] コミット (`fix: display maintenance banner across layouts when maintenance_mode is enabled`) <!-- id: 55 -->
+
 
 
 

@@ -6,9 +6,12 @@ import {
   AlertTriangle, LogOut, Search, Bell, HelpCircle, KeyRound, ChevronDown, Menu, X 
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSystemConfig } from '../../contexts/SystemConfigContext';
+import { MaintenanceBanner } from '../ui/MaintenanceBanner';
 
 export function MockLayout() {
   const { user, token, logout } = useAuth();
+  const { maintenanceMode } = useSystemConfig();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -122,6 +125,9 @@ export function MockLayout() {
           <span className="truncate">SYSTEM MODE - 管理者権限でログイン中</span>
         </div>
       )}
+
+      {/* System Maintenance Banner (Visible to all users when maintenance_mode=true) */}
+      {maintenanceMode && <MaintenanceBanner />}
 
       {/* Main Container Wrapper */}
       <div className="flex flex-1 min-h-0 w-full min-w-0 overflow-hidden">

@@ -314,8 +314,8 @@ def run_tests():
     assert comp2_data["maintenance_mode"] is False
     print("PASS: Default values properly provided when tenant settings not yet created")
 
-    # 11. 公開エンドポイント確認
-    print("\n11. Test Public Settings Endpoint")
+    # 11. 公開エンドポイント確認（maintenance_mode 反映確認含む）
+    print("\n11. Test Public Settings Endpoint & Maintenance Mode Reflection")
     r11 = client.get("/api/v1/system-settings/public")
     assert r11.status_code == 200
     pub_data = r11.json()
@@ -324,7 +324,17 @@ def run_tests():
     assert "theme_color" in pub_data
     assert "version_info" in pub_data
     assert pub_data["version_info"]["build_number"] == "20261021"
-    print("PASS: Public settings endpoint returned 200 without authentication & verified build_number=20261021")
+    # 直前のテスト4で maintenance_mode=True に更新されているため、public API でも True が返る
+    assert pub_data["maintenance_mode"] is True, f"Expected maintenance_mode=True, got {pub_data.get('maintenance_mode')}"
+    print("PASS: Public settings endpoint returned 200 without authentication & verified build_number=20261021 & maintenance_mode=True")
+
+    # maintenance_mode=False に戻した際の即時反映確認
+    off_payload = {**update_payload, "maintenance_mode": False}
+    r_off = client.put("/api/v1/admin/system-settings", json=off_payload, headers=admin_headers)
+    assert r_off.status_code == 200
+    r11_off = client.get("/api/v1/system-settings/public")
+    assert r11_off.json()["maintenance_mode"] is False
+    print("PASS: Public settings reflects maintenance_mode=False after admin update")
 
     # 12. ダッシュボード連携確認（notice_display_count=7 が正しくダッシュボードAPIに反映されること）
     print("\n12. Test Dashboard Notices Dynamic Limit Integration")

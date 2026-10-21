@@ -26,7 +26,7 @@ from app.core.config import settings
 if os.environ.get('DATABASE_URL'):
     settings.DATABASE_URL = os.environ['DATABASE_URL']
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 import app.db.database as db_module
 
@@ -136,6 +136,8 @@ try:
         normal_user.must_change_password = False
         normal_user.password_hash = security.get_password_hash("UserPassword123")
 
+    db.execute(text("SELECT setval('companies_id_seq', (SELECT COALESCE(MAX(id), 1) FROM companies))"))
+    db.commit()
     other_company = db.query(Company).filter(Company.name == "Other Company").first()
     if not other_company:
         other_company = Company(name="Other Company")
