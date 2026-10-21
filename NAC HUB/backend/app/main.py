@@ -73,6 +73,7 @@ from app.api.routers import dashboard
 from app.api.routers import admin_management
 from app.api.routers import notifications
 from app.api.routers import notices
+from app.api.routers import system_settings
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(ai_assistant.router, prefix="/api/v1/ai", tags=["ai"])
@@ -81,4 +82,7 @@ app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboar
 app.include_router(admin_management.router, prefix="/api/v1/admin", tags=["admin"])
 app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
 app.include_router(notices.router, prefix="/api/v1/notices", tags=["notices"])
+app.include_router(system_settings.router, prefix="/api/v1/admin", tags=["admin-settings"])
+app.include_router(system_settings.public_router, prefix="/api/v1", tags=["system-settings"])
+
 

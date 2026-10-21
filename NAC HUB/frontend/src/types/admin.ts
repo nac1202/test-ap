@@ -79,3 +79,40 @@ export interface AuditLogQueryParams {
   page?: number;
   size?: number;
 }
+
+// ──────────────── システム設定 ────────────────
+
+export interface SystemVersionInfo {
+  version: string;
+  build_number: string;
+  updated_at: string;
+}
+
+export interface SystemSettingsResponse {
+  company_name: string;
+  system_name: string;
+  theme_color: string;
+  timezone: string;
+  notice_display_count: number;
+  maintenance_mode: boolean;
+  version_info: SystemVersionInfo;
+}
+
+export interface SystemSettingsUpdateParams {
+  company_name: string;
+  system_name: string;
+  theme_color: string;
+  timezone: string;
+  notice_display_count: number;
+  maintenance_mode: boolean;
+}
+
+export interface PublicSystemSettingsResponse {
+  company_name: string;
+  system_name: string;
+  theme_color: string;
+  timezone: string;
+  maintenance_mode: boolean;
+  version_info: SystemVersionInfo;
+}
+

@@ -10,6 +10,9 @@ import type {
   AdminRoleUpdateParams,
   AuditLogListResponse,
   AuditLogQueryParams,
+  SystemSettingsResponse,
+  SystemSettingsUpdateParams,
+  PublicSystemSettingsResponse,
 } from '../types/admin';
 
 const API_BASE = 'http://localhost:8000/api/v1/admin';
@@ -134,3 +137,27 @@ export async function fetchAuditActions(): Promise<string[]> {
   const res = await fetch(`${API_BASE}/audit-logs/actions`, { headers: getAuthHeaders() });
   return handleResponse<string[]>(res);
 }
+
+// ──────────────── System Settings ────────────────
+
+export async function fetchSystemSettings(): Promise<SystemSettingsResponse> {
+  const res = await fetch(`${API_BASE}/system-settings`, { headers: getAuthHeaders() });
+  return handleResponse<SystemSettingsResponse>(res);
+}
+
+export async function updateSystemSettings(
+  data: SystemSettingsUpdateParams
+): Promise<SystemSettingsResponse> {
+  const res = await fetch(`${API_BASE}/system-settings`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  return handleResponse<SystemSettingsResponse>(res);
+}
+
+export async function fetchPublicSystemSettings(): Promise<PublicSystemSettingsResponse> {
+  const res = await fetch('http://localhost:8000/api/v1/system-settings/public');
+  return handleResponse<PublicSystemSettingsResponse>(res);
+}
+

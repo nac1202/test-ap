@@ -1,0 +1,31 @@
+# タスクリスト: システム設定API化 (Phase 8)
+
+- [x] 1. 開始時環境確認およびDBバックアップ状況の記録 <!-- id: 0 -->
+    - [x] Gitステータス確認 (NAC HUB配下Clean、コミット53f7205、タグv1.6-notices-notifications-api確認) <!-- id: 1 -->
+    - [x] Docker/DBコンテナ状態確認 (Docker停止中検知、正確な報告準備) <!-- id: 2 -->
+    - [x] 既存DBバックアップファイル確認 (最新: `NAC_HUB_v1.6_final_20260822_222953.sql`) <!-- id: 3 -->
+- [x] 2. 既存実装およびDBモデルの監査 <!-- id: 4 -->
+    - [x] フロントエンドUI監査 (`System.tsx`、既存モック値、入力項目、モバイルUI) <!-- id: 5 -->
+    - [x] バックエンドモデル監査 (`Company`, `TenantSetting`, `AuditLog`, `admin_management.py`) <!-- id: 6 -->
+- [x] 3. ドキュメント作成 <!-- id: 7 -->
+    - [x] `docs/system_settings_api/task.md` <!-- id: 8 -->
+    - [x] `docs/system_settings_api/implementation_plan.md` <!-- id: 9 -->
+- [x] 4. バックエンド実装 <!-- id: 10 -->
+    - [x] システム設定スキーマおよびエンドポイント実装 (`backend/app/api/routers/system_settings.py`) <!-- id: 11 -->
+    - [x] `backend/app/main.py` へのルーター登録 <!-- id: 12 -->
+    - [x] 監査ログ記録処理（非SE向け日本語サマリ）<!-- id: 13 -->
+- [x] 5. フロントエンド実装 <!-- id: 14 -->
+    - [x] 型定義追加 (`frontend/src/types/admin.ts`) <!-- id: 15 -->
+    - [x] APIクライアント追加 (`frontend/src/api/admin.ts`) <!-- id: 16 -->
+    - [x] システム設定UIの実API接続・非SE日本語化・状態表示・レスポンシブ調整 (`frontend/src/pages/settings/System.tsx`) <!-- id: 17 -->
+- [x] 6. 自動テスト作成および検証 <!-- id: 18 -->
+    - [x] 新規ユニットテスト作成 (`backend/test_system_settings_api.py`) <!-- id: 19 -->
+    - [x] フロントエンド型チェック (`npx tsc --noEmit`) <!-- id: 20 -->
+    - [x] フロントエンドビルド (`npm run build`) <!-- id: 21 -->
+    - [x] フロントエンドLint (`npm run lint`) <!-- id: 22 -->
+- [ ] 7. ドキュメント更新およびコミット <!-- id: 23 -->
+    - [x] `docs/system_settings_api/walkthrough.md` 作成 <!-- id: 24 -->
+    - [ ] `docs/nac_hub_development/task.md` 更新 <!-- id: 25 -->
+    - [ ] `docs/nac_hub_development/progress_summary.md` 更新 <!-- id: 26 -->
+    - [ ] バックアップコミット (`feat: connect system settings to API`) <!-- id: 27 -->
+
