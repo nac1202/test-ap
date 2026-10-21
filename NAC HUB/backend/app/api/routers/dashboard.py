@@ -10,6 +10,7 @@ from app.models.project import Project, RecentProject
 from app.models.notice import Notice
 from app.models.notification import Notification
 from app.models.workflow import Workflow
+from app.models.setting import TenantSetting
 from app.api.deps import get_current_active_user
 from app.schemas.dashboard import (
     DashboardResponse,
@@ -106,12 +107,30 @@ def get_dashboard_data(
             )
         )
 
-    # 3b. Notices (Company Scope)
+    # 3b. Notices (Company Scope, dynamic limit from tenant setting)
+    notice_limit = 5
+    if current_user.company_id:
+        setting = (
+            db.query(TenantSetting)
+            .filter(
+                TenantSetting.company_id == current_user.company_id,
+                TenantSetting.key == "notice_display_count"
+            )
+            .first()
+        )
+        if setting and setting.value:
+            try:
+                parsed_limit = int(setting.value)
+                if 1 <= parsed_limit <= 50:
+                    notice_limit = parsed_limit
+            except ValueError:
+                pass
+
     notices_query = (
         db.query(Notice)
         .filter(Notice.company_id == current_user.company_id, Notice.is_active == True)
         .order_by(desc(Notice.created_at))
-        .limit(5)
+        .limit(notice_limit)
         .all()
     )
 

@@ -31,6 +31,8 @@ const ACTION_LABELS: Record<string, string> = {
   create_initial_admin: '管理者初期作成',
   reset_initial_admin: '管理者PW リセット',
   ai_chat_history_cleared: 'AIチャット履歴削除',
+  update_system_settings: 'システム設定変更',
+  'システム設定変更': 'システム設定変更',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -68,6 +70,10 @@ const DETAIL_KEY_LABELS: Record<string, string> = {
   deleted_count: '削除件数',
   // login error
   reason: 'エラー詳細',
+  // system_settings
+  summary: '変更内容',
+  company_name: '会社名',
+  system_name: 'システム表示名',
   // misc
   action: '操作',
   ip_address: 'IPアドレス',
@@ -183,6 +189,11 @@ function localizeValue(key: string, value: unknown): string {
     return str;
   }
 
+  // summary値の整形（システム設定変更等のサマリ）
+  if (key === 'summary') {
+    return str.split(' / ').join('\n');
+  }
+
   // 状態系キーは日本語化
   const isStatusKey = ['status', 'old_status', 'new_status'].includes(key);
   if (isStatusKey) return localizeStatusValue(str);
@@ -220,6 +231,7 @@ const ALWAYS_HIDDEN_IDS = new Set([
   'role_id',         // 数値のみで社内利用者に意味不明
   'user_id',         // add_project_memberの内部ID（表示情報なし）
   'member_user_id',  // 同上
+  'company_id',      // 内部テナントID
 ]);
 
 // 対応するキーが存在する場合のみ非表示にするIDキー
@@ -227,6 +239,8 @@ const ALWAYS_HIDDEN_IDS = new Set([
 const SUPPRESS_IF_COMPANION: Record<string, string[]> = {
   project_id: ['name', 'project_name', 'target_project_name'],
   target_project_id: ['target_project_name', 'project_name'],
+  company_name: ['summary'],
+  system_name: ['summary'],
 };
 
 function shouldHideId(key: string, allKeys: Set<string>): boolean {

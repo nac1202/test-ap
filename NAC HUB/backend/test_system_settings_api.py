@@ -71,6 +71,7 @@ from app.models.role import Role
 from app.models.company import Company
 from app.models.setting import TenantSetting
 from app.models.audit import AuditLog
+from app.models.notice import Notice
 from app.core import security
 from app.db.seed import seed_db
 
@@ -322,11 +323,44 @@ def run_tests():
     assert "system_name" in pub_data
     assert "theme_color" in pub_data
     assert "version_info" in pub_data
-    print("PASS: Public settings endpoint returned 200 without authentication")
+    assert pub_data["version_info"]["build_number"] == "20261021"
+    print("PASS: Public settings endpoint returned 200 without authentication & verified build_number=20261021")
+
+    # 12. ダッシュボード連携確認（notice_display_count=7 が正しくダッシュボードAPIに反映されること）
+    print("\n12. Test Dashboard Notices Dynamic Limit Integration")
+    # まず notice_display_count を 7 に設定
+    update_7 = {**update_payload, "notice_display_count": 7}
+    r_update_7 = client.put("/api/v1/admin/system-settings", json=update_7, headers=admin_headers)
+    assert r_update_7.status_code == 200
+    assert r_update_7.json()["notice_display_count"] == 7
+
+    # テストDBの会社1にアクティブなお知らせを10件作成
+    with SessionLocal() as db:
+        admin_u = db.query(User).filter(User.email == ADMIN_EMAIL).first()
+        for i in range(10):
+            n = Notice(
+                company_id=admin_u.company_id,
+                created_by_id=admin_u.id,
+                title=f"テストお知らせ {i+1}",
+                body=f"内容 {i+1}",
+                category="general",
+                is_active=True,
+            )
+            db.add(n)
+        db.commit()
+
+    # ダッシュボードAPIを呼び出して notices が上限7件であることを検証
+    r_dash = client.get("/api/v1/dashboard/", headers=admin_headers)
+    assert r_dash.status_code == 200
+    dash_data = r_dash.json()
+    assert "notices" in dash_data
+    assert len(dash_data["notices"]) == 7, f"Expected 7 notices based on system setting, got {len(dash_data['notices'])}"
+    print(f"PASS: Dashboard returned exactly {len(dash_data['notices'])} notices conforming to notice_display_count=7")
 
     print("\n=============================================")
-    print("ALL 11 SYSTEM SETTINGS API TESTS PASSED! ✅")
+    print("ALL 12 SYSTEM SETTINGS API TESTS PASSED! ✅")
     print("=============================================\n")
+
 
 
 if __name__ == "__main__":

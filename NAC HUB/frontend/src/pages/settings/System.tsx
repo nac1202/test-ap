@@ -5,8 +5,10 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { fetchSystemSettings, updateSystemSettings } from '../../api/admin';
 import type { SystemVersionInfo } from '../../types/admin';
+import { useSystemConfig } from '../../contexts/SystemConfigContext';
 
 export default function System() {
+  const { refetchConfig } = useSystemConfig();
   const [companyName, setCompanyName] = useState('NAC System');
   const [systemName, setSystemName] = useState('NAC HUB');
   const [themeColor, setThemeColor] = useState('#FF6B00');
@@ -100,6 +102,13 @@ export default function System() {
       setMaintenanceMode(updated.maintenance_mode);
       if (updated.version_info) {
         setVersionInfo(updated.version_info);
+      }
+
+      // 共通Contextを更新（サイドバー・モバイルドロワーへ即時反映）
+      try {
+        await refetchConfig();
+      } catch (refetchErr) {
+        console.warn('Failed to refetch system config:', refetchErr);
       }
 
       setSuccessMessage('システム設定を正常に保存しました。');
@@ -292,13 +301,13 @@ export default function System() {
             <div className="flex justify-between py-2 border-b border-gray-100">
               <span className="text-gray-500">システムバージョン</span>
               <span className="font-bold text-gray-800 font-mono">
-                {versionInfo ? `v${versionInfo.version}` : 'v1.6.0'}
+                Ver {(versionInfo?.version ?? '1.6.0').replace(/^v/i, '')}
               </span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
               <span className="text-gray-500">ビルド番号</span>
               <span className="font-bold text-gray-800 font-mono">
-                {versionInfo?.build_number ?? '#20261021'}
+                Build {(versionInfo?.build_number ?? '20261021').replace(/^#/, '').replace(/^Build\s*/i, '')}
               </span>
             </div>
             <div className="flex justify-between py-2">

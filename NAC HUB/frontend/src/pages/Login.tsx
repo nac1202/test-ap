@@ -4,10 +4,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useAuth } from '../contexts/AuthContext';
+import { useSystemConfig } from '../contexts/SystemConfigContext';
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { systemName } = useSystemConfig();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -79,7 +81,7 @@ export default function Login() {
 
       <div className="w-full max-w-md relative z-10 my-auto">
         <div className="text-center mb-6 sm:mb-10">
-          <h1 className="text-4xl sm:text-5xl font-black text-primary mb-2 sm:mb-3 tracking-tighter">NAC HUB</h1>
+          <h1 className="text-4xl sm:text-5xl font-black text-primary mb-2 sm:mb-3 tracking-tighter">{systemName}</h1>
           <p className="text-xs sm:text-sm text-text-muted font-medium">社員が毎朝最初に開く業務OS</p>
         </div>
         

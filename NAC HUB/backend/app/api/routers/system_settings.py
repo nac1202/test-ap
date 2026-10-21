@@ -30,8 +30,9 @@ DEFAULT_NOTICE_COUNT = 5
 DEFAULT_MAINTENANCE_MODE = False
 
 # バージョン情報定数
-BUILD_NUMBER = "#20261021"
+BUILD_NUMBER = "20261021"
 LAST_UPDATED_AT = "2026-10-21"
+
 
 
 # ---------------------------------------------------------------------------

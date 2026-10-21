@@ -34,5 +34,19 @@
     - [x] 既存回帰テスト実行 (全7ファイルPASS) <!-- id: 33 -->
     - [x] フロントエンド静的検証 (tsc, build, lint 全PASS) <!-- id: 34 -->
     - [x] 検証完了コミット (`fix: finalize system settings API verification` f0df172) <!-- id: 35 -->
+- [x] 9. 手動E2Eフィードバック対応 (共通UI反映・ビルド番号統一・お知らせ件数連携・監査ログ表示) <!-- id: 36 -->
+    - [x] ダッシュボードお知らせ件数動的制限 (`backend/app/api/routers/dashboard.py`) <!-- id: 37 -->
+    - [x] バージョン・ビルド番号定義の統一 (`backend/app/api/routers/system_settings.py`) <!-- id: 38 -->
+    - [x] 共通設定Context新設 (`frontend/src/contexts/SystemConfigContext.tsx`) <!-- id: 39 -->
+    - [x] App.tsx への Provider 導入 (`frontend/src/App.tsx`) <!-- id: 40 -->
+    - [x] サイドバー・モバイルドロワーへのシステム表示名＆ビルド番号反映 (`frontend/src/components/layout/Sidebar.tsx`) <!-- id: 41 -->
+    - [x] ログイン画面へのシステム表示名反映 (`frontend/src/pages/Login.tsx`) <!-- id: 42 -->
+    - [x] システム設定画面での即時反映連携 (`frontend/src/pages/settings/System.tsx`) <!-- id: 43 -->
+    - [x] 監査ログ詳細キーの日本語化定義追加 (`frontend/src/pages/settings/Audit.tsx`) <!-- id: 44 -->
+    - [x] バックエンド新規テスト追加＆全回帰テスト実行 <!-- id: 45 -->
+    - [x] フロントエンド静的検証 (tsc, build, lint) <!-- id: 46 -->
+    - [x] コミット (`fix: apply public system settings across shared UI`) <!-- id: 47 -->
+
+
 
 

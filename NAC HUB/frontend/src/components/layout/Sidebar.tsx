@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Network
 } from 'lucide-react';
+import { useSystemConfig } from '../../contexts/SystemConfigContext';
 
 interface SidebarProps {
   onCloseMobileMenu?: () => void;
@@ -22,6 +23,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onCloseMobileMenu, unreadCount = 0 }: SidebarProps) {
+  const { systemName, versionInfo } = useSystemConfig();
   const navItems = [
     { name: 'ホーム', path: '/', icon: Home, badge: null },
     { name: 'なっくん (AI)', path: '/chat', icon: MessageSquare, badge: null },
@@ -46,9 +48,11 @@ export function Sidebar({ onCloseMobileMenu, unreadCount = 0 }: SidebarProps) {
         onClick={() => onCloseMobileMenu?.()}
         className="h-16 flex items-center px-6 shrink-0 cursor-pointer border-b border-gray-100"
       >
-        <div className="flex items-center gap-2">
-          <Network className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-black text-gray-800 tracking-tight">NAC HUB</h1>
+        <div className="flex items-center gap-2 min-w-0">
+          <Network className="h-6 w-6 text-primary shrink-0" />
+          <h1 className="text-xl font-black text-gray-800 tracking-tight truncate" title={systemName}>
+            {systemName}
+          </h1>
         </div>
       </div>
 
@@ -108,12 +112,16 @@ export function Sidebar({ onCloseMobileMenu, unreadCount = 0 }: SidebarProps) {
         {/* System Info Box */}
         <div className="mt-auto pt-6 px-3 pb-2">
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-            <p className="text-xs font-black text-gray-800">NAC HUB</p>
-            <p className="text-[10px] text-gray-500 mt-0.5">Ver 1.6.0</p>
-            <p className="text-[10px] text-gray-500">Build 20260822</p>
-            <button className="w-full mt-3 py-2 border border-primary/30 text-primary text-xs font-bold rounded-full hover:bg-primary/5 transition-colors min-h-[36px]">
+            <p className="text-xs font-black text-gray-800 truncate" title={systemName}>{systemName}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5 font-mono">Ver {versionInfo.version.replace(/^v/i, '')}</p>
+            <p className="text-[10px] text-gray-500 font-mono">Build {versionInfo.build_number.replace(/^#/, '').replace(/^Build\s*/i, '')}</p>
+            <NavLink 
+              to="/settings/system" 
+              onClick={() => onCloseMobileMenu?.()}
+              className="block w-full mt-3 py-2 border border-primary/30 text-primary text-xs font-bold rounded-full hover:bg-primary/5 transition-colors min-h-[36px] text-center"
+            >
               システム情報
-            </button>
+            </NavLink>
           </div>
         </div>
       </div>

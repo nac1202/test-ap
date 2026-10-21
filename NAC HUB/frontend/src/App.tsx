@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { SystemConfigProvider } from './contexts/SystemConfigContext';
 import { MockLayout } from './components/layout/MockLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -32,8 +33,10 @@ import Audit from './pages/settings/Audit';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <SystemConfigProvider>
+      <AuthProvider>
+        <BrowserRouter>
+
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
@@ -57,6 +60,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+  </SystemConfigProvider>
   );
 }
 
