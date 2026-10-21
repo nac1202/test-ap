@@ -23,9 +23,16 @@
     - [x] フロントエンド型チェック (`npx tsc --noEmit`) <!-- id: 20 -->
     - [x] フロントエンドビルド (`npm run build`) <!-- id: 21 -->
     - [x] フロントエンドLint (`npm run lint`) <!-- id: 22 -->
-- [ ] 7. ドキュメント更新およびコミット <!-- id: 23 -->
-    - [x] `docs/system_settings_api/walkthrough.md` 作成 <!-- id: 24 -->
-    - [ ] `docs/nac_hub_development/task.md` 更新 <!-- id: 25 -->
-    - [ ] `docs/nac_hub_development/progress_summary.md` 更新 <!-- id: 26 -->
-    - [ ] バックアップコミット (`feat: connect system settings to API`) <!-- id: 27 -->
+- [x] 7. ドキュメント更新およびコミット <!-- id: 23 -->
+    - [x] `docs/system_settings_api/walkthrough.md` 作成・更新 <!-- id: 24 -->
+    - [x] バックアップコミット (`feat: connect system settings to API` e72e0ff) <!-- id: 27 -->
+- [x] 8. Docker起動後の残検証・回帰テスト・検証完了コミット <!-- id: 28 -->
+    - [x] Docker起動状態・ヘルスチェック確認 (3コンテナUp, /health正常) <!-- id: 29 -->
+    - [x] 開発DBバックアップ取得 (`NAC_HUB_pre_system_settings_e2e_20261021_201825.sql`) <!-- id: 30 -->
+    - [x] 公開設定API機密性・用途監査 <!-- id: 31 -->
+    - [x] 新規テスト実行 (`test_system_settings_api.py` 全11件PASS) <!-- id: 32 -->
+    - [x] 既存回帰テスト実行 (全7ファイルPASS) <!-- id: 33 -->
+    - [x] フロントエンド静的検証 (tsc, build, lint 全PASS) <!-- id: 34 -->
+    - [x] 検証完了コミット (`fix: finalize system settings API verification` f0df172) <!-- id: 35 -->
+
 

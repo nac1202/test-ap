@@ -68,7 +68,16 @@ NAC社内にSE担当者が不在であることを前提とし、画面上およ
 | TypeScript型チェック (`npx tsc --noEmit`) | **PASS** ✅ | エラー 0 件 |
 | プロダクションビルド (`npm run build`) | **PASS** ✅ | Vite build 正常完了 (dist 生成確認) |
 | フロントエンドLint (`npm run lint`) | **PASS** ✅ | エラー 0 件 (警告 1 件は既存 AuthContext.tsx のみ) |
-| バックエンド自動テスト実行 | **保留（手動E2E時）** ⚠️ | Dockerデーモン停止中のため、PostgreSQLコンテナ起動後に実行 |
+| 新規バックエンドテスト (`test_system_settings_api.py`) | **PASS** ✅ | 全 11 テストケース完全通過 |
+| 既存回帰テスト (`test_api.py`) | **PASS** ✅ | 全ケース通過 |
+| 既存回帰テスト (`test_projects_api.py`) | **PASS** ✅ | 全 11 ケース通過 |
+| 既存回帰テスト (`test_dashboard_api.py`) | **PASS** ✅ | 全ケース通過 |
+| 既存回帰テスト (`test_admin_management_api.py`) | **PASS** ✅ | 全 26 ケース通過 |
+| 既存回帰テスト (`test_notifications_api.py`) | **PASS** ✅ | 全ケース通過 |
+| 既存回帰テスト (`test_notices_api.py`) | **PASS** ✅ | 全ケース通過 |
+| 作業前DBバックアップ | **取得完了** ✅ | `D:\Antigravity\backups\NAC_HUB_pre_system_settings_e2e_20261021_201825.sql` |
+| 検証コミット | **コミット完了** ✅ | `f0df172 fix: finalize system settings API verification` |
+
 
 ---
 
