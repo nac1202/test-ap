@@ -74,8 +74,10 @@ from app.models.audit import AuditLog
 from app.core import security
 from app.db.seed import seed_db
 
-# Ensure tables exist
+# Clean & create tables in test database
+db_module.Base.metadata.drop_all(bind=engine)
 db_module.Base.metadata.create_all(bind=engine)
+
 
 def override_get_db():
     db = db_module.SessionLocal()
@@ -112,6 +114,13 @@ def setup_test_data():
             )
             db.add(company1)
             db.commit()
+
+        # admin ユーザーの must_change_password を False に設定（APIテスト用）
+        admin_user = db.query(User).filter(User.email == ADMIN_EMAIL).first()
+        if admin_user:
+            admin_user.must_change_password = False
+            db.commit()
+
 
         # 一般ユーザー (会社1)
         normal = db.query(User).filter(User.email == NORMAL_EMAIL).first()
