@@ -33,6 +33,9 @@ const ACTION_LABELS: Record<string, string> = {
   ai_chat_history_cleared: 'AIチャット履歴削除',
   update_system_settings: 'システム設定変更',
   'システム設定変更': 'システム設定変更',
+  CREATE_NOTICE: 'お知らせ作成',
+  UPDATE_NOTICE: 'お知らせ更新',
+  DELETE_NOTICE: 'お知らせ削除',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -78,6 +81,12 @@ const DETAIL_KEY_LABELS: Record<string, string> = {
   service: '対象サービス',
   operation: '操作',
   executed_by: '実行者',
+  // notices
+  entity_name: 'お知らせ名',
+  category: 'カテゴリ',
+  is_important: '重要なお知らせ',
+  is_active: '公開状態',
+  updated_fields: '更新した項目',
   // misc
   action: '操作',
   ip_address: 'IPアドレス',
@@ -167,9 +176,36 @@ function formatChangeItem(item: string): string | null {
   return item;
 }
 
+// お知らせの更新項目名（内部フィールド名 → 日本語）
+const NOTICE_FIELD_LABELS: Record<string, string> = {
+  title: 'タイトル',
+  body: '本文',
+  content: '本文',
+  category: 'カテゴリ',
+  is_important: '重要なお知らせ',
+  is_active: '公開状態',
+};
+
 // 値の日本語化（安全に変換できるもののみ）
 function localizeValue(key: string, value: unknown): string {
   if (value === null || value === undefined) return '—';
+
+  // 公開状態は「公開中／非公開」で表示
+  if (key === 'is_active') {
+    const s = String(value).toLowerCase();
+    if (value === true || s === 'true' || s === 'active') return '公開中';
+    if (value === false || s === 'false' || s === 'inactive') return '非公開';
+  }
+
+  // 更新した項目: 配列 or 配列風文字列を日本語の項目名へ
+  if (key === 'updated_fields') {
+    const names: string[] = Array.isArray(value)
+      ? (value as unknown[]).map(v => String(v))
+      : (String(value).match(/[A-Za-z_]+/g) ?? []);
+    const labeled = names.map(n => NOTICE_FIELD_LABELS[n] ?? n);
+    return labeled.length > 0 ? labeled.join('、') : '—';
+  }
+
   if (typeof value === 'boolean') return value ? 'はい' : 'いいえ';
 
   // 配列（changes等）: 各項目を個別整形
@@ -236,6 +272,11 @@ const ALWAYS_HIDDEN_IDS = new Set([
   'user_id',         // add_project_memberの内部ID（表示情報なし）
   'member_user_id',  // 同上
   'company_id',      // 内部テナントID
+  // 技術情報（通常の一覧には表示しない。将来「技術情報を表示」機能へ分離）
+  'entity_type',
+  'entity_id',
+  'ip_address',
+  'user_agent',
 ]);
 
 // 対応するキーが存在する場合のみ非表示にするIDキー
