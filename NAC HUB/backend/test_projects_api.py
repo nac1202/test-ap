@@ -53,7 +53,7 @@ print("Running Projects API validation tests with TestClient...")
 db_url = str(settings.DATABASE_URL)
 if db_url.startswith("postgresql"):
     db_name = db_url.split("/")[-1].split("?")[0]
-    if not db_name.endswith("_test"):
+    if db_name != "nac_hub_test":
         print(f"SAFETY GUARD: PostgreSQL database name '{db_name}' does not end with '_test'.")
         print("Refusing to run tests against non-test database. Set DATABASE_URL to a test database.")
         sys.exit(1)

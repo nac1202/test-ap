@@ -55,7 +55,7 @@ def run_dashboard_tests():
     # Safety Check: DB Name MUST end with _test
     db_url = str(engine.url)
     print(f"Target DB URL: {db_url}")
-    if not db_url.endswith("_test"):
+    if db_url.split("/")[-1].split("?")[0] != "nac_hub_test":
         raise RuntimeError(f"CRITICAL SAFETY GUARD TRIGGERED: Refusing to run tests on non-test DB: {db_url}")
     print("Safety check passed: using test database 'nac_hub_test'")
 

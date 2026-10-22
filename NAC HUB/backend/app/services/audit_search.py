@@ -25,25 +25,22 @@ from app.services.plugins.registry import get_all_adapters
 #   like        : action の部分一致パターン（先頭一致等。% 付き）
 #   details_any : （任意）actions と AND で適用する、安全な details 内文字列条件
 # 実在するactionのみ登録する（コード上の AuditLog 書き込み箇所を確認済み）。
+# DELETE_NOTICE / enable_user / disable_user は現行コードから発行されないため登録しない
+# （お知らせ削除・ユーザー有効化/無効化は、実装時に対応表へ追加すること）。
 # ---------------------------------------------------------------------------
 AUDIT_SEARCH_ALIASES: Dict[str, Dict[str, List[str]]] = {
     # お知らせ
-    "お知らせ": {"actions": ["CREATE_NOTICE", "UPDATE_NOTICE", "DELETE_NOTICE"]},
+    "お知らせ": {"actions": ["CREATE_NOTICE", "UPDATE_NOTICE"]},
     "お知らせ作成": {"actions": ["CREATE_NOTICE"]},
     "お知らせ更新": {"actions": ["UPDATE_NOTICE"]},
-    "お知らせ削除": {"actions": ["DELETE_NOTICE"]},
     # システム設定
     "システム設定": {"actions": ["システム設定変更"]},
     "システム設定変更": {"actions": ["システム設定変更"]},
     "メンテナンス": {"actions": ["システム設定変更"], "details_any": ["メンテナンス"]},
     # ユーザー
-    "ユーザー": {"actions": [
-        "create_user", "update_user", "enable_user", "disable_user", "update_role",
-    ]},
+    "ユーザー": {"actions": ["create_user", "update_user", "update_role"]},
     "ユーザー作成": {"actions": ["create_user"]},
     "ユーザー更新": {"actions": ["update_user"]},
-    "ユーザー有効化": {"actions": ["enable_user"]},
-    "ユーザー無効化": {"actions": ["disable_user"]},
     "利用区分変更": {"actions": ["update_role"]},
     # 案件
     "案件": {"actions": [

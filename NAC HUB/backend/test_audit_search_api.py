@@ -191,6 +191,25 @@ def setup():
                       json={"settings": {"workspace_name": "audit-search-ws"}}).status_code == 200
 
 
+def teardown():
+    """このテストが投入した行(秘密情報ダミーを含む)を削除し、後続テストへ干渉させない。"""
+    db = SessionLocal()
+    try:
+        assert db.execute(text("select current_database()")).scalar() == "nac_hub_test"
+        users = db.query(User).filter(User.email.in_([ADMIN_EMAIL, COMP2_EMAIL])).all()
+        uids = [u.id for u in users]
+        cids = [c.id for c in db.query(Company).filter(Company.name.in_(["AuditSearchCorp1", "AuditSearchCorp2"])).all()]
+        if uids:
+            db.query(AuditLog).filter(AuditLog.user_id.in_(uids)).delete(synchronize_session=False)
+        if cids:
+            db.query(PluginConfig).filter(PluginConfig.company_id.in_(cids)).delete(synchronize_session=False)
+        db.commit()
+    finally:
+        db.close()
+
+
+import atexit
+atexit.register(teardown)
 setup()
 
 
