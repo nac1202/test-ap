@@ -161,3 +161,60 @@ export async function fetchPublicSystemSettings(): Promise<PublicSystemSettingsR
   return handleResponse<PublicSystemSettingsResponse>(res);
 }
 
+// ──────────────── Plugins ────────────────
+
+import type {
+  PluginListResponse,
+  PluginItemResponse,
+  PluginSettingsUpdateParams,
+  PluginValidationResponse,
+} from '../types/admin';
+
+export async function fetchPlugins(): Promise<PluginListResponse> {
+  const res = await fetch(`${API_BASE}/plugins`, { headers: getAuthHeaders() });
+  return handleResponse<PluginListResponse>(res);
+}
+
+export async function fetchPlugin(pluginKey: string): Promise<PluginItemResponse> {
+  const res = await fetch(`${API_BASE}/plugins/${pluginKey}`, { headers: getAuthHeaders() });
+  return handleResponse<PluginItemResponse>(res);
+}
+
+export async function updatePluginSettings(
+  pluginKey: string,
+  data: PluginSettingsUpdateParams
+): Promise<PluginItemResponse> {
+  const res = await fetch(`${API_BASE}/plugins/${pluginKey}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  return handleResponse<PluginItemResponse>(res);
+}
+
+export async function validatePluginSettings(
+  pluginKey: string
+): Promise<PluginValidationResponse> {
+  const res = await fetch(`${API_BASE}/plugins/${pluginKey}/validate`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  });
+  return handleResponse<PluginValidationResponse>(res);
+}
+
+export async function enablePlugin(pluginKey: string): Promise<PluginItemResponse> {
+  const res = await fetch(`${API_BASE}/plugins/${pluginKey}/enable`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  });
+  return handleResponse<PluginItemResponse>(res);
+}
+
+export async function disablePlugin(pluginKey: string): Promise<PluginItemResponse> {
+  const res = await fetch(`${API_BASE}/plugins/${pluginKey}/disable`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  });
+  return handleResponse<PluginItemResponse>(res);
+}
+

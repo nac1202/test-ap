@@ -42,3 +42,17 @@
 - 次期フェーズまたは運用保守対応。
 
 
+
+## 追加開発フェーズ9 進捗追記
+### 現在のステータス: 追加開発フェーズ9 実装済み・手動E2E待ち（正式バージョンは v1.7.0 のまま）
+
+### 追加開発フェーズ9: プラグイン管理API化
+1. **既存モデル活用**: `plugin_configs`（company_id, plugin_name, is_active, config_json, last_tested_at）で要件を充足。新規migrationなし。
+2. **プラグイン定義**: Slack / Google Drive / NotePM / HotBiz を `app/services/plugins/` のアダプター（validate・状態判定・設定確認）に一元化。DB行がなくても4件常時表示。
+3. **API**: `GET /api/v1/admin/plugins`, `GET/PUT /{plugin_key}`, `POST /{plugin_key}/validate|enable|disable`（管理者限定・会社スコープ・未知キー404）。
+4. **非機密設定のみ保存**: secret/token/password/key/credential等のキーは400で拒否。
+5. **正直な状態表示**: 外部通信は未実装のため connected は常に false。「設定確認」は準備情報の検証のみで、接続成功とは表示しない。
+6. **有効/無効**: 利用候補フラグ。接続状態とは分離。設定不足の有効化は不足項目を案内して400。
+7. **監査ログ**: 「Slack設定変更」「Google Driveを有効化」「NotePM設定確認」「HotBizを無効化」等。
+8. **Dashboard整合性**: integrations は connected=false を維持（変更なし）。
+9. **検証**: 新規20テスト＋既存7ファイル回帰PASS、tsc/build/lint PASS。手動E2E待ち。

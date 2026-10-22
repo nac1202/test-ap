@@ -79,3 +79,14 @@
   - [x] ユーザーによるブラウザ手動E2Eテスト確認 (全項目PASS)
 
 
+
+## 追加開発フェーズ9 タスク追記 (実装済み・手動E2E待ち)
+- [x] v1.7リリースバックアップ（DB dump / ソースZIP / マニフェスト）
+- [x] 既存モデル・UI監査（`plugin_configs` 既存モデルで要件充足 → migration不要）
+- [x] プラグイン定義・アダプター基盤 (`app/services/plugins/`)
+- [x] プラグイン管理API (`GET/PUT /admin/plugins`, `/{key}`, `/validate`, `/enable`, `/disable`)
+- [x] 会社スコープ・管理者限定・秘密情報入力拒否・監査ログ
+- [x] `Plugins.tsx` 実API接続（4プラグイン常時表示・設定モーダル・設定確認・有効/無効）
+- [x] 新規テスト `test_plugin_management_api.py` 作成・PASS
+- [x] 既存回帰テスト・tsc・build・lint PASS
+- [ ] ユーザーによるブラウザ手動E2E確認

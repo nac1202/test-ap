@@ -116,3 +116,45 @@ export interface PublicSystemSettingsResponse {
   version_info: SystemVersionInfo;
 }
 
+// ──────────────── プラグイン管理 ────────────────
+
+export type PluginStatus =
+  | 'not_configured'
+  | 'configured'
+  | 'needs_credentials'
+  | 'not_implemented'
+  | 'disabled'
+  | 'error'
+  | 'connected';
+
+export interface PluginItemResponse {
+  plugin_key: string;
+  display_name: string;
+  category: string;
+  description: string;
+  is_enabled: boolean;
+  status: PluginStatus;
+  status_label: string;
+  settings: Record<string, unknown>;
+  last_tested_at: string | null;
+  last_validation_result: string | null;
+  connected: boolean;
+}
+
+export interface PluginListResponse {
+  total: number;
+  items: PluginItemResponse[];
+}
+
+export interface PluginSettingsUpdateParams {
+  settings: Record<string, unknown>;
+}
+
+export interface PluginValidationResponse {
+  success: boolean;
+  status: PluginStatus;
+  status_label: string;
+  message: string;
+  tested_at: string;
+}
+
