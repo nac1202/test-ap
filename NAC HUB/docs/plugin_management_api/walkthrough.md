@@ -1,6 +1,6 @@
 # 追加開発フェーズ9「プラグイン管理API化」ウォークスルー
 
-**ステータス: 実装済み・手動E2E待ち**（バージョンは v1.7.0 のまま）
+**ステータス: 完了**（手動E2E PASS・バージョン v1.8.0・タグ v1.8-plugin-management-api）
 
 ## 実装内容
 - バックエンド: `routers/plugins.py`, `schemas/plugin.py`, `services/plugins/*`（Slack/Google Drive/NotePM/HotBiz）、`main.py` へルーター登録。
@@ -15,10 +15,14 @@
 
 ## 自動テスト結果
 - test_plugin_management_api.py（20項目）: ALL PASS
-- 既存7ファイル回帰: ALL PASS
+- 全9バックエンドテストを2回連続実行して全PASS（テスト間干渉は解消済み）
 - tsc / build / lint: PASS（lint警告1件は既存 AuthContext）
 
-## 手動E2E確認項目
+## 関連する後続対応
+- 監査ログの日本語表示・日本語検索（2abffb3 / 00aa403 / 2864a8c）
+- テスト間干渉の解消（a12268d）
+
+## 手動E2E確認項目（すべてPASS）
 1. /settings/plugins に4カード表示・緑チェック/接続済み表示なし
 2. 各プラグイン設定保存 → F5後も維持
 3. 設定不足で有効化 → 日本語エラー
