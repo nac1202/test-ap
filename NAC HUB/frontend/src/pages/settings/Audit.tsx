@@ -541,7 +541,7 @@ export default function Audit() {
                 <Input
                   id="audit-search"
                   className="pl-9 bg-white text-xs sm:text-sm h-11 w-full"
-                  placeholder="アクションで検索..."
+                  placeholder="お知らせ、案件、NotePM、メールアドレスなどで検索..."
                   value={search}
                   onChange={e => handleSearch(e.target.value)}
                 />
@@ -558,6 +558,9 @@ export default function Audit() {
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
+            {search.trim() && !error && (
+              <p id="audit-searching-label" className="text-xs text-gray-500">『{search.trim()}』で検索中</p>
+            )}
             {/* 行2: アクションフィルター（全幅） */}
             <select
               id="audit-action-filter"
@@ -632,7 +635,7 @@ export default function Audit() {
       {loading ? (
         <div className="py-16 text-center text-gray-400 text-sm">読み込み中...</div>
       ) : error ? null : logs.length === 0 ? (
-        <div className="py-16 text-center text-gray-400 text-sm">ログが見つかりません</div>
+        <div className="py-16 text-center text-gray-400 text-sm">条件に一致する監査ログはありません</div>
       ) : (
         <>
           {/* ── モバイル: カードリスト（sm未満のみ） ── */}

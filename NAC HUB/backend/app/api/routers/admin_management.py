@@ -20,6 +20,7 @@ from app.api.deps import get_current_active_user, get_current_admin_user, get_db
 from app.models.user import User
 from app.models.role import Role
 from app.models.audit import AuditLog
+from app.services.audit_search import build_audit_search_filter
 from app.core import security
 
 router = APIRouter()
@@ -137,8 +138,16 @@ class AuditLogListResponse(BaseModel):
 SENSITIVE_KEYS = {
     "password", "password_hash", "hashed_password", "secret_key", "token",
     "authorization", "database_url", "api_key", "oauth_secret",
-    "access_token", "refresh_token",
+    "access_token", "refresh_token", "secret",
 }
+
+# 監査ログのレスポンスに含めない内部キー（非秘密でも利用者に不要）
+INTERNAL_KEYS = {"company_id", "config_json", "plugin_key"}
+
+
+def _is_hidden_key(key: str) -> bool:
+    k = key.lower()
+    return k in INTERNAL_KEYS or any(s in k for s in SENSITIVE_KEYS)
 
 def _normalize_details(details) -> Optional[dict]:
     """details が dict 以外（旧形式の文字列等）でも dict に正規化する"""
@@ -156,10 +165,9 @@ def sanitize_details(details: Optional[dict]) -> str:
         return ""
     safe = {}
     for k, v in details.items():
-        if any(s in k.lower() for s in SENSITIVE_KEYS):
-            safe[k] = "***"
-        else:
-            safe[k] = v
+        if _is_hidden_key(k):
+            continue  # 秘密情報・内部キーは完全除外（キー名も出さない）
+        safe[k] = v
     # 簡潔なサマリ（最大200文字）
     try:
         parts = [f"{k}: {v}" for k, v in safe.items()]
@@ -176,8 +184,8 @@ def sanitize_details_dict(details: Optional[dict]) -> Optional[dict]:
         return None
     safe = {}
     for k, v in details.items():
-        if any(s in k.lower() for s in SENSITIVE_KEYS):
-            pass  # 秘密情報は完全除外（***も出さない）
+        if _is_hidden_key(k):
+            pass  # 秘密情報・内部キーは完全除外
         else:
             safe[k] = v
     return safe if safe else None
@@ -550,8 +558,9 @@ def list_audit_logs(
     )
 
     if search and search.strip():
-        kw = f"%{search.strip()}%"
-        q = q.filter(AuditLog.action.ilike(kw))
+        search_cond = build_audit_search_filter(db, search, current_admin.company_id)
+        if search_cond is not None:
+            q = q.filter(search_cond)
 
     if action_filter and action_filter.strip():
         q = q.filter(AuditLog.action == action_filter.strip())
