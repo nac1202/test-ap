@@ -140,8 +140,18 @@ SENSITIVE_KEYS = {
     "access_token", "refresh_token",
 }
 
+def _normalize_details(details) -> Optional[dict]:
+    """details が dict 以外（旧形式の文字列等）でも dict に正規化する"""
+    if not details:
+        return None
+    if isinstance(details, dict):
+        return details
+    return {"summary": str(details)}
+
+
 def sanitize_details(details: Optional[dict]) -> str:
     """detailsから秘密情報を除外してサマリ文字列を生成する"""
+    details = _normalize_details(details)
     if not details:
         return ""
     safe = {}
@@ -161,6 +171,7 @@ def sanitize_details(details: Optional[dict]) -> str:
 
 def sanitize_details_dict(details: Optional[dict]) -> Optional[dict]:
     """detailsから秘密情報を除外して構造化dictを返す（フロント表示用）"""
+    details = _normalize_details(details)
     if not details:
         return None
     safe = {}

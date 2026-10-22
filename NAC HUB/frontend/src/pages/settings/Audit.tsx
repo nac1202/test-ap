@@ -74,6 +74,10 @@ const DETAIL_KEY_LABELS: Record<string, string> = {
   summary: '変更内容',
   company_name: '会社名',
   system_name: 'システム表示名',
+  // plugins
+  service: '対象サービス',
+  operation: '操作',
+  executed_by: '実行者',
   // misc
   action: '操作',
   ip_address: 'IPアドレス',
@@ -445,10 +449,15 @@ export default function Audit() {
         page,
         size: PAGE_SIZE,
       });
-      setLogs(res.items);
-      setTotal(res.total);
+      setLogs(Array.isArray(res.items) ? res.items : []);
+      setTotal(res.total ?? 0);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : '監査ログの取得に失敗しました');
+      setLogs([]);
+      setError(
+        e instanceof TypeError
+          ? 'サーバーに接続できませんでした。時間をおいて再度お試しください。'
+          : e instanceof Error ? e.message : '監査ログの取得に失敗しました'
+      );
     } finally {
       setLoading(false);
     }
@@ -554,8 +563,24 @@ export default function Audit() {
       </Card>
 
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          <div className="flex items-start gap-2 flex-1">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">監査ログを取得できませんでした</p>
+              <p className="text-xs text-red-600 mt-0.5">{error}</p>
+            </div>
+          </div>
+          <Button
+            id="btn-retry-audit"
+            variant="outline"
+            size="sm"
+            className="min-h-[40px] shrink-0"
+            onClick={loadLogs}
+            disabled={loading}
+          >
+            再読み込み
+          </Button>
         </div>
       )}
 
@@ -565,7 +590,7 @@ export default function Audit() {
           ────────────────────────────────────────── */}
       {loading ? (
         <div className="py-16 text-center text-gray-400 text-sm">読み込み中...</div>
-      ) : logs.length === 0 ? (
+      ) : error ? null : logs.length === 0 ? (
         <div className="py-16 text-center text-gray-400 text-sm">ログが見つかりません</div>
       ) : (
         <>

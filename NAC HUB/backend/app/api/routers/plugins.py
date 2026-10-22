@@ -31,6 +31,18 @@ def require_admin_user(current_user: User) -> None:
             detail='会社情報が設定されていません。'
         )
 
+def _audit_details(adapter: BasePluginAdapter, operation: str, user: User, summary: Optional[str] = None) -> Dict[str, Any]:
+    """監査ログ details（JSON dict・秘密情報なし・非SE向け日本語）"""
+    d: Dict[str, Any] = {
+        'service': adapter.display_name,
+        'operation': operation,
+        'executed_by': user.email,
+    }
+    if summary:
+        d['summary'] = summary
+    return d
+
+
 def build_plugin_item(adapter: BasePluginAdapter, record: Optional[PluginConfig]) -> PluginItemResponse:
     if not record:
         raw_settings: Dict[str, Any] = {}
@@ -155,7 +167,7 @@ def update_plugin_settings(
     audit = AuditLog(
         user_id=current_user.id,
         action=f'{adapter.display_name}設定変更',
-        details=f'{adapter.display_name}の基本準備設定を更新しました。'
+        details=_audit_details(adapter, '基本設定を変更', current_user)
     )
     db.add(audit)
     db.commit()
@@ -214,7 +226,7 @@ def validate_plugin_settings(
     audit = AuditLog(
         user_id=current_user.id,
         action=f'{adapter.display_name}設定確認',
-        details=f'{adapter.display_name}の設定確認を実行しました: {result.get("message", "")}'
+        details=_audit_details(adapter, '設定確認を実行', current_user, result.get('message', ''))
     )
     db.add(audit)
     db.commit()
@@ -274,7 +286,7 @@ def enable_plugin(
     audit = AuditLog(
         user_id=current_user.id,
         action=f'{adapter.display_name}を有効化',
-        details=f'{adapter.display_name}プラグインを利用候補として有効化しました。'
+        details=_audit_details(adapter, '利用候補として有効化', current_user)
     )
     db.add(audit)
     db.commit()
@@ -318,7 +330,7 @@ def disable_plugin(
     audit = AuditLog(
         user_id=current_user.id,
         action=f'{adapter.display_name}を無効化',
-        details=f'{adapter.display_name}プラグインを無効化しました。'
+        details=_audit_details(adapter, '無効化', current_user)
     )
     db.add(audit)
     db.commit()

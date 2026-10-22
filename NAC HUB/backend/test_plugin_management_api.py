@@ -537,6 +537,47 @@ def test_20_no_secrets_exposed():
         assert f'"{t}"' not in raw_text.lower()
     print("PASS: 20. 秘密情報非露出の最終確認")
 
+# ──────────────────────────────────────────────────────────
+# 21. プラグイン監査ログが存在しても GET /admin/audit-logs が200
+#     （旧形式の文字列detailsが混在していても500にならない）
+# ──────────────────────────────────────────────────────────
+def test_21_audit_logs_api_with_plugin_logs():
+    # NotePM設定確認ログを生成（設定変更・有効化は test_19 で生成済み）
+    res_v = client.post("/api/v1/admin/plugins/notepm/validate", headers=auth_headers(admin_token))
+    assert res_v.status_code == 200
+    db = SessionLocal()
+    try:
+        admin = db.query(User).filter(User.email == ADMIN_EMAIL).first()
+        # 旧不具合で作られた文字列details形式の行を混在させる
+        db.add(AuditLog(user_id=admin.id, action="NotePM設定変更", details="NotePMの基本準備設定を更新しました。"))
+        db.commit()
+    finally:
+        db.close()
+
+    res = client.get("/api/v1/admin/audit-logs?size=100", headers=auth_headers(admin_token))
+    assert res.status_code == 200, f"Expected 200, got {res.status_code}: {res.text}"
+    data = res.json()
+    for key in ("total", "page", "size", "items"):
+        assert key in data
+    plugin_items = [i for i in data["items"] if i["action"].startswith(("Slack", "NotePM", "HotBiz", "Google Drive"))]
+    actions = {i["action"] for i in plugin_items}
+    assert "NotePM設定変更" in actions
+    assert "NotePMを有効化" in actions
+    assert "NotePM設定確認" in actions
+
+    # 新形式: 構造化dict（対象サービス・操作・実行者）
+    structured = [i for i in plugin_items if i["action"] == "NotePMを有効化"][0]
+    dd = structured["display_details"]
+    assert dd["service"] == "NotePM"
+    assert dd["operation"] == "利用候補として有効化"
+    assert dd["executed_by"] == ADMIN_EMAIL
+
+    # 秘密情報・内部情報が出ていない
+    raw = res.text
+    for forbidden in ("config_json", "plugin_key", "company_id", "client_secret", "access_token"):
+        assert forbidden not in raw, f"{forbidden} leaked in audit log response"
+    print("PASS: 21. プラグイン監査ログ存在下でも監査ログAPI 200（旧形式混在OK・秘密情報非露出）")
+
 if __name__ == "__main__":
     test_01_unauthorized_list()
     test_02_forbidden_normal_user()
@@ -554,6 +595,7 @@ if __name__ == "__main__":
     test_18_hotbiz_all_methods()
     test_19_notepm_and_google_drive()
     test_20_no_secrets_exposed()
+    test_21_audit_logs_api_with_plugin_logs()
     print("\n==========================================")
     print("ALL 20+ PLUGIN MANAGEMENT API TESTS PASSED!")
     print("==========================================")
