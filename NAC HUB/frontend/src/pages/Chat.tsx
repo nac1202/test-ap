@@ -7,6 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = 'http://localhost:8000/api/v1/ai';
 
+type AnswerMode = 'mock' | 'external' | 'fallback';
+
 interface ChatMessage {
   id: number;
   question: string;
@@ -14,7 +16,17 @@ interface ChatMessage {
   created_at: string;
   status?: 'sending' | 'error' | 'ok';
   errorDetail?: string;
+  // 送信直後の応答のみ保持（履歴取得では返らない）
+  mode?: AnswerMode;
+  fallback_used?: boolean;
+  warning?: string | null;
 }
+
+const MODE_NOTICE: Record<AnswerMode, string> = {
+  mock: '※ なっくんは現在モック回答モードで動作しています',
+  external: '※ なっくんは外部AI回答モードで動作しています（社内データには未接続）',
+  fallback: '※ 一時的にモック回答へ切り替えました',
+};
 
 interface PendingMessage {
   tempId: number;
@@ -33,6 +45,8 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [loadError, setLoadError] = useState('');
+  // APIから返る実際の回答モード（取得前・取得失敗時は null = モードを断定しない）
+  const [answerMode, setAnswerMode] = useState<AnswerMode | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Guard: consume the initial question exactly once, never re-fire
@@ -72,6 +86,26 @@ export default function Chat() {
     loadHistory();
   }, [loadHistory]);
 
+  // 現在の回答モード（外部通信なしで判定される）
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && (data.mode === 'mock' || data.mode === 'external' || data.mode === 'fallback')) {
+          setAnswerMode(data.mode);
+        }
+      } catch {
+        // モード取得失敗時は表示を出さない（チャット自体は継続）
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [token]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, pendingMessage, scrollToBottom]);
@@ -103,6 +137,9 @@ export default function Chat() {
 
       const data: ChatMessage = await res.json();
       setMessages(prev => [...prev, data]);
+      if (data.mode === 'mock' || data.mode === 'external' || data.mode === 'fallback') {
+        setAnswerMode(data.mode);
+      }
       setPendingMessage(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '送信エラー';
@@ -287,6 +324,9 @@ export default function Chat() {
                     </div>
                     <div className="p-3 sm:p-4 rounded-2xl rounded-tl-sm text-xs sm:text-sm shadow-sm bg-white border border-gray-100 break-words [overflow-wrap:anywhere] leading-relaxed text-gray-800">
                       {msg.answer}
+                      {msg.fallback_used && msg.warning && (
+                        <p className="mt-2 text-[11px] sm:text-xs text-amber-600">{msg.warning}</p>
+                      )}
                     </div>
                   </div>
                 </React.Fragment>
@@ -339,9 +379,11 @@ export default function Chat() {
 
         {/* Input Area (Shrink-0) */}
         <div className="p-3 sm:p-4 bg-white border-t shrink-0 flex flex-col gap-1.5 z-10">
-          <p className="text-[11px] sm:text-xs text-gray-400 text-center py-0.5 truncate">
-            ※ なっくんは現在モック回答モードで動作しています
-          </p>
+          {answerMode && (
+            <p id="chat-mode-notice" className="text-[11px] sm:text-xs text-gray-400 text-center py-0.5 truncate">
+              {MODE_NOTICE[answerMode]}
+            </p>
+          )}
 
           <form onSubmit={handleSubmit} className="flex gap-2 items-end">
             <textarea

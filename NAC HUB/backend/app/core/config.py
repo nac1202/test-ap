@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import Optional, Union
-from pydantic import field_validator
+from pydantic import SecretStr, field_validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "NAC HUB API"
@@ -36,10 +36,26 @@ class Settings(BaseSettings):
     # Initial Superuser Settings
     FIRST_SUPERUSER: str = "admin@example.com"
     FIRST_SUPERUSER_PASSWORD: str = "AdminPassword123"
+
+    # AI Provider (なっくん)
+    # AI_PROVIDER: "mock"(既定) | "openai"
+    # OPENAI_API_KEY はバックエンドの環境変数だけから取得する（ブラウザ・フロント・DB・ログへは出さない）。
+    AI_PROVIDER: str = "mock"
+    OPENAI_API_KEY: Optional[SecretStr] = None
+    OPENAI_MODEL: str = "gpt-6-luna"
+    OPENAI_REASONING_EFFORT: str = "low"  # 空文字なら reasoning を送らない
+    OPENAI_TIMEOUT_SECONDS: float = 30
+    OPENAI_MAX_OUTPUT_TOKENS: int = 1200
+    OPENAI_MAX_RETRIES: int = 1  # SDKの自動リトライ上限（無限リトライ禁止）
+    # モデルへ渡す会話履歴の上限
+    AI_HISTORY_MAX_TURNS: int = 10
+    AI_HISTORY_MAX_CHARS: int = 6000
     
     class Config:
         case_sensitive = True
-        env_file = ".env"
+        # .env.ai は backend 専用の秘密ファイル（Git管理外・フロントエンドには渡されない）
+        env_file = (".env", ".env.ai")
+        extra = "ignore"
 
 settings = Settings()
 

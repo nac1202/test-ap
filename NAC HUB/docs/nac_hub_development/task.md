@@ -89,4 +89,19 @@
 - [x] `Plugins.tsx` 実API接続（4プラグイン常時表示・設定モーダル・設定確認・有効/無効）
 - [x] 新規テスト `test_plugin_management_api.py` 作成・PASS
 - [x] 既存回帰テスト・tsc・build・lint PASS
-- [ ] ユーザーによるブラウザ手動E2E確認
+- [x] ユーザーによるブラウザ手動E2E確認（PASS・v1.8.0確定）
+
+## 追加開発フェーズ10 タスク (実装済み・APIキー設定／実通信E2E待ち)
+- [x] 開始時確認（HEAD=854ef5b / v1.8タグ / Clean / 3コンテナUp / health 1.8.0）
+- [x] 既存チャット実装監査（`ai_assistant.py` / `Chat.tsx` / `ai_chat_histories` / `ai_execution_logs`）
+- [x] AI Provider抽象化（`app/services/ai/`: base / mock_provider / openai_provider / factory / history / instructions）
+- [x] OpenAI公式SDK・Responses API実装（モデル等は環境変数で変更可）
+- [x] モック回答との切替・フォールバック（未設定／接続／タイムアウト／429／5xx／不正レスポンス）
+- [x] 秘密情報保護（`OPENAI_API_KEY` はバックエンド環境変数のみ・SecretStr・ログ／DB／レスポンス非露出）
+- [x] 会話履歴の上限・秘密情報らしき値の除外
+- [x] APIレスポンス拡張（mode / provider / fallback_used / warning）・`GET /api/v1/ai/status`
+- [x] 実行ログへ provider / model / 成否 / 処理時間 / 入出力トークン数 / フォールバック / エラー種別（migrationなし）
+- [x] `Chat.tsx` 回答モード表示（モック／外部AI／フォールバック）
+- [x] 新規テスト `test_ai_provider_api.py`（OpenAI実APIは呼ばない）
+- [x] 既存回帰テスト全10ファイルを2回連続PASS・tsc・build・lint PASS
+- [ ] ユーザーによるAPIキー設定・実通信E2E確認（バージョン・タグは未更新）

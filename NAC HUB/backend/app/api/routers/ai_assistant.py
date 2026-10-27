@@ -2,7 +2,8 @@
 AI Assistant API Router
 - Internal name: ai_assistant (generic name for extensibility)
 - Display name: "なっくん" (frontend only)
-- This phase uses mock responses; no external AI API is called.
+- AI 呼び出しは app.services.ai（Provider層）へ分離。AI_PROVIDER=mock で従来のモック回答、
+  AI_PROVIDER=openai で OpenAI Responses API（失敗時はモックへフォールバック）。
 """
 import logging
 from datetime import datetime
@@ -17,6 +18,8 @@ from app.db.database import get_db
 from app.models.ai import AIChatHistory, AIExecutionLog
 from app.models.audit import AuditLog
 from app.models.user import User
+from app.services.ai.factory import generate_reply_with_fallback, get_ai_status
+from app.services.ai.history import build_conversation_history, redact_secrets
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +38,11 @@ class ChatResponse(BaseModel):
     question: str
     answer: str
     created_at: datetime
+    # 以下は後方互換の追加項目（技術詳細をフロントで目立たせない）
+    mode: str = "mock"            # mock | external | fallback
+    provider: str = "mock"        # 実際に回答した provider
+    fallback_used: bool = False
+    warning: Optional[str] = None
 
 
 class ChatHistoryItem(BaseModel):
@@ -44,63 +52,37 @@ class ChatHistoryItem(BaseModel):
     created_at: datetime
 
 
-# ---------------------------------------------------------------------------
-# Mock response logic
-# ---------------------------------------------------------------------------
+def _build_process_details(outcome) -> str:
+    """実行ログ用の非機密メタ情報。APIキー・Authorization・プロンプト全文は含めない。
 
-def _generate_mock_response(question: str) -> str:
-    """Generate a mock response based on question content.
-
-    In a future phase this will be replaced with a real AI backend call.
+    モック単独は従来どおり "mock_response"。
+    input_usage / output_usage は入出力トークン数（キー名に秘密情報スキャンの禁止語を含めないためこの名称）。
     """
-    q_lower = question.lower()
-
-    if "案件" in question:
-        return (
-            "現在はモックデータで回答しています。"
-            "案件管理API接続後、実際の案件情報を確認できるようになります。\n\n"
-            "接続予定の機能:\n"
-            "・案件一覧の取得\n"
-            "・案件ステータスの確認\n"
-            "・担当者情報の表示"
-        )
-
-    if "予定" in question or "スケジュール" in question or "カレンダー" in question:
-        return (
-            "現在はモックデータで回答しています。"
-            "Google Calendar連携後、実際の予定情報を確認できるようになります。"
-        )
-
-    if "slack" in q_lower or "スラック" in question:
-        return (
-            "現在はモックデータで回答しています。"
-            "Slackプラグイン接続後、チャンネルの検索や過去ログの参照が可能になります。"
-        )
-
-    if "notePM" in q_lower or "notepm" in q_lower or "ノート" in question:
-        return (
-            "現在はモックデータで回答しています。"
-            "NotePMプラグイン接続後、社内ナレッジの検索が可能になります。"
-        )
-
-    if "ドライブ" in question or "drive" in q_lower or "資料" in question or "ファイル" in question:
-        return (
-            "現在はモックデータで回答しています。"
-            "Google Driveプラグイン接続後、ファイルの検索・参照が可能になります。"
-        )
-
-    return (
-        "ご質問ありがとうございます！\n\n"
-        "現在はモック回答モードで動作しています。"
-        "今後、外部AIおよび各プラグイン（Slack・NotePM・Google Drive等）と接続することで、"
-        "より正確な回答が可能になります。\n\n"
-        "何かお手伝いできることがあれば、お気軽にお聞きください。"
-    )
+    r = outcome.reply
+    if outcome.mode == "mock":
+        return "mock_response"
+    parts = []
+    if outcome.fallback_used:
+        parts.append("mock_response")
+    parts += [
+        f"requested={outcome.requested_provider}",
+        f"provider={r.provider}",
+        f"model={r.model or '-'}",
+        f"success={'false' if outcome.fallback_used else 'true'}",
+        f"fallback={'true' if outcome.fallback_used else 'false'}",
+        f"error={outcome.error_kind or 'none'}",
+        f"latency_ms={r.latency_ms if r.latency_ms is not None else '-'}",
+        f"input_usage={r.input_tokens if r.input_tokens is not None else '-'}",
+        f"output_usage={r.output_tokens if r.output_tokens is not None else '-'}",
+    ]
+    return ";".join(parts)
 
 
-# ---------------------------------------------------------------------------
-# Endpoints
-# ---------------------------------------------------------------------------
+@router.get("/status")
+def get_chat_status(current_user: User = Depends(get_current_active_user)):
+    """現在の回答モード（外部通信なしで判定）。モデル名・キー等の技術情報は返さない。"""
+    return get_ai_status()
+
 
 @router.post("/chat", response_model=ChatResponse)
 def send_chat_message(
@@ -108,12 +90,19 @@ def send_chat_message(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Send a chat message and receive a mock AI response.
+    """Send a chat message and receive an AI response (mock / external AI).
 
     - Saves the Q&A pair to ai_chat_histories
     - Logs the execution to ai_execution_logs (no secrets)
     """
-    answer = _generate_mock_response(data.question)
+    # モデルへ渡す会話履歴は現在ユーザー本人の直近分のみ（上限あり・秘密情報らしき値を除外）
+    history = build_conversation_history(db, current_user.id)
+    outcome = generate_reply_with_fallback(
+        redact_secrets(data.question),
+        history,
+        {"is_admin": bool(getattr(current_user, "is_admin", False))},
+    )
+    answer = outcome.reply.answer
 
     # Save to chat history
     chat_record = AIChatHistory(
@@ -129,16 +118,20 @@ def send_chat_message(
         chat_id=chat_record.id,
         used_plugins=[],
         used_data="none",
-        process_details="mock_response",
+        process_details=_build_process_details(outcome),
     )
     db.add(execution_log)
     db.commit()
     db.refresh(chat_record)
 
     logger.info(
-        "AI chat processed: user_id=%s, chat_id=%s, mode=mock",
+        "AI chat processed: user_id=%s, chat_id=%s, mode=%s, provider=%s, fallback=%s, error=%s",
         current_user.id,
         chat_record.id,
+        outcome.mode,
+        outcome.reply.provider,
+        outcome.fallback_used,
+        outcome.error_kind or "none",
     )
 
     return ChatResponse(
@@ -146,6 +139,10 @@ def send_chat_message(
         question=chat_record.question,
         answer=chat_record.answer,
         created_at=chat_record.created_at,
+        mode=outcome.mode,
+        provider=outcome.reply.provider,
+        fallback_used=outcome.fallback_used,
+        warning=outcome.warning,
     )
 
 

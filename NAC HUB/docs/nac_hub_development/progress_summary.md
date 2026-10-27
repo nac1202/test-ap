@@ -4,7 +4,7 @@
 本ファイル `docs/nac_hub_development/progress_summary.md` をプロジェクトの進捗・サマリ管理の正本とします。プロジェクト直下に重複ファイルが存在する場合は削除し、二重管理を防止します。
 
 ## 現在のステータス
-追加開発フェーズ9 完了 (v1.8.0 正式確定 / タグ: v1.8-plugin-management-api)
+追加開発フェーズ10 実装済み・APIキー設定／実通信E2E待ち（正式バージョンは v1.8.0 のまま／フェーズ9: v1.8-plugin-management-api で確定済み）
 
 ## 最新の作業内容 (追加開発フェーズ8: システム設定API化 完了)
 1. **既存モデル・DB活用**:
@@ -69,3 +69,18 @@
 - 認証情報（秘密情報）の安全な保管・入力機構。
 - お知らせ削除・ユーザー有効化/無効化の監査ログ（現行コードでは未発行。実装時に検索対応表へ追加）。
 - 各プラグインを利用する機能（チャット連携・資料検索等）。
+
+## 追加開発フェーズ10 進捗追記
+### 現在のステータス: 追加開発フェーズ10「なっくん外部AI仮接続・デモ版」 実装済み・APIキー設定／実通信E2E待ち（正式バージョン・タグは未更新）
+
+1. **Provider抽象化**: `backend/app/services/ai/`（base / mock_provider / openai_provider / factory / history / instructions）。`ai_assistant.py` は Provider層経由。
+2. **OpenAI Responses API**: 公式SDK（`openai==3.39.0`）。`model` / `instructions` / `input` / `max_output_tokens` / `reasoning` / `store=False` を使用（SDKシグネチャ確認済み）。外部検索・ファイル検索・ツールは不使用。
+3. **設定（環境変数）**: `AI_PROVIDER`（mock既定）/ `OPENAI_API_KEY` / `OPENAI_MODEL`（既定 gpt-6-luna）/ `OPENAI_REASONING_EFFORT` / `OPENAI_TIMEOUT_SECONDS` / `OPENAI_MAX_OUTPUT_TOKENS` / `OPENAI_MAX_RETRIES`（SDKリトライ上限1）/ `AI_HISTORY_MAX_TURNS` / `AI_HISTORY_MAX_CHARS`。モデル名は設定1か所のみ。
+4. **秘密情報**: APIキーはバックエンドの環境変数（`backend/.env.ai` 推奨・Git管理外・フロント非公開）だけから取得。SecretStr。ログ・レスポンス・DB・監査ログ・plugin_configs へ出さない。プラグイン管理画面の入力UIは作らない。
+5. **フォールバック**: キー未設定／接続／タイムアウト／429／5xx／認証／不正レスポンス／想定外例外 → MockProviderで回答し `fallback_used=true`。画面には「外部AIへ接続できなかったため、一時的に簡易回答モードで回答しています。」。
+6. **会話履歴**: 現在ユーザー本人の直近10往復・6000文字まで。秘密情報らしき値は除外してから送信。
+7. **APIレスポンス**: 既存項目に mode / provider / fallback_used / warning を追加（後方互換）。`GET /api/v1/ai/status` で外部通信なしにモード判定。
+8. **実行ログ**: `ai_execution_logs.process_details` に provider/model/成否/処理時間/入出力トークン数/フォールバック/エラー種別を保存（migrationなし）。モック単独は従来どおり `mock_response`。
+9. **フロント**: `Chat.tsx` の注記をAPIの実モードで切替（モック／外部AI／一時的にモックへ切替）。送信中多重送信防止・履歴復元・無限ループ対策は不変。
+10. **検証**: 新規 `test_ai_provider_api.py`（OpenAI実APIは呼ばない）PASS、既存全10ファイルを2回連続PASS、tsc/build/lint PASS。
+11. **次のステップ**: ユーザーによる `backend/.env.ai` へのAPIキー設定・バックエンド再起動・実通信E2E。
