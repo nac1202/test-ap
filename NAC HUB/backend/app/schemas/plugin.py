@@ -9,7 +9,8 @@ STATUS_LABELS: Dict[str, str] = {
     'not_implemented': '本接続は今後対応',
     'disabled': '無効',
     'error': '設定エラー',
-    'connected': '接続済み'
+    'connected': '接続済み',
+    'connection_error': '接続エラー'
 }
 
 class PluginSettingsUpdateRequest(BaseModel):
@@ -27,6 +28,11 @@ class PluginItemResponse(BaseModel):
     last_tested_at: Optional[datetime] = None
     last_validation_result: Optional[str] = None
     connected: bool = False
+    # NotePMなど実API連携プラグイン用（値は返さない。設定済みかどうかの真偽のみ）
+    credentials_configured: Optional[bool] = None
+    allowed_note_count: Optional[int] = None
+    allowed_note_names: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
@@ -41,3 +47,24 @@ class PluginValidationResponse(BaseModel):
     status_label: str
     message: str
     tested_at: datetime
+    warnings: List[str] = Field(default_factory=list)
+
+
+class NotePMNoteItem(BaseModel):
+    """管理者向け：参照許可ノート選択用（note_code は管理画面内部での選択キーとしてのみ使用）。"""
+    note_code: str
+    name: str
+    description: str = ''
+    scope_label: str = ''
+    allowed: bool = False
+
+
+class NotePMNotesResponse(BaseModel):
+    total: int
+    items: List[NotePMNoteItem]
+    allowed_count: int
+    max_allowed: int
+
+
+class NotePMAllowedNotesRequest(BaseModel):
+    note_codes: List[str] = Field(default_factory=list, description='参照を許可するノート（最大10件）')

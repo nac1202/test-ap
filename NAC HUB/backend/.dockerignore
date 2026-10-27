@@ -8,3 +8,7 @@ __pycache__/
 **/__pycache__/
 .pytest_cache/
 *.pyc
+# 連携サービスの秘密ファイルは明示的にもイメージへ含めない
+.env.ai
+.env.integrations
+**/.env.integrations

@@ -35,6 +35,9 @@ services:
       # AI用の秘密ファイル（backend専用・Git管理外・未作成でも起動可）。frontend へは渡さない。
       - path: ./backend/.env.ai
         required: false
+      # 連携サービス用の秘密ファイル（NotePM読み取り専用トークン等。backend専用・Git管理外・未作成でも起動可）。frontend へは渡さない。
+      - path: ./backend/.env.integrations
+        required: false
     depends_on:
       - db
 

@@ -29,6 +29,11 @@ from app.services.ai.internal_context import (
     NacHubContextService,
     render_context_block,
 )
+from app.services.notepm.search import (
+    CT_SEARCH as NOTEPM_CT_SEARCH,
+    detect_notepm_intent,
+    search_notepm,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +49,7 @@ class ChatRequest(BaseModel):
 
 class ReferenceItem(BaseModel):
     """回答根拠（内部IDは含めない。link は案件詳細画面のパスのみ）。"""
-    type: str            # project | notice
+    type: str            # project | notice | notepm
     title: str
     link: Optional[str] = None
 
@@ -63,6 +68,8 @@ class ChatResponse(BaseModel):
     used_internal_data: bool = False
     references: list[ReferenceItem] = []
     context_type: Optional[str] = None
+    # NotePM検索（読み取り専用・許可ノートのみ）: 実データを回答へ使った場合のみ True
+    used_notepm_data: bool = False
 
 
 class ChatHistoryItem(BaseModel):
@@ -97,11 +104,18 @@ def _build_process_details(outcome, ctx: Optional[InternalContext] = None) -> st
         f"output_usage={r.output_tokens if r.output_tokens is not None else '-'}",
     ]
     if ctx is not None and ctx.used:
-        parts += [
-            "internal_data=true",
-            f"context_type={ctx.context_type}",
-            f"ref_count={len(ctx.references)}",
-        ]
+        if ctx.source == "notepm":
+            parts += [
+                "notepm=true",
+                f"context_type={ctx.context_type}",
+                f"ref_count={len(ctx.references)}",
+            ]
+        else:
+            parts += [
+                "internal_data=true",
+                f"context_type={ctx.context_type}",
+                f"ref_count={len(ctx.references)}",
+            ]
     return ";".join(parts)
 
 
@@ -131,7 +145,14 @@ def send_chat_message(
     ctx = InternalContext()
     if requested_provider_name() != "mock":
         try:
-            ctx = NacHubContextService(db, current_user).build_context(safe_question)
+            notepm_keyword = detect_notepm_intent(safe_question)
+            if notepm_keyword is not None:
+                # NotePM検索意図がある質問のみ実API検索（許可ノートのホワイトリスト範囲）。
+                # NotePMが利用できない状態（無効・未設定）は None → 一般質問として外部AIへ（未接続を正直に回答）。
+                np_ctx = search_notepm(db, current_user.company_id, notepm_keyword)
+                ctx = np_ctx if np_ctx is not None else InternalContext()
+            else:
+                ctx = NacHubContextService(db, current_user).build_context(safe_question)
         except Exception as exc:  # noqa: BLE001 - 内部検索の失敗でチャットは落とさない
             db.rollback()
             logger.warning("Internal context failed: exc_type=%s", type(exc).__name__)
@@ -144,6 +165,7 @@ def send_chat_message(
             "internal_context_text": ctx.text,
             "internal_label": ctx.label,
             "internal_no_match": ctx.no_match,
+            "internal_source": ctx.source,
         })
     outcome = generate_reply_with_fallback(safe_question, history, user_context)
     answer = outcome.reply.answer
@@ -161,7 +183,7 @@ def send_chat_message(
     execution_log = AIExecutionLog(
         chat_id=chat_record.id,
         used_plugins=[],
-        used_data=f"nac_hub:{ctx.context_type}" if ctx.used else "none",
+        used_data=f"{ctx.source}:{ctx.context_type}" if ctx.used else "none",
         process_details=_build_process_details(outcome, ctx),
     )
     db.add(execution_log)
@@ -187,9 +209,10 @@ def send_chat_message(
         provider=outcome.reply.provider,
         fallback_used=outcome.fallback_used,
         warning=outcome.warning,
-        used_internal_data=ctx.used,
+        used_internal_data=ctx.used and ctx.source == "nac_hub",
         references=[ReferenceItem(**r.as_dict()) for r in ctx.references],
         context_type=ctx.context_type if ctx.used else None,
+        used_notepm_data=bool(ctx.used and ctx.source == "notepm" and ctx.context_type == NOTEPM_CT_SEARCH),
     )
 
 

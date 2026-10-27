@@ -27,6 +27,7 @@ interface ChatMessage {
   fallback_used?: boolean;
   warning?: string | null;
   used_internal_data?: boolean;
+  used_notepm_data?: boolean;
   references?: ChatReference[];
 }
 
@@ -38,6 +39,18 @@ const MODE_NOTICE: Record<AnswerMode, string> = {
 
 const INTERNAL_DATA_LABEL = '外部AI + NAC HUBデータ回答';
 const INTERNAL_DATA_LABEL_FALLBACK = 'NAC HUBデータ回答（簡易モード）';
+const NOTEPM_DATA_LABEL = '外部AI + NotePMデータ回答';
+const NOTEPM_DATA_LABEL_FALLBACK = 'NotePMデータ回答（簡易モード）';
+const BOTH_DATA_LABEL = '外部AI + NAC HUB / NotePMデータ回答';
+
+// 実データを使った回答の表示ラベル（使っていなければ null = 従来のモード表示）
+function dataLabelFor(usedInternal: boolean, usedNotepm: boolean, mode?: AnswerMode | null): string | null {
+  const external = mode === 'external';
+  if (usedInternal && usedNotepm) return external ? BOTH_DATA_LABEL : INTERNAL_DATA_LABEL_FALLBACK;
+  if (usedNotepm) return external ? NOTEPM_DATA_LABEL : NOTEPM_DATA_LABEL_FALLBACK;
+  if (usedInternal) return external ? INTERNAL_DATA_LABEL : INTERNAL_DATA_LABEL_FALLBACK;
+  return null;
+}
 
 interface PendingMessage {
   tempId: number;
@@ -60,6 +73,7 @@ export default function Chat() {
   const [answerMode, setAnswerMode] = useState<AnswerMode | null>(null);
   // 直近の回答が NAC HUB 内部データを使ったか（表示の切替用）
   const [lastUsedInternal, setLastUsedInternal] = useState(false);
+  const [lastUsedNotepm, setLastUsedNotepm] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Guard: consume the initial question exactly once, never re-fire
@@ -154,6 +168,7 @@ export default function Chat() {
         setAnswerMode(data.mode);
       }
       setLastUsedInternal(Boolean(data.used_internal_data));
+      setLastUsedNotepm(Boolean(data.used_notepm_data));
       setPendingMessage(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '送信エラー';
@@ -341,9 +356,9 @@ export default function Chat() {
                       {msg.fallback_used && msg.warning && (
                         <p className="mt-2 text-[11px] sm:text-xs text-amber-600">{msg.warning}</p>
                       )}
-                      {msg.used_internal_data && (
+                      {dataLabelFor(Boolean(msg.used_internal_data), Boolean(msg.used_notepm_data), msg.mode) && (
                         <p className="mt-2 text-[11px] sm:text-xs text-primary font-semibold" data-testid="internal-data-label">
-                          {msg.mode === 'external' ? INTERNAL_DATA_LABEL : INTERNAL_DATA_LABEL_FALLBACK}
+                          {dataLabelFor(Boolean(msg.used_internal_data), Boolean(msg.used_notepm_data), msg.mode)}
                         </p>
                       )}
                       {msg.references && msg.references.length > 0 && (
@@ -421,7 +436,9 @@ export default function Chat() {
         <div className="p-3 sm:p-4 bg-white border-t shrink-0 flex flex-col gap-1.5 z-10">
           {answerMode && (
             <p id="chat-mode-notice" className="text-[11px] sm:text-xs text-gray-400 text-center py-0.5 truncate">
-              {lastUsedInternal && answerMode === 'external' ? `※ ${INTERNAL_DATA_LABEL}` : MODE_NOTICE[answerMode]}
+              {answerMode === 'external' && dataLabelFor(lastUsedInternal, lastUsedNotepm, answerMode)
+                ? `※ ${dataLabelFor(lastUsedInternal, lastUsedNotepm, answerMode)}`
+                : MODE_NOTICE[answerMode]}
             </p>
           )}
 

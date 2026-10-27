@@ -11,6 +11,11 @@ backend/.env*
 backend/.env.ai
 **/.env.ai
 
+# Integration secrets (NOTEPM_API_TOKEN etc.) - never commit
+.env.integrations
+backend/.env.integrations
+**/.env.integrations
+
 # Other local files
 backend/nac_hub_temp.db
 backup/

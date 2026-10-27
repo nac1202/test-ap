@@ -125,7 +125,8 @@ export type PluginStatus =
   | 'not_implemented'
   | 'disabled'
   | 'error'
-  | 'connected';
+  | 'connected'
+  | 'connection_error';
 
 export interface PluginItemResponse {
   plugin_key: string;
@@ -139,6 +140,11 @@ export interface PluginItemResponse {
   last_tested_at: string | null;
   last_validation_result: string | null;
   connected: boolean;
+  // NotePM など実API連携プラグイン用（トークンの値は返らない。設定済みかの真偽のみ）
+  credentials_configured?: boolean | null;
+  allowed_note_count?: number | null;
+  allowed_note_names?: string[];
+  warnings?: string[];
 }
 
 export interface PluginListResponse {
@@ -156,5 +162,22 @@ export interface PluginValidationResponse {
   status_label: string;
   message: string;
   tested_at: string;
+  warnings?: string[];
+}
+
+// NotePM 参照許可ノート選択（管理者専用画面でのみ使用）
+export interface NotePMNoteItem {
+  note_code: string;
+  name: string;
+  description: string;
+  scope_label: string;
+  allowed: boolean;
+}
+
+export interface NotePMNotesResponse {
+  total: number;
+  items: NotePMNoteItem[];
+  allowed_count: number;
+  max_allowed: number;
 }
 

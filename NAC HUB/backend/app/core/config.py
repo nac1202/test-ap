@@ -50,11 +50,15 @@ class Settings(BaseSettings):
     # モデルへ渡す会話履歴の上限
     AI_HISTORY_MAX_TURNS: int = 10
     AI_HISTORY_MAX_CHARS: int = 6000
+
+    # NotePM（読み取り専用API）。トークンは backend/.env.integrations（Git管理外）の環境変数からのみ取得する。
+    # SecretStr のため repr / ログには値が出ない。DB・API・フロント・監査ログ・OpenAIへは出さない。
+    NOTEPM_API_TOKEN: Optional[SecretStr] = None
     
     class Config:
         case_sensitive = True
         # .env.ai は backend 専用の秘密ファイル（Git管理外・フロントエンドには渡されない）
-        env_file = (".env", ".env.ai")
+        env_file = (".env", ".env.ai", ".env.integrations")
         extra = "ignore"
 
 settings = Settings()

@@ -1,5 +1,6 @@
 from typing import Dict, Any, Tuple
 from app.services.plugins.base import BasePluginAdapter
+from app.services.notepm.client import NotePMError, normalize_team_domain, is_token_configured
 
 class NotePMPluginAdapter(BasePluginAdapter):
     plugin_key = 'notepm'
@@ -12,6 +13,11 @@ class NotePMPluginAdapter(BasePluginAdapter):
         td = settings.get('team_domain', '')
         if td and len(str(td)) > 100:
             return False, 'チームドメインは100文字以内で入力してください。'
+        if td:
+            try:
+                normalize_team_domain(str(td))  # SSRF対策: *.notepm.jp の HTTPS のみ許可
+            except NotePMError as err:
+                return False, err.message
         return True, ''
 
     def evaluate_status(self, is_active: bool, settings: Dict[str, Any]) -> str:
@@ -31,10 +37,16 @@ class NotePMPluginAdapter(BasePluginAdapter):
                 'status': 'not_configured',
                 'message': 'チームドメインが入力されていません。基本設定を入力してください。'
             }
+        if not is_token_configured():
+            return {
+                'success': False,
+                'status': 'needs_credentials',
+                'message': 'NotePMの認証情報（APIトークン）が設定されていません。'
+            }
         return {
             'success': True,
             'status': 'needs_credentials',
-            'message': '基本設定（チームドメイン情報）を確認しました。本接続にはNotePM API連携設定が必要です（現フェーズでは未接続）。'
+            'message': '基本設定を確認しました。実API接続確認は「設定確認」で実行します。'
         }
 
     def can_enable(self, settings: Dict[str, Any]) -> Tuple[bool, str]:

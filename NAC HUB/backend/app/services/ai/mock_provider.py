@@ -66,6 +66,10 @@ class MockProvider(AIProvider):
         ctx = user_context or {}
         internal_text = ctx.get("internal_context_text")
         if internal_text:
+            if ctx.get("internal_source") == "notepm":
+                if ctx.get("internal_no_match"):
+                    return AIReply(answer=internal_text, provider=self.name)
+                return AIReply(answer=f"NotePMを検索しました。\n\n{internal_text}", provider=self.name)
             if ctx.get("internal_no_match"):
                 label = ctx.get("internal_label") or "情報"
                 return AIReply(answer=f"{label}を確認しましたが、{internal_text}。", provider=self.name)

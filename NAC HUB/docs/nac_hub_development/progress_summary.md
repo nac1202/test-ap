@@ -143,3 +143,21 @@
 - ストリーミング回答
 - LLM意図判定／Function Calling
 - 履歴への参照元・モード保存
+
+## 追加開発フェーズ12 進捗追記
+### 現在のステータス: 追加開発フェーズ12 実装済み・NotePM実通信／参照対象選択E2E待ち（Version 1.10.0のまま・正式タグ未作成）
+1. **目的**: NotePMへの読み取り専用実API接続。書き込み系（POST/PATCH/DELETE）は一切実装しない。
+2. **秘密情報**: `NOTEPM_API_TOKEN` は `backend/.env.integrations`（Git除外・Docker build context除外）から backend のみが読み込む（SecretStr）。DB・plugin_configs・監査ログ・API・frontend・OpenAIへは渡さない。
+3. **Client**: `app/services/notepm/`。HTTPS・`*.notepm.jp` のみ（localhost／IP／ポート／外部URL拒否）。GETのみ・タイムアウト10秒・リトライなし・リダイレクト追従なし。
+4. **接続確認**: `GET /user/account` で read_flag を確認。write_flag=true なら「読み取り専用トークンの利用を推奨します」を警告表示。成功時のみ「接続済み」・最終確認日時。
+5. **ホワイトリスト**: 管理者が許可ノート（最大10）を明示選択。未選択ならなっくんからのNotePM本文検索は不可。ドメイン変更で選択は解除。
+6. **検索**: `GET /pages`（q / note_code / include_archived=0 / search_engine_type=v2）。1ノート5件・最終10件・本文500文字・コンテキスト3500文字が上限。
+7. **なっくん連携**: 質問に明確なNotePM検索意図がある場合のみ実API検索。「外部AI + NotePMデータ回答」表示。参照チップはタイトルのみ（ページURL形式は公式で未確認のためリンクなし）。
+8. **API**: `POST /admin/plugins/notepm/test-connection`、`GET /admin/plugins/notepm/notes`、`PUT /admin/plugins/notepm/allowed-notes`（管理者のみ）。
+9. **検証**: `test_notepm_integration.py` 33項目 ALL PASS。既存＋新規12ファイルを2回連続PASS、tsc/build/lint PASS。
+
+### 残存未実装項目
+- ユーザー手動E2E（実接続・ノート選択・NotePM検索）
+- NotePMページURLのリンク化
+- Google Drive／Slack／HotBiz実API接続
+- 社内情報横断検索

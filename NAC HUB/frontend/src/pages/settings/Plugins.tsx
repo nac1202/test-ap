@@ -19,6 +19,8 @@ import {
   PowerOff,
   RefreshCw,
   Info,
+  ListChecks,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   fetchPlugins,
@@ -26,8 +28,10 @@ import {
   validatePluginSettings,
   enablePlugin,
   disablePlugin,
+  fetchNotePMNotes,
+  saveNotePMAllowedNotes,
 } from '../../api/admin';
-import type { PluginItemResponse, PluginStatus } from '../../types/admin';
+import type { PluginItemResponse, PluginStatus, NotePMNoteItem } from '../../types/admin';
 
 // プラグインアイコンマッピング
 function getPluginIcon(pluginKey: string) {
@@ -83,6 +87,20 @@ function getStatusBadge(status: PluginStatus, label: string) {
           {label}
         </span>
       );
+    case 'connected':
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          {label}
+        </span>
+      );
+    case 'connection_error':
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+          <AlertCircle className="h-3.5 w-3.5" />
+          {label}
+        </span>
+      );
     case 'not_configured':
     default:
       return (
@@ -113,7 +131,57 @@ export default function Plugins() {
     message: string;
     testedAt: string;
     success: boolean;
+    warnings: string[];
   } | null>(null);
+
+  // NotePM 参照許可ノート選択モーダル用state（管理者専用）
+  const [notesModalOpen, setNotesModalOpen] = useState(false);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesSaving, setNotesSaving] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
+  const [noteItems, setNoteItems] = useState<NotePMNoteItem[]>([]);
+  const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
+  const [maxAllowed, setMaxAllowed] = useState(10);
+
+  const handleOpenNotesModal = async () => {
+    setNotesModalOpen(true);
+    setNotesError(null);
+    setNotesLoading(true);
+    try {
+      const res = await fetchNotePMNotes();
+      setNoteItems(res.items);
+      setMaxAllowed(res.max_allowed);
+      setSelectedNotes(res.items.filter((n) => n.allowed).map((n) => n.note_code));
+    } catch (err: any) {
+      setNoteItems([]);
+      setNotesError(err.message || 'ノート一覧の取得に失敗しました。');
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const handleToggleNote = (code: string) => {
+    setSelectedNotes((prev) => {
+      if (prev.includes(code)) return prev.filter((c) => c !== code);
+      if (prev.length >= maxAllowed) return prev;
+      return [...prev, code];
+    });
+  };
+
+  const handleSaveNotes = async () => {
+    try {
+      setNotesSaving(true);
+      setNotesError(null);
+      await saveNotePMAllowedNotes(selectedNotes);
+      setSuccessMessage(`NotePMの参照を許可するノートを保存しました（${selectedNotes.length}件）。`);
+      setNotesModalOpen(false);
+      await loadPlugins();
+    } catch (err: any) {
+      setNotesError(err.message || '参照許可ノートの保存に失敗しました。');
+    } finally {
+      setNotesSaving(false);
+    }
+  };
 
   // プラグイン一覧取得
   const loadPlugins = async () => {
@@ -179,6 +247,7 @@ export default function Plugins() {
         message: res.message,
         testedAt: new Date(res.tested_at).toLocaleString('ja-JP'),
         success: res.success,
+        warnings: res.warnings || [],
       });
       await loadPlugins();
     } catch (err: any) {
@@ -226,9 +295,9 @@ export default function Plugins() {
         <div className="space-y-1">
           <p className="font-bold">外部サービス連携についてのご案内</p>
           <p className="text-amber-800 leading-relaxed text-xs">
-            現在のバージョンでは、安全のため外部サービスへの本接続・API通信は未接続となっております。
-            本画面では各サービスを利用するための「基本準備情報」の設定と事前確認のみを行えます。
-            APIトークンやシークレット等の機密情報は保存されません。
+            NotePMは「読み取り専用」で実API接続できます（「設定確認」で接続を確認し、「参照ノート設定」でなっくんから検索できるノートを選びます）。
+            Slack・Google Drive・HotBizは現在未接続（準備段階）です。
+            認証トークンはこの画面からは入力・表示・保存されません（サーバー側の安全な設定で管理）。
           </p>
         </div>
       </div>
@@ -327,10 +396,60 @@ export default function Plugins() {
 
                       <div className="flex justify-between py-1.5 items-center">
                         <span className="text-gray-500 font-medium">外部通信状態:</span>
-                        <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
-                          未接続 (準備段階)
-                        </span>
+                        {plugin.plugin_key === 'notepm' && plugin.connected ? (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded" data-testid="notepm-connected">
+                            接続済み（読み取り専用）
+                          </span>
+                        ) : plugin.plugin_key === 'notepm' && plugin.status === 'connection_error' ? (
+                          <span className="text-xs font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded">
+                            接続エラー
+                          </span>
+                        ) : (
+                          <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                            {plugin.plugin_key === 'notepm' ? '未確認（「設定確認」で接続を確認）' : '未接続 (準備段階)'}
+                          </span>
+                        )}
                       </div>
+
+                      {plugin.plugin_key === 'notepm' && (
+                        <>
+                          <div className="flex justify-between py-1.5 items-center">
+                            <span className="text-gray-500 font-medium">認証情報:</span>
+                            <span
+                              className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                plugin.credentials_configured
+                                  ? 'bg-emerald-50 text-emerald-700'
+                                  : 'bg-amber-50 text-amber-700'
+                              }`}
+                            >
+                              {plugin.credentials_configured ? '設定済み' : '未設定'}
+                            </span>
+                          </div>
+                          <div className="py-1.5">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500 font-medium">参照を許可したノート:</span>
+                              <span className="text-xs font-bold text-gray-700" data-testid="notepm-allowed-count">
+                                {plugin.allowed_note_count ?? 0}件
+                              </span>
+                            </div>
+                            {(plugin.allowed_note_names || []).length > 0 ? (
+                              <p className="mt-1 text-[11px] text-gray-600 break-words">
+                                {(plugin.allowed_note_names || []).join('、')}
+                              </p>
+                            ) : (
+                              <p className="mt-1 text-[11px] text-amber-700">
+                                未選択の間は、なっくんからNotePMを検索できません。
+                              </p>
+                            )}
+                          </div>
+                          {(plugin.warnings || []).map((w, i) => (
+                            <div key={i} className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-800 flex items-start gap-1.5">
+                              <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
+                              <span>{w}</span>
+                            </div>
+                          ))}
+                        </>
+                      )}
 
                       <div className="flex justify-between py-1.5 items-center">
                         <span className="text-gray-500 font-medium flex items-center gap-1">
@@ -391,6 +510,19 @@ export default function Plugins() {
                     )}
                     {isValidating ? '確認中...' : '設定確認'}
                   </Button>
+
+                  {plugin.plugin_key === 'notepm' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 min-h-[40px] text-xs font-bold flex items-center justify-center gap-1.5"
+                      onClick={handleOpenNotesModal}
+                      id="notepm-allowed-notes-button"
+                    >
+                      <ListChecks className="h-3.5 w-3.5 text-amber-600" />
+                      参照ノート設定
+                    </Button>
+                  )}
 
                   <Button
                     variant={plugin.is_enabled ? 'outline' : 'primary'}
@@ -560,7 +692,7 @@ export default function Plugins() {
                     チームドメイン <span className="text-red-500">*</span>
                   </label>
                   <Input
-                    placeholder="例: nac-system.notepm.jp または nac-system"
+                    placeholder="例: team-nac.notepm.jp"
                     value={formSettings.team_domain || ''}
                     onChange={(e) =>
                       setFormSettings({ ...formSettings, team_domain: e.target.value })
@@ -569,7 +701,7 @@ export default function Plugins() {
                     required
                   />
                   <p className="text-[11px] text-gray-500 mt-1">
-                    ご契約中のNotePMのサブドメイン名を入力します。
+                    ご契約中のNotePMのドメイン（xxxx.notepm.jp）を入力します。https://xxxx.notepm.jp/ 形式でも構いません。
                   </p>
                 </div>
 
@@ -754,6 +886,108 @@ export default function Plugins() {
         </Modal>
       )}
 
+      {/* ──────────────── NotePM 参照許可ノートモーダル（管理者専用） ──────────────── */}
+      {notesModalOpen && (
+        <Modal
+          isOpen={true}
+          onClose={() => !notesSaving && setNotesModalOpen(false)}
+          title="NotePM 参照ノート設定"
+          className="max-w-lg"
+        >
+          <div className="space-y-4">
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2" data-testid="notepm-allowed-warning">
+              <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <p className="leading-relaxed font-bold">
+                ここで選択したノートは、NAC HUBの利用者から検索可能になります。
+                全社員へ公開してよいノートだけを選択してください。
+              </p>
+            </div>
+
+            {notesError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{notesError}</span>
+              </div>
+            )}
+
+            {notesLoading ? (
+              <div className="flex items-center justify-center py-8 text-gray-500 text-xs gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin" /> ノート一覧を読み込み中...
+              </div>
+            ) : (
+              <>
+                <p className="text-[11px] text-gray-500">
+                  選択中: {selectedNotes.length} / {maxAllowed}件（アーカイブ済みのノートは表示されません）
+                </p>
+                <div className="max-h-[45vh] overflow-y-auto space-y-2 pr-1">
+                  {noteItems.length === 0 && !notesError && (
+                    <p className="text-xs text-gray-500 py-4 text-center">参照可能なノートがありません。</p>
+                  )}
+                  {noteItems.map((n) => {
+                    const checked = selectedNotes.includes(n.note_code);
+                    const disabled = !checked && selectedNotes.length >= maxAllowed;
+                    return (
+                      <label
+                        key={n.note_code}
+                        className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer ${
+                          checked ? 'border-primary/50 bg-primary/5' : 'border-gray-200 bg-white'
+                        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={disabled}
+                          onChange={() => handleToggleNote(n.note_code)}
+                          className="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 shrink-0"
+                        />
+                        <span className="min-w-0">
+                          <span className="block font-bold text-gray-800 break-words">{n.name}</span>
+                          {n.scope_label && (
+                            <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-gray-100 text-[10px] text-gray-600">
+                              {n.scope_label}
+                            </span>
+                          )}
+                          {n.description && (
+                            <span className="block mt-0.5 text-[11px] text-gray-500 break-words line-clamp-2">
+                              {n.description}
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            <div className="pt-3 border-t border-gray-100 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setNotesModalOpen(false)}
+                disabled={notesSaving}
+                className="min-h-[40px] px-4 text-xs font-bold"
+              >
+                キャンセル
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handleSaveNotes}
+                disabled={notesSaving || notesLoading || Boolean(notesError && noteItems.length === 0)}
+                className="min-h-[40px] px-5 text-xs font-bold flex items-center gap-1.5"
+                id="notepm-allowed-notes-save"
+              >
+                {notesSaving && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                {notesSaving ? '保存中...' : 'この内容で保存'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* ──────────────── 設定確認結果モーダル ──────────────── */}
       {validationResult && (
         <Modal
@@ -778,6 +1012,12 @@ export default function Plugins() {
               <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-xl text-xs text-blue-900 leading-relaxed font-sans">
                 {validationResult.message}
               </div>
+              {validationResult.warnings.map((w, i) => (
+                <div key={i} className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-start gap-1.5" data-testid="notepm-readonly-warning">
+                  <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+                  <span>{w}</span>
+                </div>
+              ))}
             </div>
 
             <div className="text-[11px] text-gray-500 flex items-center justify-between border-t border-gray-100 pt-3">

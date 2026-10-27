@@ -138,3 +138,21 @@
 - [ ] （次フェーズ以降）ストリーミング回答
 - [ ] （次フェーズ以降）LLM意図判定／Function Calling
 - [ ] （次フェーズ以降）履歴への参照元・モード保存
+
+## 追加開発フェーズ12 タスク (実装済み・NotePM実通信／参照対象選択E2E待ち・Version 1.10.0のまま)
+- [x] 開始時確認（HEAD=8f4ac73 / v1.10タグ / Clean / 3コンテナUp / health 1.10.0）
+- [x] v1.10.0バックアップ（DBダンプ・ソースzip・マニフェスト。`D:\Antigravity\backups\NAC_HUB_v1.10.0\`）
+- [x] `.env.integrations` の安全な配線（backendのみ・required:false・.gitignore / .dockerignore）
+- [x] `NOTEPM_API_TOKEN` をSecretStrで管理・設定済みかどうかのtrue/false確認スクリプト
+- [x] NotePM Client（HTTPSのみ・SSRF対策・GETのみ・429/401/5xx/timeout処理・リトライなし）
+- [x] 接続確認を実API（GET /user/account）へ昇格・read_flag確認・write_flag警告
+- [x] ノート一覧（GET /notes・管理者のみ）と参照対象ノート選択（ホワイトリスト）
+- [x] NotePMページ検索（許可ノート内のみ・アーカイブ除外・件数／文字数上限）
+- [x] なっくん連携（NotePM検索意図のみ）・参照チップ（タイトルのみ）・モード表示
+- [x] 監査ログ（接続確認・参照対象ノート変更・有効化／無効化）
+- [x] 新規テスト `test_notepm_integration.py`（33項目・実NotePM／OpenAI APIは呼ばない）
+- [x] 既存＋新規＝12ファイルを2回連続PASS・tsc・build・lint PASS
+- [x] ドキュメント（docs/notepm_integration/）
+- [ ] ユーザーによる手動E2E（NotePM実通信・参照対象ノート選択・なっくん検索）
+- [ ] （次フェーズ以降）ページURLのリンク化（URL形式が公式で確認できた場合）
+- [ ] （次フェーズ以降）Google Drive／Slack／HotBiz実API接続・社内情報横断検索

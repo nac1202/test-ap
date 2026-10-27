@@ -168,6 +168,7 @@ import type {
   PluginItemResponse,
   PluginSettingsUpdateParams,
   PluginValidationResponse,
+  NotePMNotesResponse,
 } from '../types/admin';
 
 export async function fetchPlugins(): Promise<PluginListResponse> {
@@ -214,6 +215,21 @@ export async function disablePlugin(pluginKey: string): Promise<PluginItemRespon
   const res = await fetch(`${API_BASE}/plugins/${pluginKey}/disable`, {
     method: 'POST',
     headers: getAuthHeaders(),
+  });
+  return handleResponse<PluginItemResponse>(res);
+}
+
+// NotePM（管理者専用・読み取り専用）: トークンはブラウザへは渡らない（バックエンドが保持）
+export async function fetchNotePMNotes(): Promise<NotePMNotesResponse> {
+  const res = await fetch(`${API_BASE}/plugins/notepm/notes`, { headers: getAuthHeaders() });
+  return handleResponse<NotePMNotesResponse>(res);
+}
+
+export async function saveNotePMAllowedNotes(noteCodes: string[]): Promise<PluginItemResponse> {
+  const res = await fetch(`${API_BASE}/plugins/notepm/allowed-notes`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ note_codes: noteCodes }),
   });
   return handleResponse<PluginItemResponse>(res);
 }
