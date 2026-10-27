@@ -111,7 +111,7 @@
 - [x] 最終コミット・タグ `v1.9-nakkun-external-ai`
 - [ ] （次フェーズ以降）案件DB検索／NotePM・Google Drive・Slack・HotBiz実接続／社内横断検索／会社用OpenAI切替／秘密情報管理機構／ストリーミング回答
 
-## 追加開発フェーズ11 タスク (実装済み・手動E2E待ち)
+## 追加開発フェーズ11 タスク (完了・v1.10.0)
 - [x] 開始時確認（HEAD=25e2735 / v1.9タグ / Clean / 3コンテナUp / health 1.9.0）
 - [x] v1.9.0バックアップ（DBダンプ・ソースzip・マニフェスト。`D:\Antigravity\backups\NAC_HUB_v1.9.0\`）
 - [x] 既存案件・お知らせAPI／権限監査（projectsにcompany_idなし → ダッシュボードの会社判定を踏襲し厳格化）
@@ -123,4 +123,18 @@
 - [x] 既存回帰テスト＋新規＝11ファイルを2回連続PASS・tsc・build・lint PASS
 - [x] 手動E2E用データ投入（`[E2E TEST NAKKUN]`。削除は `e2e_cleanup.sql`）
 - [x] ドキュメント（docs/nakkun_internal_data/）
-- [ ] ユーザーによる手動E2E確認（Version・正式タグは未更新）
+- [x] ユーザーによる手動E2E確認 PASS（案件総数・要注意・期限近い・進捗・担当者・お知らせ・非公開除外・未接続回答・参照チップ・履歴・390×844・非露出）
+- [x] 一覧全件列挙修正（8ad637b）
+- [x] E2Eデータ `[E2E TEST NAKKUN]` 削除・0件確認（既存データ不変）
+- [x] 秘密情報の最終確認（Git非追跡・frontend/dist/差分/docs/DB/ログ非露出）
+- [x] Version 1.10.0 確定（config.py / SystemConfigContext.tsx / System.tsx。ビルド番号20261021維持）
+- [x] 最終自動テスト全11ファイル2回連続PASS・tsc・build・lint PASS
+- [x] 最終コミット・タグ `v1.10-nakkun-internal-data`
+- [ ] （次フェーズ以降）projects.company_id追加と既存案件所属整理
+- [ ] （次フェーズ以降）NotePM／Google Drive／Slack／HotBiz 実API接続（内部DB検索と外部サービス検索は別物）
+- [ ] （次フェーズ以降）社内情報横断検索
+- [ ] （次フェーズ以降）会社用OpenAI Projectへの切替
+- [ ] （次フェーズ以降）秘密情報の管理画面／安全な保管機構
+- [ ] （次フェーズ以降）ストリーミング回答
+- [ ] （次フェーズ以降）LLM意図判定／Function Calling
+- [ ] （次フェーズ以降）履歴への参照元・モード保存
