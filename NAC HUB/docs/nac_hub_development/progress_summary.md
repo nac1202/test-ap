@@ -4,7 +4,7 @@
 本ファイル `docs/nac_hub_development/progress_summary.md` をプロジェクトの進捗・サマリ管理の正本とします。プロジェクト直下に重複ファイルが存在する場合は削除し、二重管理を防止します。
 
 ## 現在のステータス
-追加開発フェーズ11 完了（v1.10.0 正式確定／タグ `v1.10-nakkun-internal-data`／手動E2E PASS）
+追加開発フェーズ12 完了（v1.11.0 正式確定／タグ `v1.11-notepm-integration`／手動E2E PASS）
 
 ## 最新の作業内容 (追加開発フェーズ8: システム設定API化 完了)
 1. **既存モデル・DB活用**:
@@ -145,7 +145,7 @@
 - 履歴への参照元・モード保存
 
 ## 追加開発フェーズ12 進捗追記
-### 現在のステータス: 追加開発フェーズ12 実装済み・NotePM実通信／参照対象選択E2E待ち（Version 1.10.0のまま・正式タグ未作成）
+### 現在のステータス: 追加開発フェーズ12「NotePM実API接続・読み取り専用 第1弾」完了（v1.11.0 正式確定／タグ `v1.11-notepm-integration`／手動E2E PASS）
 1. **目的**: NotePMへの読み取り専用実API接続。書き込み系（POST/PATCH/DELETE）は一切実装しない。
 2. **秘密情報**: `NOTEPM_API_TOKEN` は `backend/.env.integrations`（Git除外・Docker build context除外）から backend のみが読み込む（SecretStr）。DB・plugin_configs・監査ログ・API・frontend・OpenAIへは渡さない。
 3. **Client**: `app/services/notepm/`。HTTPS・`*.notepm.jp` のみ（localhost／IP／ポート／外部URL拒否）。GETのみ・タイムアウト10秒・リトライなし・リダイレクト追従なし。
@@ -161,3 +161,17 @@
 - NotePMページURLのリンク化
 - Google Drive／Slack／HotBiz実API接続
 - 社内情報横断検索
+
+- **完了（手動E2E PASS・v1.11.0）**: NotePM実API接続・読み取り専用認証・ノート一覧・ホワイトリスト・許可ノート限定検索・なっくん実検索・参照チップ・表示用正規化・秘密情報非露出・全自動テストPASS。
+### 残存未実装項目（次フェーズ以降）
+- Google Drive実API接続
+- Slack実API接続
+- HotBiz実接続
+- 社内情報横断検索
+- projects.company_id追加
+- 会社用OpenAI Projectへの切替
+- 秘密情報の管理画面／安全な保管機構
+- ストリーミング回答
+- LLM意図判定／Function Calling
+- 履歴への参照元／モード保存
+- NotePMページURLのリンク化

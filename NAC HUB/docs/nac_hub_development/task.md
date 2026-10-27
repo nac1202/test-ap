@@ -139,7 +139,7 @@
 - [ ] （次フェーズ以降）LLM意図判定／Function Calling
 - [ ] （次フェーズ以降）履歴への参照元・モード保存
 
-## 追加開発フェーズ12 タスク (実装済み・NotePM実通信／参照対象選択E2E待ち・Version 1.10.0のまま)
+## 追加開発フェーズ12 タスク (完了・v1.11.0)
 - [x] 開始時確認（HEAD=8f4ac73 / v1.10タグ / Clean / 3コンテナUp / health 1.10.0）
 - [x] v1.10.0バックアップ（DBダンプ・ソースzip・マニフェスト。`D:\Antigravity\backups\NAC_HUB_v1.10.0\`）
 - [x] `.env.integrations` の安全な配線（backendのみ・required:false・.gitignore / .dockerignore）
@@ -153,6 +153,11 @@
 - [x] 新規テスト `test_notepm_integration.py`（34項目・実NotePM／OpenAI APIは呼ばない）
 - [x] 既存＋新規＝12ファイルを2回連続PASS・tsc・build・lint PASS
 - [x] ドキュメント（docs/notepm_integration/）
-- [ ] ユーザーによる手動E2E（NotePM実通信・参照対象ノート選択・なっくん検索）
+- [x] 表示用正規化（**太字**・:mag: 等の除去。AIへ渡す表示用コピーのみ。bfaaf4a）
+- [x] ユーザーによる手動E2E PASS（実API接続・読み取り専用確認・ノート一覧・ホワイトリスト・許可ノート限定検索・参照チップ・正規化・非露出・390×844）
+- [x] 秘密情報の最終確認（Git非追跡・Git差分／frontend／dist／docs／DB／監査ログ／AI実行ログ非露出）
+- [x] Version 1.11.0 確定（config.py / SystemConfigContext.tsx / System.tsx。ビルド番号20261021維持）
+- [x] 最終自動テスト全12ファイル2回連続PASS・tsc・build・lint PASS
+- [x] 最終コミット・タグ `v1.11-notepm-integration`
 - [ ] （次フェーズ以降）ページURLのリンク化（URL形式が公式で確認できた場合）
 - [ ] （次フェーズ以降）Google Drive／Slack／HotBiz実API接続・社内情報横断検索

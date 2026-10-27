@@ -27,3 +27,6 @@
 - `test_notepm_integration.py`（モックHTTP・`nac_hub_test` のみ）＋既存11ファイルを2回連続実行。
 - frontend：`tsc --noEmit` / `build` / `lint`。
 - 実NotePM確認は、モックテスト完了後に `GET /user/account` → `GET /notes` のみ。
+
+## ステータス
+追加開発フェーズ12 完了（Version 1.11.0・手動E2E PASS）。表示用正規化（AIへ渡す前のコピーのみ）を追加済み。残存項目は walkthrough.md を参照。
