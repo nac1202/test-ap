@@ -27,8 +27,12 @@
    OPENAI_API_KEY=...
    OPENAI_MODEL=gpt-6-luna
    ```
-2. バックエンドを再起動: `docker compose restart backend`（SDK未導入環境の場合は `docker compose build backend` の後に `docker compose up -d backend`。`docker compose down -v` は使わない）。
-3. `http://localhost:8000/health` が正常であることを確認。
+2. バックエンドを再作成して反映: `docker compose up -d backend`（`docker-compose.yml` が `backend/.env.ai` を任意の env_file として読み込む。ファイルが無くても起動できる）。`docker compose down -v` は使わない。
+   - openai SDK は `requirements.txt` から Docker build で自動インストールされる（手動 pip install は不要）。コンテナを作り直す前にイメージを更新する場合は `docker compose build backend`。
+   - `backend/.dockerignore` により `.env*` はイメージへ焼き込まれない。`.env.ai` は frontend コンテナへ渡らない。
+3. 設定状況を**値を表示せずに**確認: `docker exec nac_hub_backend python check_ai_env.py`
+   （`OPENAI_API_KEY configured: true/false`、SDK有無、`AI_PROVIDER`、`OPENAI_MODEL`、`external AI will be used: true/false` のみ表示。キーの値・文字数・先頭末尾は表示しない）。
+   `http://localhost:8000/health` が正常であることも確認する。
 4. モデルを変える場合は `OPENAI_MODEL` を変更して再起動（例: `gpt-6.1-sol`）。モック回答へ戻す場合は `AI_PROVIDER=mock`。
 
 ## 実通信E2E確認項目（ユーザー実施）

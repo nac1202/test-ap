@@ -1,0 +1,10 @@
+# 秘密情報・環境ファイルをイメージへ焼き込まない（実行時は volume / env_file で渡す）
+.env
+.env.*
+**/.env
+**/.env.*
+venv/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+*.pyc

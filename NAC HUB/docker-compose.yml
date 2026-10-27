@@ -32,6 +32,9 @@ services:
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost:5173", "http://localhost:3000", "http://host.docker.internal:5173"]}
     env_file:
       - .env
+      # AI用の秘密ファイル（backend専用・Git管理外・未作成でも起動可）。frontend へは渡さない。
+      - path: ./backend/.env.ai
+        required: false
     depends_on:
       - db
 
