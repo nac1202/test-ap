@@ -14,7 +14,7 @@ interface SystemConfigContextType {
 }
 
 const DEFAULT_VERSION_INFO: SystemVersionInfo = {
-  version: '1.8.0',
+  version: '1.9.0',
   build_number: '20261021',
   updated_at: '2026-10-21',
 };

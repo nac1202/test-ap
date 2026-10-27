@@ -53,6 +53,10 @@ from app.core.config import settings
 if os.environ.get('DATABASE_URL'):
     settings.DATABASE_URL = os.environ['DATABASE_URL']
 
+# テスト隔離: 開発環境(.env.ai)の実APIキーでテストが外部AIを呼ばないようモック固定
+settings.AI_PROVIDER = "mock"
+settings.OPENAI_API_KEY = None
+
 from pydantic import SecretStr
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker

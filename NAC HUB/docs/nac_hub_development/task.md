@@ -91,7 +91,7 @@
 - [x] 既存回帰テスト・tsc・build・lint PASS
 - [x] ユーザーによるブラウザ手動E2E確認（PASS・v1.8.0確定）
 
-## 追加開発フェーズ10 タスク (実装済み・APIキー設定／実通信E2E待ち)
+## 追加開発フェーズ10 タスク (完了・v1.9.0)
 - [x] 開始時確認（HEAD=854ef5b / v1.8タグ / Clean / 3コンテナUp / health 1.8.0）
 - [x] 既存チャット実装監査（`ai_assistant.py` / `Chat.tsx` / `ai_chat_histories` / `ai_execution_logs`）
 - [x] AI Provider抽象化（`app/services/ai/`: base / mock_provider / openai_provider / factory / history / instructions）
@@ -104,4 +104,9 @@
 - [x] `Chat.tsx` 回答モード表示（モック／外部AI／フォールバック）
 - [x] 新規テスト `test_ai_provider_api.py`（OpenAI実APIは呼ばない）
 - [x] 既存回帰テスト全10ファイルを2回連続PASS・tsc・build・lint PASS
-- [ ] ユーザーによるAPIキー設定・実通信E2E確認（バージョン・タグは未更新）
+- [x] ユーザーによるAPIキー設定・実通信E2E確認（PASS）
+- [x] 秘密情報の最終確認（Git非追跡・frontend/dist/差分/docs/DB/実行ログ非露出）
+- [x] Version 1.9.0 確定（config.py / SystemConfigContext.tsx / System.tsx）
+- [x] 最終自動テスト全10ファイル2回連続PASS・tsc・build・lint PASS
+- [x] 最終コミット・タグ `v1.9-nakkun-external-ai`
+- [ ] （次フェーズ以降）案件DB検索／NotePM・Google Drive・Slack・HotBiz実接続／社内横断検索／会社用OpenAI切替／秘密情報管理機構／ストリーミング回答

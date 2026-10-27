@@ -4,7 +4,7 @@ from pydantic import SecretStr, field_validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "NAC HUB API"
-    VERSION: str = "1.8.0"
+    VERSION: str = "1.9.0"
     API_V1_STR: str = "/api/v1"
     
     # Security

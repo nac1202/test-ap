@@ -4,7 +4,7 @@
 本ファイル `docs/nac_hub_development/progress_summary.md` をプロジェクトの進捗・サマリ管理の正本とします。プロジェクト直下に重複ファイルが存在する場合は削除し、二重管理を防止します。
 
 ## 現在のステータス
-追加開発フェーズ10 実装済み・APIキー設定／実通信E2E待ち（正式バージョンは v1.8.0 のまま／フェーズ9: v1.8-plugin-management-api で確定済み）
+追加開発フェーズ10 完了（v1.9.0 正式確定／タグ `v1.9-nakkun-external-ai`／実通信E2E PASS）
 
 ## 最新の作業内容 (追加開発フェーズ8: システム設定API化 完了)
 1. **既存モデル・DB活用**:
@@ -71,7 +71,7 @@
 - 各プラグインを利用する機能（チャット連携・資料検索等）。
 
 ## 追加開発フェーズ10 進捗追記
-### 現在のステータス: 追加開発フェーズ10「なっくん外部AI仮接続・デモ版」 実装済み・APIキー設定／実通信E2E待ち（正式バージョン・タグは未更新）
+### 現在のステータス: 追加開発フェーズ10「なっくん外部AI仮接続・デモ版」 完了（v1.9.0 正式確定・実通信E2E PASS）
 
 1. **Provider抽象化**: `backend/app/services/ai/`（base / mock_provider / openai_provider / factory / history / instructions）。`ai_assistant.py` は Provider層経由。
 2. **OpenAI Responses API**: 公式SDK（`openai==3.39.0`）。`model` / `instructions` / `input` / `max_output_tokens` / `reasoning` / `store=False` を使用（SDKシグネチャ確認済み）。外部検索・ファイル検索・ツールは不使用。
@@ -83,4 +83,25 @@
 8. **実行ログ**: `ai_execution_logs.process_details` に provider/model/成否/処理時間/入出力トークン数/フォールバック/エラー種別を保存（migrationなし）。モック単独は従来どおり `mock_response`。
 9. **フロント**: `Chat.tsx` の注記をAPIの実モードで切替（モック／外部AI／一時的にモックへ切替）。送信中多重送信防止・履歴復元・無限ループ対策は不変。
 10. **検証**: 新規 `test_ai_provider_api.py`（OpenAI実APIは呼ばない）PASS、既存全10ファイルを2回連続PASS、tsc/build/lint PASS。
-11. **次のステップ**: ユーザーによる `backend/.env.ai` へのAPIキー設定・バックエンド再起動・実通信E2E。
+11. **実通信E2E結果: PASS**（ユーザー手動確認）:
+    - OpenAI API実通信成功／「外部AI回答モード」表示／自然な日本語回答。
+    - 1質問につき質問1件・回答1件。
+    - NotePM未接続を正直に回答／NAC HUB案件データ未接続を正直に回答。
+    - F5後の会話履歴復元／「新しい会話」で履歴削除。
+    - 390×844で質問・回答・スクロール・送信が正常。
+    - 秘密情報非露出（APIキーのfrontend非露出・Git非追跡・dist／差分／ドキュメント／DB／実行ログに不在を確認）。
+    - フォールバック動作は自動テストで確認済み。
+12. **バージョン**: 1.9.0 に確定（backend `config.py`、frontend `SystemConfigContext.tsx` / `System.tsx`）。ビルド番号 20261021 は維持。
+13. **テスト隔離**: `test_api.py` / `test_ai_provider_api.py` は開発環境の `.env.ai` に関わらずモック固定で実行（実OpenAI APIを呼ばない）。
+
+### 残存未実装項目（次フェーズ以降）
+> 外部AIへ接続できたことと、社内データを検索できることは別。現在のなっくんは一般的なAI回答のみで、社内データは参照しない。
+- なっくんからNAC HUB案件DBを実際に検索する機能
+- NotePM実API接続
+- Google Drive実API接続
+- Slack実API接続
+- HotBiz実接続
+- 社内情報横断検索
+- 会社用OpenAIアカウント／Projectへの切替
+- 秘密情報の管理画面／安全な保管機構
+- ストリーミング回答
