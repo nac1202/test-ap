@@ -150,7 +150,7 @@
 - [x] NotePMページ検索（許可ノート内のみ・アーカイブ除外・件数／文字数上限）
 - [x] なっくん連携（NotePM検索意図のみ）・参照チップ（タイトルのみ）・モード表示
 - [x] 監査ログ（接続確認・参照対象ノート変更・有効化／無効化）
-- [x] 新規テスト `test_notepm_integration.py`（33項目・実NotePM／OpenAI APIは呼ばない）
+- [x] 新規テスト `test_notepm_integration.py`（34項目・実NotePM／OpenAI APIは呼ばない）
 - [x] 既存＋新規＝12ファイルを2回連続PASS・tsc・build・lint PASS
 - [x] ドキュメント（docs/notepm_integration/）
 - [ ] ユーザーによる手動E2E（NotePM実通信・参照対象ノート選択・なっくん検索）

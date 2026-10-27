@@ -1120,6 +1120,49 @@ def test_33_integer_flags():
     print("PASS: 33. 整数フラグ(1/0)の解釈")
 
 
+def test_34_display_normalization():
+    fresh()
+    setup_plugin(allowed=["note_a"])
+    raw_title = "**Step2 すぐ見つかる検索機能を試してみよう :mag:**"
+    raw_title2 = "**[Tips] NotePMの便利機能まとめ**"
+    raw_body = (
+        "## 見出し\n\n\n\n**太字の検索機能** と __下線太字__ を使います :mag: :tada:\n"
+        "----------\n```\nprint('code kept')\n```\n"
+        "詳細は [マニュアル](https://team-test.notepm.jp/manual) を参照。時刻 10:30:45 はそのまま。snake_case_name も残す。"
+    )
+    FAKE.pages["note_a"] = [
+        _page("pg_n1", "note_a", raw_title, raw_body, "2026-10-05T10:00:00+09:00"),
+        _page("pg_n2", "note_a", raw_title2, "検索機能の便利な使い方。", "2026-10-04T10:00:00+09:00"),
+    ]
+    fake = use_openai(ok_response("回答"))
+    d = chat("NotePMから検索機能を探して").json()
+    assert d["used_notepm_data"] is True
+    sent = fake.calls[0]["input"][-1]["content"]
+    block = sent.split("【NotePM検索結果（ここから）】")[1].split("【NotePM検索結果（ここまで）】")[0]
+    for bad in ("**", "__", ":mag:", ":tada:", "----", "```", "## "):
+        assert bad not in block, (bad, block)
+    # 重要な文章・URL・コード本文・時刻・スネークケースは残る
+    assert "タイトル：Step2 すぐ見つかる検索機能を試してみよう" in block
+    assert "タイトル：[Tips] NotePMの便利機能まとめ" in block
+    assert "太字の検索機能" in block and "下線太字" in block
+    assert "print('code kept')" in block
+    assert "マニュアル (https://team-test.notepm.jp/manual)" in block
+    assert "10:30:45" in block and "snake_case_name" in block
+    assert "\n\n\n" not in block
+    titles = [r["title"] for r in d["references"]]
+    assert titles == ["Step2 すぐ見つかる検索機能を試してみよう", "[Tips] NotePMの便利機能まとめ"], titles
+    assert all("**" not in t and ":mag:" not in t for t in titles)
+    # 原文（NotePM側データ）は変更しない
+    assert FAKE.pages["note_a"][0]["title"] == raw_title and "**太字の検索機能**" in FAKE.pages["note_a"][0]["body"]
+    assert all(c.params.get("q") == "検索機能" for c in pages_calls())
+    # 直接関数での確認
+    f = npm_search.normalize_display_text
+    assert f("**A** __B__ :mag:") == "A B"
+    assert f("") == "" and f(None) == ""
+    assert f("https://example.com/a:b:c") == "https://example.com/a:b:c"
+    print("PASS: 34. NotePM本文・タイトルの表示用正規化（参照チップ含む）")
+
+
 TESTS = [
     test_01_token_not_configured, test_02_domain_not_configured, test_03_invalid_domain_rejected,
     test_04_ssrf_rejected_and_normalization, test_05_connection_success, test_06_auth_error_401,
@@ -1132,7 +1175,7 @@ TESTS = [
     test_26_token_not_exposed, test_27_audit_logs, test_28_general_user_forbidden,
     test_29_internal_search_regression, test_30_no_real_notepm_calls,
     test_31_disabled_or_unconfigured_not_used, test_32_company_isolation_and_domain_change,
-    test_33_integer_flags,
+    test_33_integer_flags, test_34_display_normalization,
 ]
 
 if __name__ == "__main__":

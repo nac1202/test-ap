@@ -121,8 +121,44 @@ def load_config(db: Session, company_id: Optional[int]) -> NotePMConfig:
 _EMAIL = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
 
 
+_EMOJI_CODE = re.compile(r"(?<![A-Za-z0-9/]):(?=[a-z0-9_+\-]*[a-z])[a-z0-9_+\-]{2,}:(?![A-Za-z0-9/])")
+_FENCE = re.compile(r"^[ \t]*(```|~~~)[^\n]*$", re.MULTILINE)
+_HEADING = re.compile(r"^[ \t]{0,3}#{1,6}[ \t]+", re.MULTILINE)
+_BOLD = re.compile(r"(\*\*|__)(?=\S)(.+?)(?<=\S)\1", re.DOTALL)
+_STRIKE = re.compile(r"~~(?=\S)(.+?)(?<=\S)~~", re.DOTALL)
+_INLINE_CODE = re.compile(r"`([^`\n]+)`")
+_MD_LINK = re.compile(r"!?\[([^\]\n]*)\]\((https?://[^)\s]+)\)")
+_RULE_RUN = re.compile(r"([-=_*~#])\1{3,}")
+_STRAY_BOLD = re.compile(r"\*\*|__")
+
+
+def normalize_display_text(text: Optional[str]) -> str:
+    """NotePM由来テキストを、ユーザー／AI向けの読みやすい表示用文字列にする（コピーのみ。原文は変更しない）。
+
+    - **太字** / __太字__ / ~~取消~~ / `コード` / 見出し # の記号を除去（中身は残す）
+    - コードブロックのフェンス行（```）は除去し、中身は残す
+    - [表示](URL) は「表示 (URL)」にし、URLは残す
+    - :mag: のような絵文字コードを除去
+    - ---- / ==== 等の連続記号を除去、連続改行を圧縮
+    """
+    t = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    t = _FENCE.sub("", t)
+    t = _MD_LINK.sub(lambda m: f"{m.group(1)} ({m.group(2)})" if m.group(1).strip() else m.group(2), t)
+    t = _BOLD.sub(lambda m: m.group(2), t)
+    t = _STRIKE.sub(lambda m: m.group(1), t)
+    t = _INLINE_CODE.sub(lambda m: m.group(1), t)
+    t = _HEADING.sub("", t)
+    t = _EMOJI_CODE.sub("", t)
+    t = _STRAY_BOLD.sub("", t)
+    t = _RULE_RUN.sub(" ", t)
+    t = re.sub(r"[ \t\u3000]+", " ", t)
+    t = re.sub(r"[ \t]*\n[ \t]*", "\n", t)
+    t = re.sub(r"\n{3,}", "\n\n", t)
+    return t.strip()
+
+
 def _clip(text: Optional[str], limit: int) -> str:
-    t = (text or "").replace("\r", " ").replace("\n", " ")
+    t = normalize_display_text(text).replace("\n", " ")
     t = _EMAIL.sub("（メールアドレス省略）", t)
     t = redact_secrets(re.sub(r"\s+", " ", t)).strip()
     return t if len(t) <= limit else t[: limit - 1] + "…"

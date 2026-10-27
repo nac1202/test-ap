@@ -154,7 +154,7 @@
 6. **検索**: `GET /pages`（q / note_code / include_archived=0 / search_engine_type=v2）。1ノート5件・最終10件・本文500文字・コンテキスト3500文字が上限。
 7. **なっくん連携**: 質問に明確なNotePM検索意図がある場合のみ実API検索。「外部AI + NotePMデータ回答」表示。参照チップはタイトルのみ（ページURL形式は公式で未確認のためリンクなし）。
 8. **API**: `POST /admin/plugins/notepm/test-connection`、`GET /admin/plugins/notepm/notes`、`PUT /admin/plugins/notepm/allowed-notes`（管理者のみ）。
-9. **検証**: `test_notepm_integration.py` 33項目 ALL PASS。既存＋新規12ファイルを2回連続PASS、tsc/build/lint PASS。
+9. **検証**: `test_notepm_integration.py` 34項目 ALL PASS。既存＋新規12ファイルを2回連続PASS、tsc/build/lint PASS。
 
 ### 残存未実装項目
 - ユーザー手動E2E（実接続・ノート選択・NotePM検索）
