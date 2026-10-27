@@ -775,6 +775,40 @@ def test_30_no_real_openai_calls():
     print("PASS: 30. 実OpenAI APIを呼ばない・内部検索失敗時も継続")
 
 
+def test_31_all_matching_records_listed():
+    """複数件ある一覧系は、context / references / OpenAIへの入力のすべてに全件が入り、全件列挙の指示が付く。"""
+    # 要注意案件: ベータ(warning) と ガンマ(delayed) の2件。「遅延」も要注意案件として扱う（定義を維持）
+    c = ask_ctx("A1", "要注意案件を教えて")
+    assert c.item_count == 2 and c.listed == 2 and len(c.references) == 2
+    assert "NKD案件ベータ" in c.text and "NKD案件ガンマ" in c.text
+    assert "状態:要注意" in c.text and "状態:遅延" in c.text
+    assert sorted(r.title for r in c.references) == ["NKD案件ガンマ", "NKD案件ベータ"]
+    block = ic.render_context_block(c)
+    assert "この資料には2件の該当があります" in block and "省略せず" in block and "すべて回答本文に列挙" in block
+    assert "NKD案件ベータ" in block and "NKD案件ガンマ" in block
+
+    fake = use_openai(ok_response("要注意の案件は、ベータ案件とガンマ案件です。"))
+    d = chat("要注意案件を教えて").json()
+    sent = fake.calls[0]["input"][-1]["content"]
+    assert "NKD案件ベータ" in sent and "NKD案件ガンマ" in sent, "OpenAIへ渡す入力に2件とも含まれる"
+    assert "この資料には2件の該当があります" in sent and "省略せず" in sent
+    assert sorted(r["title"] for r in d["references"]) == ["NKD案件ガンマ", "NKD案件ベータ"]
+    assert "全件を省略せず" in NAKKUN_INSTRUCTIONS and "絞り込んだりしてはいけません" in NAKKUN_INSTRUCTIONS
+
+    # 期限が近い案件・進行中一覧・お知らせでも、listed と references と本文の「・」行が一致する
+    for q in ("期限が近い案件を教えて", "進行中の案件一覧を教えて", "最新のお知らせを教えて", "重要なお知らせは？"):
+        cx = ask_ctx("A1", q)
+        bullets = [ln for ln in cx.text.splitlines() if ln.startswith("・")]
+        assert cx.listed == len(cx.references) == len(bullets) > 0, (q, cx.listed, len(cx.references), len(bullets))
+        rendered = ic.render_context_block(cx)
+        assert f"この資料には{cx.listed}件の該当があります" in rendered, q
+    # 一覧でない質問（件数・詳細）・該当なしには全件列挙の指示を付けない
+    for q in ("現在の案件は何件？", "NKD案件アルファの進捗を教えて", "NKD存在しないお知らせはある？"):
+        rendered = ic.render_context_block(ask_ctx("A1", q))
+        assert "件の該当があります" not in rendered, q
+    print("PASS: 31. 一覧系は全件がcontext/references/OpenAI入力へ入る（全件列挙の指示付き）")
+
+
 TESTS = [
     test_01_project_count, test_02_attention_projects, test_03_upcoming_deadlines,
     test_04_project_name_search, test_05_project_members, test_06_recent_notices,
@@ -786,6 +820,7 @@ TESTS = [
     test_23_internal_ids_not_exposed, test_24_no_match_answer, test_25_external_plugins_not_connected,
     test_26_general_question_regression, test_27_history_compat, test_28_user_history_isolation,
     test_29_company_isolation_via_chat, test_30_no_real_openai_calls,
+    test_31_all_matching_records_listed,
 ]
 
 if __name__ == "__main__":

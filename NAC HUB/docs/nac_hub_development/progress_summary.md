@@ -117,7 +117,8 @@
 6. **フロント**: 「外部AI + NAC HUBデータ回答」表示、「参照：○○」チップ（案件は詳細画面へ遷移）。
 7. **検証**: 新規 `test_nakkun_internal_data.py` 30項目 ALL PASS、既存＋新規11ファイルを2回連続PASS、tsc/build/lint PASS。テストは実OpenAI APIを呼ばない。
 8. **手動E2E用データ**: 開発DBへ `[E2E TEST NAKKUN]` 案件3件・お知らせ3件を投入済み（削除: `docs/nakkun_internal_data/e2e_cleanup.sql`）。
-9. **次のステップ**: ユーザー手動E2E（詳細は `docs/nakkun_internal_data/walkthrough.md`）。PASS後にVersion・正式タグを決定。
+9. **手動E2E結果と修正**: ほぼ全項目PASS。「要注意案件」で参照チップ2件に対し回答本文が1件のみ（AIが状態「遅延」のガンマ案件を省略）。検索結果は2件で正しかったため、資料へ「○件を省略せず全件列挙」の指示と明確な見出しを追加し、instructions にも全件列挙ルールを追記。要注意案件の定義（状態が要注意または遅延）は維持。`test_31` を追加。
+10. **次のステップ**: ユーザー手動E2E再確認（詳細は `docs/nakkun_internal_data/walkthrough.md`）。PASS後にVersion・正式タグを決定。
 
 ### 残存未実装項目（フェーズ11時点）
 - NotePM / Google Drive / Slack / HotBiz の実API接続
