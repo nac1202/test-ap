@@ -78,7 +78,12 @@ class OpenAIProvider(AIProvider):
             raise AIProviderError("api_key_missing")
 
         model = settings.OPENAI_MODEL
-        messages = list(conversation_history) + [{"role": "user", "content": question}]
+        user_content = question
+        internal_block = (user_context or {}).get("internal_context_block")
+        if internal_block:
+            # バックエンドが取得・上限適用済みの内部情報のみ（内部ID・秘密情報なし）
+            user_content = f"{internal_block}\n\n【質問】\n{question}"
+        messages = list(conversation_history) + [{"role": "user", "content": user_content}]
         kwargs = {
             "model": model,
             "instructions": NAKKUN_INSTRUCTIONS,

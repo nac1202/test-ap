@@ -9,6 +9,12 @@ const API_BASE = 'http://localhost:8000/api/v1/ai';
 
 type AnswerMode = 'mock' | 'external' | 'fallback';
 
+interface ChatReference {
+  type: 'project' | 'notice' | string;
+  title: string;
+  link?: string | null;
+}
+
 interface ChatMessage {
   id: number;
   question: string;
@@ -20,13 +26,18 @@ interface ChatMessage {
   mode?: AnswerMode;
   fallback_used?: boolean;
   warning?: string | null;
+  used_internal_data?: boolean;
+  references?: ChatReference[];
 }
 
 const MODE_NOTICE: Record<AnswerMode, string> = {
   mock: '※ なっくんは現在モック回答モードで動作しています',
-  external: '※ なっくんは外部AI回答モードで動作しています（社内データには未接続）',
+  external: '※ なっくんは外部AI回答モードで動作しています',
   fallback: '※ 一時的にモック回答へ切り替えました',
 };
+
+const INTERNAL_DATA_LABEL = '外部AI + NAC HUBデータ回答';
+const INTERNAL_DATA_LABEL_FALLBACK = 'NAC HUBデータ回答（簡易モード）';
 
 interface PendingMessage {
   tempId: number;
@@ -47,6 +58,8 @@ export default function Chat() {
   const [loadError, setLoadError] = useState('');
   // APIから返る実際の回答モード（取得前・取得失敗時は null = モードを断定しない）
   const [answerMode, setAnswerMode] = useState<AnswerMode | null>(null);
+  // 直近の回答が NAC HUB 内部データを使ったか（表示の切替用）
+  const [lastUsedInternal, setLastUsedInternal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Guard: consume the initial question exactly once, never re-fire
@@ -140,6 +153,7 @@ export default function Chat() {
       if (data.mode === 'mock' || data.mode === 'external' || data.mode === 'fallback') {
         setAnswerMode(data.mode);
       }
+      setLastUsedInternal(Boolean(data.used_internal_data));
       setPendingMessage(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '送信エラー';
@@ -327,6 +341,32 @@ export default function Chat() {
                       {msg.fallback_used && msg.warning && (
                         <p className="mt-2 text-[11px] sm:text-xs text-amber-600">{msg.warning}</p>
                       )}
+                      {msg.used_internal_data && (
+                        <p className="mt-2 text-[11px] sm:text-xs text-primary font-semibold" data-testid="internal-data-label">
+                          {msg.mode === 'external' ? INTERNAL_DATA_LABEL : INTERNAL_DATA_LABEL_FALLBACK}
+                        </p>
+                      )}
+                      {msg.references && msg.references.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1.5" data-testid="chat-references">
+                          {msg.references.map((ref, idx) => {
+                            const label = `参照：${ref.title}`;
+                            const chipClass = 'max-w-full truncate px-2 py-0.5 rounded-full text-[11px] sm:text-xs border border-primary/30 bg-primary/5 text-primary';
+                            return ref.type === 'project' && ref.link && ref.link.startsWith('/projects/') ? (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => navigate(ref.link as string)}
+                                className={`${chipClass} hover:bg-primary/10 min-h-[24px]`}
+                                title={ref.title}
+                              >
+                                {label}
+                              </button>
+                            ) : (
+                              <span key={idx} className={chipClass} title={ref.title}>{label}</span>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </React.Fragment>
@@ -381,7 +421,7 @@ export default function Chat() {
         <div className="p-3 sm:p-4 bg-white border-t shrink-0 flex flex-col gap-1.5 z-10">
           {answerMode && (
             <p id="chat-mode-notice" className="text-[11px] sm:text-xs text-gray-400 text-center py-0.5 truncate">
-              {MODE_NOTICE[answerMode]}
+              {lastUsedInternal && answerMode === 'external' ? `※ ${INTERNAL_DATA_LABEL}` : MODE_NOTICE[answerMode]}
             </p>
           )}
 

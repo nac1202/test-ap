@@ -110,3 +110,17 @@
 - [x] 最終自動テスト全10ファイル2回連続PASS・tsc・build・lint PASS
 - [x] 最終コミット・タグ `v1.9-nakkun-external-ai`
 - [ ] （次フェーズ以降）案件DB検索／NotePM・Google Drive・Slack・HotBiz実接続／社内横断検索／会社用OpenAI切替／秘密情報管理機構／ストリーミング回答
+
+## 追加開発フェーズ11 タスク (実装済み・手動E2E待ち)
+- [x] 開始時確認（HEAD=25e2735 / v1.9タグ / Clean / 3コンテナUp / health 1.9.0）
+- [x] v1.9.0バックアップ（DBダンプ・ソースzip・マニフェスト。`D:\Antigravity\backups\NAC_HUB_v1.9.0\`）
+- [x] 既存案件・お知らせAPI／権限監査（projectsにcompany_idなし → ダッシュボードの会社判定を踏襲し厳格化）
+- [x] 内部検索サービス `services/ai/internal_context.py`（固定ルールの質問分類・上限・秘密情報除外）
+- [x] なっくん（Chat API）との接続・OpenAIへの資料注入・フォールバック時の内部情報提示
+- [x] レスポンス拡張（used_internal_data / references / context_type）・実行ログ追記（migrationなし）
+- [x] フロント: 参照チップ・「外部AI + NAC HUBデータ回答」表示
+- [x] 新規テスト `test_nakkun_internal_data.py`（30項目・OpenAI実APIは呼ばない）
+- [x] 既存回帰テスト＋新規＝11ファイルを2回連続PASS・tsc・build・lint PASS
+- [x] 手動E2E用データ投入（`[E2E TEST NAKKUN]`。削除は `e2e_cleanup.sql`）
+- [x] ドキュメント（docs/nakkun_internal_data/）
+- [ ] ユーザーによる手動E2E確認（Version・正式タグは未更新）

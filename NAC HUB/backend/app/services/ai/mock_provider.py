@@ -63,4 +63,15 @@ class MockProvider(AIProvider):
         conversation_history: ConversationHistory,
         user_context: Optional[dict] = None,
     ) -> AIReply:
+        ctx = user_context or {}
+        internal_text = ctx.get("internal_context_text")
+        if internal_text:
+            if ctx.get("internal_no_match"):
+                label = ctx.get("internal_label") or "情報"
+                return AIReply(answer=f"{label}を確認しましたが、{internal_text}。", provider=self.name)
+            label = ctx.get("internal_label") or "情報"
+            return AIReply(
+                answer=f"NAC HUB内の{label}を確認しました。\n\n{internal_text}",
+                provider=self.name,
+            )
         return AIReply(answer=generate_mock_response(question), provider=self.name)

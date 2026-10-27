@@ -4,7 +4,7 @@
 本ファイル `docs/nac_hub_development/progress_summary.md` をプロジェクトの進捗・サマリ管理の正本とします。プロジェクト直下に重複ファイルが存在する場合は削除し、二重管理を防止します。
 
 ## 現在のステータス
-追加開発フェーズ10 完了（v1.9.0 正式確定／タグ `v1.9-nakkun-external-ai`／実通信E2E PASS）
+追加開発フェーズ11 実装済み・手動E2E待ち（正式バージョンは v1.9.0 のまま／フェーズ10: v1.9-nakkun-external-ai で確定済み）
 
 ## 最新の作業内容 (追加開発フェーズ8: システム設定API化 完了)
 1. **既存モデル・DB活用**:
@@ -105,3 +105,25 @@
 - 会社用OpenAIアカウント／Projectへの切替
 - 秘密情報の管理画面／安全な保管機構
 - ストリーミング回答
+
+## 追加開発フェーズ11 進捗追記
+### 現在のステータス: 追加開発フェーズ11「なっくん NAC HUB実データ検索・第1弾」 実装済み・手動E2E待ち（Version 1.9.0 のまま・正式タグは未作成）
+
+1. **目的**: なっくんが NAC HUB 内の「案件」と「全社お知らせ」の実データを根拠に回答する。Slack / Google Drive / NotePM / HotBiz は対象外（従来どおり未接続）。
+2. **安全設計**: AI に SQL / DB 権限は与えない。バックエンドが固定ルールで質問を分類 → 許可された検索関数のみ実行 → 最小限のデータを資料として OpenAI へ渡す。
+3. **実装**: `backend/app/services/ai/internal_context.py`（`NacHubContextService`）。上限は案件10・お知らせ5・本文200文字・コンテキスト3000文字。秘密情報らしき値は除外。
+4. **会社スコープ**: お知らせは `company_id` かつ公開中のみ。案件は `company_id` 列がないため、ダッシュボードの会社判定（プロデューサーが自社）を踏襲し、プロデューサー未設定は自社メンバーの場合のみ、他社プロデューサーの案件・所属不明の案件は対象外とした。閲覧権限は既存どおり管理者・一般で同一。
+5. **Chat API**: `used_internal_data` / `references` / `context_type` を追加（既存項目不変・内部IDなし）。実行ログは `used_data=nac_hub:<種別>` と `process_details` へ追記（migrationなし）。
+6. **フロント**: 「外部AI + NAC HUBデータ回答」表示、「参照：○○」チップ（案件は詳細画面へ遷移）。
+7. **検証**: 新規 `test_nakkun_internal_data.py` 30項目 ALL PASS、既存＋新規11ファイルを2回連続PASS、tsc/build/lint PASS。テストは実OpenAI APIを呼ばない。
+8. **手動E2E用データ**: 開発DBへ `[E2E TEST NAKKUN]` 案件3件・お知らせ3件を投入済み（削除: `docs/nakkun_internal_data/e2e_cleanup.sql`）。
+9. **次のステップ**: ユーザー手動E2E（詳細は `docs/nakkun_internal_data/walkthrough.md`）。PASS後にVersion・正式タグを決定。
+
+### 残存未実装項目（フェーズ11時点）
+- NotePM / Google Drive / Slack / HotBiz の実API接続
+- 社内情報横断検索
+- 会社用OpenAIアカウント／Projectへの切替
+- 秘密情報の管理画面／安全な保管機構
+- ストリーミング回答
+- `projects.company_id` の追加（所属不明案件を検索対象にするため。migrationを伴う）
+- LLMによる意図判定／Function Calling、履歴への参照元保存、タイムライン以外の案件詳細、予定・その他データの検索

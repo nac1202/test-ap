@@ -18,8 +18,17 @@ from app.db.database import get_db
 from app.models.ai import AIChatHistory, AIExecutionLog
 from app.models.audit import AuditLog
 from app.models.user import User
-from app.services.ai.factory import generate_reply_with_fallback, get_ai_status
+from app.services.ai.factory import (
+    generate_reply_with_fallback,
+    get_ai_status,
+    requested_provider_name,
+)
 from app.services.ai.history import build_conversation_history, redact_secrets
+from app.services.ai.internal_context import (
+    InternalContext,
+    NacHubContextService,
+    render_context_block,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +42,13 @@ class ChatRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=2000)
 
 
+class ReferenceItem(BaseModel):
+    """回答根拠（内部IDは含めない。link は案件詳細画面のパスのみ）。"""
+    type: str            # project | notice
+    title: str
+    link: Optional[str] = None
+
+
 class ChatResponse(BaseModel):
     id: int
     question: str
@@ -43,6 +59,10 @@ class ChatResponse(BaseModel):
     provider: str = "mock"        # 実際に回答した provider
     fallback_used: bool = False
     warning: Optional[str] = None
+    # NAC HUB内部データ検索（第1弾）
+    used_internal_data: bool = False
+    references: list[ReferenceItem] = []
+    context_type: Optional[str] = None
 
 
 class ChatHistoryItem(BaseModel):
@@ -52,11 +72,12 @@ class ChatHistoryItem(BaseModel):
     created_at: datetime
 
 
-def _build_process_details(outcome) -> str:
+def _build_process_details(outcome, ctx: Optional[InternalContext] = None) -> str:
     """実行ログ用の非機密メタ情報。APIキー・Authorization・プロンプト全文は含めない。
 
     モック単独は従来どおり "mock_response"。
     input_usage / output_usage は入出力トークン数（キー名に秘密情報スキャンの禁止語を含めないためこの名称）。
+    内部データ検索を行った場合のみ、使用有無・分類・参照件数を追記する（取得内容そのものは保存しない）。
     """
     r = outcome.reply
     if outcome.mode == "mock":
@@ -75,6 +96,12 @@ def _build_process_details(outcome) -> str:
         f"input_usage={r.input_tokens if r.input_tokens is not None else '-'}",
         f"output_usage={r.output_tokens if r.output_tokens is not None else '-'}",
     ]
+    if ctx is not None and ctx.used:
+        parts += [
+            "internal_data=true",
+            f"context_type={ctx.context_type}",
+            f"ref_count={len(ctx.references)}",
+        ]
     return ";".join(parts)
 
 
@@ -97,11 +124,28 @@ def send_chat_message(
     """
     # モデルへ渡す会話履歴は現在ユーザー本人の直近分のみ（上限あり・秘密情報らしき値を除外）
     history = build_conversation_history(db, current_user.id)
-    outcome = generate_reply_with_fallback(
-        redact_secrets(data.question),
-        history,
-        {"is_admin": bool(getattr(current_user, "is_admin", False))},
-    )
+    safe_question = redact_secrets(data.question)
+
+    # NAC HUB内部データ検索（バックエンドの固定ルールのみ。AIにSQL/DB権限は与えない）。
+    # 純粋なモックモードでは従来動作を維持するため検索しない。
+    ctx = InternalContext()
+    if requested_provider_name() != "mock":
+        try:
+            ctx = NacHubContextService(db, current_user).build_context(safe_question)
+        except Exception as exc:  # noqa: BLE001 - 内部検索の失敗でチャットは落とさない
+            db.rollback()
+            logger.warning("Internal context failed: exc_type=%s", type(exc).__name__)
+            ctx = InternalContext()
+
+    user_context = {"is_admin": bool(getattr(current_user, "is_admin", False))}
+    if ctx.used:
+        user_context.update({
+            "internal_context_block": render_context_block(ctx),
+            "internal_context_text": ctx.text,
+            "internal_label": ctx.label,
+            "internal_no_match": ctx.no_match,
+        })
+    outcome = generate_reply_with_fallback(safe_question, history, user_context)
     answer = outcome.reply.answer
 
     # Save to chat history
@@ -117,8 +161,8 @@ def send_chat_message(
     execution_log = AIExecutionLog(
         chat_id=chat_record.id,
         used_plugins=[],
-        used_data="none",
-        process_details=_build_process_details(outcome),
+        used_data=f"nac_hub:{ctx.context_type}" if ctx.used else "none",
+        process_details=_build_process_details(outcome, ctx),
     )
     db.add(execution_log)
     db.commit()
@@ -143,6 +187,9 @@ def send_chat_message(
         provider=outcome.reply.provider,
         fallback_used=outcome.fallback_used,
         warning=outcome.warning,
+        used_internal_data=ctx.used,
+        references=[ReferenceItem(**r.as_dict()) for r in ctx.references],
+        context_type=ctx.context_type if ctx.used else None,
     )
 
 
